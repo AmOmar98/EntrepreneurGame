@@ -9,10 +9,10 @@
 
 ### AUTH — Authentification & sessions
 
-- [ ] **AUTH-01** : Player/Mentor/GameMaster peut se connecter avec email + mot de passe initial via Supabase Auth, et obtenir une session persistante (cookies SSR)
+- [x] **AUTH-01** : Player/Mentor/GameMaster peut se connecter avec email + mot de passe initial via Supabase Auth, et obtenir une session persistante (cookies SSR) _(Phase 1)_
 - [x] **AUTH-02** : Visiteur non authentifié sur route protégée est redirigé vers `/login?redirect=<path>` par le middleware
-- [ ] **AUTH-03** : Player peut se déconnecter depuis n'importe quelle page et revenir à `/login`
-- [ ] **AUTH-04** : Le rôle (`player` / `mentor` / `gamemaster`) est attaché à l'utilisateur côté DB et fait foi pour le routing et les RLS
+- [x] **AUTH-03** : Player peut se déconnecter depuis n'importe quelle page et revenir à `/login` _(Phase 1)_
+- [x] **AUTH-04** : Le rôle (`player` / `mentor` / `gamemaster`) est attaché à l'utilisateur côté DB et fait foi pour le routing et les RLS _(Phase 1)_
 
 ### ONBOARD — Onboarding & création comptes
 
@@ -24,8 +24,8 @@
 
 - [x] **EVENT-01** : Au déploiement, un Event seed « Hack-Days Fès-Meknès Mai 2026 » est créé avec 6 Missions correspondant aux ateliers du programme PDF Tamwilcom et ~9 DeliverableTemplates (Business Model Canvas, Étude de marché, Fiche Personae, Fiche Produit + Plan Dév, Coûts & prévisions ventes, Stratégie prix/ventes/canaux, + livrables ateliers 3-4-5 à confirmer)
 - [x] **EVENT-02** : Chaque DeliverableTemplate a une `scoring_rubric` JSONB (4-5 critères pondérés selon brief Section 14) et un `due_at` aligné sur la timeline du programme
-- [ ] **EVENT-03** : Les 8 Levels (Niveau 0 à 7 du brief) sont seedés en table de référence statique au déploiement
-- [ ] **EVENT-04** : Toutes les tables liées (players, missions, submissions, pitch_scores) ont une colonne `event_id NOT NULL` ; pour le pilote, hardcodée à l'event seed (multi-event = SHOULD/V2)
+- [x] **EVENT-03** : Les 8 Levels (Niveau 0 à 7 du brief) sont seedés en table de référence statique au déploiement _(Phase 1, schema-side)_
+- [x] **EVENT-04** : Toutes les tables liées (players, missions, submissions, pitch_scores) ont une colonne `event_id NOT NULL` ; pour le pilote, hardcodée à l'event seed (multi-event = SHOULD/V2) _(Phase 1)_
 
 ### JOURNEY — Parcours Player
 
@@ -76,12 +76,12 @@
 
 ### DATA — Persistence & sécurité
 
-- [ ] **DATA-01** : Schema Postgres appliqué sur le projet Supabase prod (création/migration). Comprend les tables : events, levels, missions, deliverable_templates, cohorts, players, player_members, submissions, evaluations, pitch_scores, et leurs FK + index sur les FK chaudes
+- [x] **DATA-01** : Schema Postgres appliqué sur le projet Supabase prod (création/migration). Comprend les tables : events, levels, missions, deliverable_templates, cohorts, players, player_members, submissions, evaluations, pitch_scores, et leurs FK + index sur les FK chaudes _(SQL livre Phase 1, apply prod = operator UAT)_
 - [x] **DATA-02** : RLS policies en place : Player ne voit que ses propres Submissions/Evaluations + données publiques (DeliverableTemplates, Missions, Levels, Event public info) ; Mentor voit tous les Players de l'event ; GameMaster voit tout. Test exhaustif RLS avec 2 comptes Player factices avant 13 mai.
 - [x] **DATA-03** : `lib/workflow-data.ts` ne tombe plus sur le seed quand `hasSupabaseEnv()` est true et que la DB est vide → retourne tableaux vides (suppression du leak)
 - [x] **DATA-04** : Toutes les server actions retournent un `WorkflowState = { ok, message, data? }` ; aucune `return;` silencieuse, aucune erreur Supabase swallow
-- [ ] **DATA-05** : Lucide-react repinné à une version résolue correctement (corrige le `^1.14.0` suspect identifié dans `.planning/codebase/CONCERNS.md`)
-- [ ] **DATA-06** : Code mort supprimé : `BonusEvent`, `bonusRules`, `prestige_xp`, enums `Stage`/`Checkpoint`/`MaturityPhase`/`BonusType`, pages `/committee`, `/admin/game`, `/admin/startups`, mailto drafts, exports `committee.csv`/`eml`/`kpi-snapshot`. `lib/data.ts` éclaté en `lib/types.ts` + `lib/seed/*.ts` + `lib/score.ts` + `lib/icons.ts`.
+- [x] **DATA-05** : Lucide-react repinné à une version résolue correctement (corrige le `^1.14.0` suspect identifié dans `.planning/codebase/CONCERNS.md`) _(Phase 1 plan 06)_
+- [x] **DATA-06** : Code mort supprimé : `BonusEvent`, `bonusRules`, `prestige_xp`, enums `Stage`/`Checkpoint`/`MaturityPhase`/`BonusType`, pages `/committee`, `/admin/game`, `/admin/startups`, mailto drafts, exports `committee.csv`/`eml`/`kpi-snapshot`. `lib/data.ts` éclaté en `lib/types.ts` + `lib/seed/*.ts` + `lib/score.ts` + `lib/icons.ts`. _(Phase 1)_
 
 ### DEPLOY — Déploiement
 
@@ -124,19 +124,38 @@
 
 | REQ-ID | Phase | Status |
 |---|---|---|
-| AUTH-01..04 | (à mapper) | pending |
-| ONBOARD-01..03 | (à mapper) | pending |
-| EVENT-01..04 | (à mapper) | pending |
-| JOURNEY-01..03 | (à mapper) | pending |
-| SUBMIT-01..04 | (à mapper) | pending |
-| EVAL-01..03 | (à mapper) | pending |
-| SCORE-01..02 | (à mapper) | pending |
-| JURY-01..05 | (à mapper) | pending |
-| ADMIN-01..04 | (à mapper) | pending |
-| BRAND-01..05 | (à mapper) | pending |
-| DATA-01..06 | (à mapper) | pending |
-| DEPLOY-01..03 | (à mapper) | pending |
-| NOTIF-01, SCORE-03, EVENT-05, RESOURCE-01 | (SHOULD) | pending |
+| AUTH-01 | 1 | validated (operator UAT) |
+| AUTH-02 | 1 | validated |
+| AUTH-03 | 1 | validated (operator UAT) |
+| AUTH-04 | 1 | validated (operator UAT) |
+| ONBOARD-01 | 4 | validated |
+| ONBOARD-02 | 2 | validated |
+| ONBOARD-03 | 2 | validated |
+| EVENT-01 | 1+2 | validated |
+| EVENT-02 | 1+2 | validated |
+| EVENT-03 | 1 | validated (operator UAT) |
+| EVENT-04 | 1 | validated (operator UAT) |
+| JOURNEY-01..03 | 2 | validated |
+| SUBMIT-01..04 | 2+3 | validated |
+| EVAL-01..03 | 3 | validated |
+| SCORE-01..02 | 3 | validated |
+| JURY-01 | 5 | validated |
+| JURY-02 | 5 | validated |
+| JURY-03 | 5 | validated |
+| JURY-04 | 5 | validated |
+| JURY-05 | 5 | validated |
+| ADMIN-01..04 | 4 | validated |
+| BRAND-01..05 | 4 | validated |
+| DATA-01 | 1 | validated (operator UAT) |
+| DATA-02 | 5 | validated (suite SQL livree, operator run requis) |
+| DATA-03 | 2 | validated |
+| DATA-04 | 1+3 | validated |
+| DATA-05 | 1 | validated (operator UAT) |
+| DATA-06 | 1 | validated (operator UAT) |
+| DEPLOY-01 | 5 | validated (config livree, operator deploy requis) |
+| DEPLOY-02 | 5 | validated (config livree, operator env vars requis) |
+| DEPLOY-03 | 5 | validated (checklist livree, operator UAT requis) |
+| NOTIF-01, SCORE-03, EVENT-05, RESOURCE-01 | (SHOULD) | pending (Phase 6/7 si buffer) |
 
 ---
 

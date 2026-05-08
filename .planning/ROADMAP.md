@@ -7,7 +7,7 @@
 
 ---
 
-## 🚧 **v0.1 Pilot Hack-Days Fès-Meknès** — Phases 1-5 (in progress)
+## ✅ **v0.1 Pilot Hack-Days Fès-Meknès** — Phases 1-5 (complete - pilot-ready)
 
 ---
 
@@ -144,7 +144,9 @@ Plans:
 - [x] 05-02-PLAN.md — /results page + lib/results.ts ranking + publishResultsFlow (gate)
 - [x] 05-03-PLAN.md — RLS exhaustive test (DATA-02) + magic link invites internal testers
 - [x] 05-04-PLAN.md — Vercel deploy config + smoke test E2E template
-- [ ] 05-05-PLAN.md — Phase closeout (final smoke + summary + docs)
+- [x] 05-05-PLAN.md — Phase closeout (final smoke + summary + docs)
+
+**Phase 5 status** : ✅ Complete (2026-05-08). 9 requirements valides : JURY-01..05, DATA-02, DEPLOY-01..03. Voir `.planning/phases/05-pitch-jury-results-smoke-test-e2e-deploiement-vercel-prod/05-PHASE-SUMMARY.md`.
 
 ---
 
@@ -195,4 +197,4 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
 ---
 
-*Last updated: 2026-05-08 after Phase 2 plan creation*
+*Last updated: 2026-05-08 after Phase 5 completion (pilot-ready). All 5 phases / 26 plans complete. Operator UAT pending before 13 mai 2026.*
