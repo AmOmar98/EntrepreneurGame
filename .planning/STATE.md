@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T20:17:19.887Z"
+last_updated: "2026-05-08T20:23:03.786Z"
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -74,3 +74,4 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 02]: Plan 03: V2 fully blocked at action level until Phase 3 introduces verdict-based gating
 - [Phase 02]: Phase 2 cloturee : i18n complet, anti-leak audite clean, SMOKE.md livre comme procedure UAT executable avant 13 mai.
 - [Phase 03]: Mentor data layer aggregates submissions+evaluations in two bulk queries (no N+1), per-player pending derived from status + connected user's evaluations
+- [Phase 03]: evaluateSubmission keeps players.score_project untouched - relies on trg_evaluation_recalc trigger

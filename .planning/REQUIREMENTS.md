@@ -43,12 +43,12 @@
 ### EVAL — Évaluation Mentor
 
 - [x] **EVAL-01** : Sur `/mentor`, Mentor voit la liste de tous les Players de la cohorte avec score Projet courant, nb livrables soumis / total, filtre « livrables en attente »
-- [ ] **EVAL-02** : Sur `/mentor/submission/[id]`, Mentor voit le contenu de la Submission (lien et/ou texte), un formulaire de scoring selon la `scoring_rubric` du DeliverableTemplate (un input numérique par critère), un champ feedback texte, et 3 boutons : « Valider V1 » / « Demander V2 » / « Rejeter »
-- [ ] **EVAL-03** : Soumettre une évaluation crée une `Evaluation` row avec `scoring_breakdown` (JSONB), `total_score`, `feedback_text`, `verdict` ; met à jour le statut de la Submission et recalcule le Score Projet du Player
+- [x] **EVAL-02** : Sur `/mentor/submission/[id]`, Mentor voit le contenu de la Submission (lien et/ou texte), un formulaire de scoring selon la `scoring_rubric` du DeliverableTemplate (un input numérique par critère), un champ feedback texte, et 3 boutons : « Valider V1 » / « Demander V2 » / « Rejeter »
+- [x] **EVAL-03** : Soumettre une évaluation crée une `Evaluation` row avec `scoring_breakdown` (JSONB), `total_score`, `feedback_text`, `verdict` ; met à jour le statut de la Submission et recalcule le Score Projet du Player
 
 ### SCORE — Calcul de scores
 
-- [ ] **SCORE-01** : Le Score Projet d'un Player est la somme des `total_score` des Evaluations validées sur ses Submissions, calculé serveur (jamais saisi côté client)
+- [x] **SCORE-01** : Le Score Projet d'un Player est la somme des `total_score` des Evaluations validées sur ses Submissions, calculé serveur (jamais saisi côté client)
 - [x] **SCORE-02** : Le Score Projet est consultable temps réel par le Player sur `/journey`, par le Mentor sur `/mentor`, et par le GameMaster sur `/admin`
 
 ### JURY — Pitch jury jour 2
