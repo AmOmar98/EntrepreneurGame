@@ -85,9 +85,9 @@
 
 ### DEPLOY — Déploiement
 
-- [ ] **DEPLOY-01** : App déployée sur Vercel sur un domaine accessible (`entrepreneur-game.vercel.app` ou domaine custom EIC selon décision §7)
-- [ ] **DEPLOY-02** : Variables d'environnement `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` configurées sur Vercel pointant vers le projet Supabase prod
-- [ ] **DEPLOY-03** : Smoke test E2E manuel passant : signup admin → import CSV → login Player → onboarding → submit livrable → login Mentor → évaluation → V2 → publication résultats. Effectué en J5 sur l'URL prod.
+- [x] **DEPLOY-01** : App déployée sur Vercel sur un domaine accessible (`entrepreneur-game.vercel.app` ou domaine custom EIC selon décision §7)
+- [x] **DEPLOY-02** : Variables d'environnement `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` configurées sur Vercel pointant vers le projet Supabase prod
+- [x] **DEPLOY-03** : Smoke test E2E manuel passant : signup admin → import CSV → login Player → onboarding → submit livrable → login Mentor → évaluation → V2 → publication résultats. Effectué en J5 sur l'URL prod.
 
 ---
 
