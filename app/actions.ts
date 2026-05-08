@@ -3,10 +3,17 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { pathForRole } from "@/lib/auth";
 import type { AppRole } from "@/lib/types";
+import {
+  parseCsv,
+  dedupeCsvRows,
+  slugifyTeam,
+  type ImportReport,
+} from "@/lib/admin-import";
 
 export type WorkflowState = { ok: boolean; message: string };
 
@@ -483,4 +490,328 @@ export async function evaluateSubmission(
   revalidatePath(`/journey/deliverable/${submission.deliverable_template_id}`);
   revalidatePath("/journey");
   return { ok: true, message: "Evaluation enregistree." };
+}
+
+// ============================================================================
+// CSV Import (ONBOARD-01, ADMIN-01) - GameMaster bulk import
+// ============================================================================
+
+export type ImportWorkflowState = WorkflowState & { report?: ImportReport };
+
+const importSchema = z.object({
+  csvText: z.string().min(10).max(200_000),
+  cohortSlug: z.string().min(2).max(64).default("hack-days-mai-2026"),
+});
+
+const DEFAULT_COHORT_NAME = "Hack-Days Mai 2026";
+
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+function buildServiceClient(): ServiceClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || key === "replace-me") return null;
+  return createServiceClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
+ * GameMaster CSV bulk import.
+ * - Idempotent: re-running the same CSV produces created=0, membersAdded=0.
+ * - Service-role optional: when absent, missing users are flagged invitesSkipped.
+ * - All Supabase errors are surfaced via report.errors; never throws.
+ */
+export async function importPlayersCsv(
+  _prev: ImportWorkflowState,
+  formData: FormData,
+): Promise<ImportWorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  // 1. Validate input.
+  const parsed = importSchema.safeParse({
+    csvText: formData.get("csvText"),
+    cohortSlug: formData.get("cohortSlug") ?? "hack-days-mai-2026",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  // 2. AuthZ: must be authenticated game_master.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve aux GameMasters." };
+  }
+
+  // 3. Parse + dedupe.
+  const { rows: parsedRows, errors: parseErrors } = parseCsv(parsed.data.csvText);
+  const rows = dedupeCsvRows(parsedRows);
+  const report: ImportReport = {
+    created: 0,
+    alreadyExisted: 0,
+    membersAdded: 0,
+    invitesSent: 0,
+    invitesSkipped: 0,
+    errors: parseErrors.map((e) => ({ line: e.line, email: e.email, reason: e.reason })),
+  };
+  if (rows.length === 0) {
+    return {
+      ok: report.errors.length === 0,
+      message: "Aucune ligne valide a importer.",
+      report,
+    };
+  }
+
+  // 4. Resolve current event (latest by starts_at).
+  const { data: eventRow, error: eventErr } = await supabase
+    .from("events")
+    .select("id")
+    .order("starts_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (eventErr) {
+    report.errors.push({ reason: `events: ${eventErr.message}` });
+    return { ok: false, message: eventErr.message, report };
+  }
+  if (!eventRow) {
+    report.errors.push({ reason: "Aucun event configure." });
+    return { ok: false, message: "Aucun event configure.", report };
+  }
+  const eventId = (eventRow as { id: string }).id;
+
+  // 5. Resolve / upsert cohort by (event_id, slug).
+  const cohortSlug = parsed.data.cohortSlug;
+  const { data: existingCohort, error: cohortSelErr } = await supabase
+    .from("cohorts")
+    .select("id")
+    .eq("event_id", eventId)
+    .eq("slug", cohortSlug)
+    .maybeSingle();
+  if (cohortSelErr) {
+    report.errors.push({ reason: `cohorts select: ${cohortSelErr.message}` });
+    return { ok: false, message: cohortSelErr.message, report };
+  }
+  let cohortId: string;
+  if (existingCohort) {
+    cohortId = (existingCohort as { id: string }).id;
+  } else {
+    const { data: insCohort, error: cohortInsErr } = await supabase
+      .from("cohorts")
+      .insert({ event_id: eventId, slug: cohortSlug, name: DEFAULT_COHORT_NAME })
+      .select("id")
+      .maybeSingle();
+    if (cohortInsErr || !insCohort) {
+      const msg = cohortInsErr?.message ?? "cohort insert failed";
+      report.errors.push({ reason: `cohorts insert: ${msg}` });
+      return { ok: false, message: msg, report };
+    }
+    cohortId = (insCohort as { id: string }).id;
+  }
+
+  // 6. Service-role admin client (optional, for invites + auth.users lookup).
+  const adminClient = buildServiceClient();
+
+  // Helper: resolve user_id for an email. Tries admin API first, then profiles.
+  async function resolveUserIdByEmail(email: string): Promise<string | null> {
+    if (adminClient) {
+      // listUsers with a filter — Supabase does not expose a direct "by email" endpoint
+      // in supabase-js v2; we use admin.listUsers with a per-page scan limited to 1000.
+      // For pilot scale (< 100 emails) this is fine.
+      try {
+        const { data, error } = await adminClient.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
+        if (!error && data?.users) {
+          const found = data.users.find(
+            (u) => (u.email ?? "").toLowerCase() === email.toLowerCase(),
+          );
+          if (found) return found.id;
+        }
+      } catch {
+        // fall through to profiles lookup
+      }
+    }
+    const { data } = await supabase!
+      .from("profiles")
+      .select("user_id")
+      .eq("email", email)
+      .maybeSingle();
+    return (data as { user_id?: string } | null)?.user_id ?? null;
+  }
+
+  // 7. Iterate CSV rows.
+  for (const row of rows) {
+    const baseSlug = slugifyTeam(row.teamName);
+    if (!baseSlug) {
+      report.errors.push({ reason: `Slug vide pour team_name="${row.teamName}"` });
+      continue;
+    }
+
+    // Find existing player by base slug.
+    const { data: existingPlayer, error: playerSelErr } = await supabase
+      .from("players")
+      .select("id, name, cohort_id, slug")
+      .eq("slug", baseSlug)
+      .maybeSingle();
+    if (playerSelErr) {
+      report.errors.push({ reason: `players select: ${playerSelErr.message}` });
+      continue;
+    }
+
+    let playerId: string;
+    let isNewPlayer = false;
+    if (
+      existingPlayer &&
+      (existingPlayer as { cohort_id: string }).cohort_id === cohortId &&
+      (existingPlayer as { name: string }).name === row.teamName
+    ) {
+      playerId = (existingPlayer as { id: string }).id;
+      report.alreadyExisted += 1;
+    } else {
+      // Slug collision in another cohort: append "-{cohortSlug}".
+      const slugToUse = existingPlayer ? `${baseSlug}-${cohortSlug}` : baseSlug;
+      const { data: insPlayer, error: playerInsErr } = await supabase
+        .from("players")
+        .insert({
+          cohort_id: cohortId,
+          slug: slugToUse,
+          name: row.teamName,
+          idea: row.projectPitch,
+        })
+        .select("id")
+        .maybeSingle();
+      if (playerInsErr || !insPlayer) {
+        report.errors.push({
+          reason: `players insert "${row.teamName}": ${playerInsErr?.message ?? "unknown"}`,
+        });
+        continue;
+      }
+      playerId = (insPlayer as { id: string }).id;
+      report.created += 1;
+      isNewPlayer = true;
+    }
+
+    // Process emails: leader first (team_role='owner'), then members ('contributor').
+    const emailEntries: { email: string; teamRole: "owner" | "contributor" }[] = [
+      { email: row.leaderEmail, teamRole: "owner" },
+      ...row.memberEmails.map((e) => ({ email: e, teamRole: "contributor" as const })),
+    ];
+
+    for (const entry of emailEntries) {
+      const email = entry.email.toLowerCase();
+      try {
+        let userId = await resolveUserIdByEmail(email);
+
+        // Invite via service role if user missing.
+        if (!userId) {
+          if (!adminClient) {
+            report.invitesSkipped += 1;
+            report.errors.push({
+              email,
+              reason: "service role missing - invite skipped",
+            });
+            continue;
+          }
+          const { data: invite, error: inviteErr } =
+            await adminClient.auth.admin.inviteUserByEmail(email, {
+              data: { team_name: row.teamName },
+            });
+          if (inviteErr || !invite?.user) {
+            report.errors.push({
+              email,
+              reason: `invite: ${inviteErr?.message ?? "unknown"}`,
+            });
+            continue;
+          }
+          userId = invite.user.id;
+          report.invitesSent += 1;
+        }
+
+        // Ensure profiles row exists (so role-gating works on first login).
+        // Upsert app_role='player' + email; do not override an existing role.
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("user_id, app_role")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!existingProfile) {
+          const { error: profileInsErr } = await supabase.from("profiles").insert({
+            user_id: userId,
+            app_role: "player",
+            email,
+          });
+          if (profileInsErr && !profileInsErr.message.includes("duplicate")) {
+            report.errors.push({ email, reason: `profile insert: ${profileInsErr.message}` });
+          }
+        }
+
+        // Idempotent player_member upsert: select first, then insert if missing.
+        const { data: existingMember } = await supabase
+          .from("player_members")
+          .select("id")
+          .eq("player_id", playerId)
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!existingMember) {
+          const { error: memberInsErr } = await supabase.from("player_members").insert({
+            player_id: playerId,
+            user_id: userId,
+            role: "player",
+            team_role: entry.teamRole,
+          });
+          if (memberInsErr) {
+            // Unique constraint -> treat as already-linked (idempotent).
+            if ((memberInsErr as { code?: string }).code !== "23505") {
+              report.errors.push({
+                email,
+                reason: `member insert: ${memberInsErr.message}`,
+              });
+            }
+            continue;
+          }
+          report.membersAdded += 1;
+        }
+      } catch (err) {
+        report.errors.push({
+          email,
+          reason: `unexpected: ${(err as Error).message}`,
+        });
+      }
+    }
+
+    // Defensive: if newly created player but no leader linked, log it (not a failure).
+    if (isNewPlayer) {
+      // no-op marker for readability
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/players/import");
+
+  const ok = report.errors.length === 0;
+  const message = ok
+    ? `Import termine: ${report.created} cree(s), ${report.alreadyExisted} deja existant(s), ${report.membersAdded} membre(s) ajoute(s), ${report.invitesSent} invite(s).`
+    : `Import termine avec ${report.errors.length} erreur(s).`;
+  return { ok, message, report };
 }
