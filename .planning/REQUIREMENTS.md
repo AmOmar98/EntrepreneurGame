@@ -55,9 +55,9 @@
 
 - [x] **JURY-01** : Sur `/jury` (accès Mentor), pour chaque Player de la cohorte, le Mentor-Juré peut saisir 5 notes (clarté pitch / structure deck / crédibilité / qualité roadmap / qualité oral), chacune sur 20 points
 - [x] **JURY-02** : Une soumission jury crée une `PitchScore` row (juror_id × player_id, contrainte unique) ; resoumission = update
-- [ ] **JURY-03** : Le classement final est calculé : pour chaque Player, moyenne des PitchScore + Score Projet pondéré (pondération configurable, par défaut 50/50)
-- [ ] **JURY-04** : Sur `/results`, GameMaster voit le classement complet ; les autres rôles voient une page « Résultats à venir » jusqu'à `events.results_published_at`
-- [ ] **JURY-05** : GameMaster peut publier les résultats via un bouton « Publier » qui set `events.results_published_at = now()` ; à partir de ce moment, `/results` est accessible à tous
+- [x] **JURY-03** : Le classement final est calculé : pour chaque Player, moyenne des PitchScore + Score Projet pondéré (pondération configurable, par défaut 50/50)
+- [x] **JURY-04** : Sur `/results`, GameMaster voit le classement complet ; les autres rôles voient une page « Résultats à venir » jusqu'à `events.results_published_at`
+- [x] **JURY-05** : GameMaster peut publier les résultats via un bouton « Publier » qui set `events.results_published_at = now()` ; à partir de ce moment, `/results` est accessible à tous
 
 ### ADMIN — Vue GameMaster
 
