@@ -35,10 +35,10 @@
 
 ### SUBMIT — Soumission de livrables
 
-- [ ] **SUBMIT-01** : Sur `/journey/deliverable/[id]`, Player peut soumettre une `Submission` avec au moins un de `proof_url` (https://) ou `proof_text` (markdown ≤ 4000 chars) ; validation Zod côté server action
-- [ ] **SUBMIT-02** : Une Submission V1 (status=`submitted_v1`) ne peut plus être modifiée par le Player tant que le Mentor n'a pas demandé V2
+- [x] **SUBMIT-01** : Sur `/journey/deliverable/[id]`, Player peut soumettre une `Submission` avec au moins un de `proof_url` (https://) ou `proof_text` (markdown ≤ 4000 chars) ; validation Zod côté server action
+- [x] **SUBMIT-02** : Une Submission V1 (status=`submitted_v1`) ne peut plus être modifiée par le Player tant que le Mentor n'a pas demandé V2
 - [ ] **SUBMIT-03** : Si le Mentor demande V2 (verdict=`revision`), le Player peut soumettre une nouvelle Submission V2 (version=2, status=`submitted_v2`) ; le score final retenu est celui de V2
-- [ ] **SUBMIT-04** : Le Player ne peut pas soumettre de livrable d'un autre Player (vérification owner via `player_members` + `auth.getUser()`) — RLS + check applicatif
+- [x] **SUBMIT-04** : Le Player ne peut pas soumettre de livrable d'un autre Player (vérification owner via `player_members` + `auth.getUser()`) — RLS + check applicatif
 
 ### EVAL — Évaluation Mentor
 
