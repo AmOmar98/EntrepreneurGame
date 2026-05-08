@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
-status: unknown
-last_updated: "2026-05-08T20:05:37.969Z"
+status: Ready to plan
+last_updated: "2026-05-08T20:17:19.887Z"
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 12
-  percent: 100
+  total_plans: 15
+  completed_plans: 13
+  percent: 87
 ---
 
 # Project State
@@ -73,3 +73,4 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 02]: Likert q1..q5 et membres present non persistes (pas de table diagnostic Phase 1) - validation server-side conservee pour UX
 - [Phase 02]: Plan 03: V2 fully blocked at action level until Phase 3 introduces verdict-based gating
 - [Phase 02]: Phase 2 cloturee : i18n complet, anti-leak audite clean, SMOKE.md livre comme procedure UAT executable avant 13 mai.
+- [Phase 03]: Mentor data layer aggregates submissions+evaluations in two bulk queries (no N+1), per-player pending derived from status + connected user's evaluations
