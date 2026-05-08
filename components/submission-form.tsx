@@ -13,10 +13,17 @@ const t = dictionaries.fr;
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
-export function SubmissionForm({ deliverableTemplateId }: { deliverableTemplateId: string }) {
+export function SubmissionForm({
+  deliverableTemplateId,
+  version = 1,
+}: {
+  deliverableTemplateId: string;
+  version?: 1 | 2;
+}) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitDeliverable, initialState);
   const [kind, setKind] = useState<"proof_url" | "proof_text">("proof_url");
+  const submitLabel = version === 2 ? t.submission_v2_submit : t.submission_submit;
 
   useEffect(() => {
     if (state.ok) {
@@ -119,7 +126,7 @@ export function SubmissionForm({ deliverableTemplateId }: { deliverableTemplateI
           alignSelf: "flex-start",
         }}
       >
-        {pending ? t.submission_submitting : t.submission_submit}
+        {pending ? t.submission_submitting : submitLabel}
       </button>
 
       {state.message ? (
