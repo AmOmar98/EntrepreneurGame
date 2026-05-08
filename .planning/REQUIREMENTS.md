@@ -29,9 +29,9 @@
 
 ### JOURNEY — Parcours Player
 
-- [ ] **JOURNEY-01** : Sur `/journey`, Player voit en header le nom de son équipe, son niveau actuel (déduit du dernier livrable validé), et son Score Projet en temps réel
-- [ ] **JOURNEY-02** : Sur `/journey`, Player voit la timeline des ateliers du jour avec statut (à venir / en cours / passé)
-- [ ] **JOURNEY-03** : Sur `/journey`, Player voit la liste des DeliverableTemplates du jour, chacun avec son statut (à rendre / brouillon / soumis V1 / feedback reçu / V2 soumis / validé) et un bouton d'action (Soumettre / Voir feedback / Re-soumettre)
+- [x] **JOURNEY-01** : Sur `/journey`, Player voit en header le nom de son équipe, son niveau actuel (déduit du dernier livrable validé), et son Score Projet en temps réel
+- [x] **JOURNEY-02** : Sur `/journey`, Player voit la timeline des ateliers du jour avec statut (à venir / en cours / passé)
+- [x] **JOURNEY-03** : Sur `/journey`, Player voit la liste des DeliverableTemplates du jour, chacun avec son statut (à rendre / brouillon / soumis V1 / feedback reçu / V2 soumis / validé) et un bouton d'action (Soumettre / Voir feedback / Re-soumettre)
 
 ### SUBMIT — Soumission de livrables
 
