@@ -3,14 +3,17 @@ import { AppShell } from "@/components/app-shell";
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getCurrentRole, pathForRole } from "@/lib/auth";
+import { dictionaries } from "@/lib/i18n";
 import { OnboardingForm, type OnboardingMember } from "@/components/onboarding-form";
+
+const t = dictionaries.fr;
 
 export default async function OnboardingPage() {
   if (!hasSupabaseEnv()) {
     return (
       <main style={{ padding: 24 }}>
-        <h1>Onboarding</h1>
-        <p>Onboarding necessite la configuration Supabase de production.</p>
+        <h1>{t.onboarding_title}</h1>
+        <p>{t.onboarding_demo_disabled}</p>
       </main>
     );
   }
@@ -19,8 +22,8 @@ export default async function OnboardingPage() {
   if (!supabase) {
     return (
       <main style={{ padding: 24 }}>
-        <h1>Onboarding</h1>
-        <p>Onboarding necessite la configuration Supabase de production.</p>
+        <h1>{t.onboarding_title}</h1>
+        <p>{t.onboarding_demo_disabled}</p>
       </main>
     );
   }
@@ -49,8 +52,8 @@ export default async function OnboardingPage() {
     return (
       <AppShell role="player">
         <main style={{ padding: 24 }}>
-          <h1>Onboarding</h1>
-          <p>Aucun Player rattache a votre compte. Contactez le GameMaster.</p>
+          <h1>{t.onboarding_title}</h1>
+          <p>{t.onboarding_no_player}</p>
         </main>
       </AppShell>
     );
@@ -82,10 +85,8 @@ export default async function OnboardingPage() {
     <AppShell role="player">
       <main style={{ padding: 24, display: "grid", gap: 24 }}>
         <header>
-          <h1>Bienvenue dans l&apos;Entrepreneur Game</h1>
-          <p>
-            Niveau 0 - Diagnostic initial. Renseignez votre equipe et votre idee pour debloquer le parcours.
-          </p>
+          <h1>{t.onboarding_title}</h1>
+          <p>{t.onboarding_header_subtitle}</p>
         </header>
         <OnboardingForm
           initialName={player.name ?? ""}

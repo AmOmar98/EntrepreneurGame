@@ -3,6 +3,9 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveOnboarding, type WorkflowState } from "@/app/actions";
+import { dictionaries } from "@/lib/i18n";
+
+const t = dictionaries.fr;
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -13,11 +16,11 @@ export type OnboardingMember = {
 };
 
 const LIKERT_QUESTIONS: { id: "q1" | "q2" | "q3" | "q4" | "q5"; label: string }[] = [
-  { id: "q1", label: "Notre probleme client est clairement identifie." },
-  { id: "q2", label: "Nous avons deja parle a au moins 5 utilisateurs cibles." },
-  { id: "q3", label: "Nous avons une solution pressentie." },
-  { id: "q4", label: "Nous connaissons notre marche et la concurrence." },
-  { id: "q5", label: "Nous savons comment nous allons monetiser." },
+  { id: "q1", label: t.onboarding_q1 },
+  { id: "q2", label: t.onboarding_q2 },
+  { id: "q3", label: t.onboarding_q3 },
+  { id: "q4", label: t.onboarding_q4 },
+  { id: "q5", label: t.onboarding_q5 },
 ];
 
 const LIKERT_SCALE = [1, 2, 3, 4, 5];
@@ -45,7 +48,7 @@ export function OnboardingForm({
     <form action={formAction} style={{ display: "grid", gap: 24, maxWidth: 720 }}>
       <section style={{ display: "grid", gap: 8 }}>
         <label htmlFor="teamName">
-          <strong>Nom d&apos;equipe</strong>
+          <strong>{t.onboarding_team_name}</strong>
         </label>
         <input
           id="teamName"
@@ -61,7 +64,7 @@ export function OnboardingForm({
 
       <section style={{ display: "grid", gap: 8 }}>
         <label htmlFor="idea">
-          <strong>Idee de projet</strong>
+          <strong>{t.onboarding_idea}</strong>
         </label>
         <textarea
           id="idea"
@@ -74,12 +77,12 @@ export function OnboardingForm({
           onChange={(e) => setIdea(e.target.value)}
           style={{ padding: 8, borderRadius: 6, border: "1px solid #d0d4dc" }}
         />
-        <small aria-live="polite">{idea.length} / 500 caracteres</small>
+        <small aria-live="polite">{idea.length} / 500 {t.onboarding_idea_counter}</small>
       </section>
 
       <fieldset style={{ display: "grid", gap: 12, border: "1px solid #d0d4dc", padding: 12, borderRadius: 6 }}>
         <legend>
-          <strong>Diagnostic initial (1 = pas du tout, 5 = tout a fait)</strong>
+          <strong>{t.onboarding_diagnostic_legend}</strong>
         </legend>
         {LIKERT_QUESTIONS.map((q) => (
           <div key={q.id} style={{ display: "grid", gap: 4 }}>
@@ -99,13 +102,13 @@ export function OnboardingForm({
       {members.length > 0 && (
         <fieldset style={{ display: "grid", gap: 8, border: "1px solid #d0d4dc", padding: 12, borderRadius: 6 }}>
           <legend>
-            <strong>Membres presents</strong>
+            <strong>{t.onboarding_members}</strong>
           </legend>
           {members.map((m) => (
             <label key={m.userId} style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input type="checkbox" name="membersConfirmed" value={m.userId} defaultChecked />
               <span>
-                {m.fullName ?? "(sans nom)"} {m.email ? `- ${m.email}` : ""}
+                {m.fullName ?? t.onboarding_member_unnamed} {m.email ? `- ${m.email}` : ""}
               </span>
             </label>
           ))}
@@ -125,7 +128,7 @@ export function OnboardingForm({
             cursor: pending ? "wait" : "pointer",
           }}
         >
-          {pending ? "Enregistrement..." : "Valider et demarrer"}
+          {pending ? t.onboarding_submitting : t.onboarding_submit}
         </button>
         {state.message && (
           <span role="status" style={{ color: state.ok ? "#1f7a3a" : "#b3261e" }}>
