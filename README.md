@@ -39,3 +39,15 @@ database/rls.sql
 ```
 
 Then create users in Supabase Auth, add their rows to `profiles` and `user_roles`, create startups through `/admin/startups`, and assign founders/coaches.
+
+## Deploy
+
+The app is deployed on Vercel for the pilot. See [`docs/DEPLOY.md`](docs/DEPLOY.md) for the full deployment guide:
+
+- First-time setup (Vercel link + env vars + Supabase Auth config)
+- Continuous deploy procedure (push to `master`)
+- Rollback procedure (code + DB)
+- Custom domain configuration
+- Troubleshooting
+
+After every production deploy, execute the smoke test checklist in [`.planning/phases/05-pitch-jury-results-smoke-test-e2e-deploiement-vercel-prod/SMOKE-TEST-E2E.md`](.planning/phases/05-pitch-jury-results-smoke-test-e2e-deploiement-vercel-prod/SMOKE-TEST-E2E.md) before opening to internal testers.
