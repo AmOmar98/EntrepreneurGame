@@ -89,3 +89,29 @@ Objectif : valider le flux complet bout-en-bout sur l'URL prod avant ouverture a
 
 ## Notes / observations
 _Espace libre pour noter toute anomalie, lenteur, UX bizarre meme non-bloquante_
+
+---
+
+## Phase 5 closeout (Plan 05-05) - Auto-validation status
+
+**Mode** : FULL AUTO closeout - 2026-05-08
+
+Le re-run final du smoke test E2E est documente comme **action operateur (Omar) avant 12 mai 2026 (J-1)**. Le plan 05-05 en mode FULL AUTO ne fait pas de fausse signature : la checklist est prete, les artefacts (vercel.json, DEPLOY.md, RLS test SQL, INTERNAL-TESTERS.md) sont livres et le build local (typecheck/lint/build) passe vert.
+
+### Pre-UAT automated checks (2026-05-08)
+- [x] `npm run typecheck` - PASS (0 erreur TS)
+- [x] `npm run lint` - PASS (0 warning)
+- [x] `npm run build` - PASS (17 routes, middleware 89.6 kB)
+- [x] vercel.json valide (region cdg1 + 3 headers securite)
+- [x] DEPLOY.md complet (pre-requis + procedure + rollback)
+- [x] RLS test suite (`database/rls_test.sql`) prete a executer
+
+### Blockers actuels : NONE
+
+### Action operateur requise avant 13 mai 2026
+1. Importer testeurs internes via `/admin/players/import` (cf. `INTERNAL-TESTERS.md`)
+2. Executer `database/rls_test.sql` dans SQL editor Supabase + remplir `RLS-TEST-RESULTS.md` (verdict ALL PASS requis)
+3. Push prod sur Vercel + configurer env vars (cf. `docs/DEPLOY.md`)
+4. Re-executer cette checklist sur l'URL prod et cocher Verdict PASS
+5. Si bug bloquant : logger dans STATE.md > Blockers + plan ad-hoc
+
