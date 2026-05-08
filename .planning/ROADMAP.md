@@ -53,7 +53,16 @@ Plans:
 2. Sur `/journey`, Player voit header (équipe, niveau, score), timeline ateliers du jour, liste des DeliverableTemplates avec statuts corrects
 3. Sur `/journey/deliverable/[id]`, Player peut soumettre une Submission V1 (proof_url ou proof_text) ; après soumission, statut = `submitted_v1` et formulaire se verrouille
 4. Player ne peut pas accéder à `/journey/deliverable/[id]` d'un autre Player (RLS + check applicatif) ni soumettre pour un autre Player
-5. En mode Supabase prod, aucune fuite du seed (`atlas-soil`, etc.) — `lib/workflow-data.ts` retourne tableaux vides quand DB est vide
+5. En mode Supabase prod, aucune fuite du seed (`atlas-soil`, etc.) — `lib/seed/index.ts` retourne tableaux vides quand env Supabase est present
+
+**Plans:** 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Onboarding Niveau 0 form + saveOnboarding action + middleware redirect
+- [ ] 02-02-PLAN.md — /journey page (header + timeline + deliverables list with status)
+- [ ] 02-03-PLAN.md — /journey/deliverable/[id] page + submitDeliverable V1 action
+- [ ] 02-04-PLAN.md — Seed Event Hack-Days SQL idempotent + DATA-03 anti-leak audit
+- [ ] 02-05-PLAN.md — Polish i18n + smoke test E2E manuel + handoff Phase 3
 
 ---
 
@@ -159,4 +168,4 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
 ---
 
-*Last updated: 2026-05-08 after roadmap creation*
+*Last updated: 2026-05-08 after Phase 2 plan creation*
