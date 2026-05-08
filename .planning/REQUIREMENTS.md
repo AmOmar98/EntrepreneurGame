@@ -22,8 +22,8 @@
 
 ### EVENT — Événement et configuration
 
-- [ ] **EVENT-01** : Au déploiement, un Event seed « Hack-Days Fès-Meknès Mai 2026 » est créé avec 6 Missions correspondant aux ateliers du programme PDF Tamwilcom et ~9 DeliverableTemplates (Business Model Canvas, Étude de marché, Fiche Personae, Fiche Produit + Plan Dév, Coûts & prévisions ventes, Stratégie prix/ventes/canaux, + livrables ateliers 3-4-5 à confirmer)
-- [ ] **EVENT-02** : Chaque DeliverableTemplate a une `scoring_rubric` JSONB (4-5 critères pondérés selon brief Section 14) et un `due_at` aligné sur la timeline du programme
+- [x] **EVENT-01** : Au déploiement, un Event seed « Hack-Days Fès-Meknès Mai 2026 » est créé avec 6 Missions correspondant aux ateliers du programme PDF Tamwilcom et ~9 DeliverableTemplates (Business Model Canvas, Étude de marché, Fiche Personae, Fiche Produit + Plan Dév, Coûts & prévisions ventes, Stratégie prix/ventes/canaux, + livrables ateliers 3-4-5 à confirmer)
+- [x] **EVENT-02** : Chaque DeliverableTemplate a une `scoring_rubric` JSONB (4-5 critères pondérés selon brief Section 14) et un `due_at` aligné sur la timeline du programme
 - [ ] **EVENT-03** : Les 8 Levels (Niveau 0 à 7 du brief) sont seedés en table de référence statique au déploiement
 - [ ] **EVENT-04** : Toutes les tables liées (players, missions, submissions, pitch_scores) ont une colonne `event_id NOT NULL` ; pour le pilote, hardcodée à l'event seed (multi-event = SHOULD/V2)
 
@@ -78,7 +78,7 @@
 
 - [ ] **DATA-01** : Schema Postgres appliqué sur le projet Supabase prod (création/migration). Comprend les tables : events, levels, missions, deliverable_templates, cohorts, players, player_members, submissions, evaluations, pitch_scores, et leurs FK + index sur les FK chaudes
 - [ ] **DATA-02** : RLS policies en place : Player ne voit que ses propres Submissions/Evaluations + données publiques (DeliverableTemplates, Missions, Levels, Event public info) ; Mentor voit tous les Players de l'event ; GameMaster voit tout. Test exhaustif RLS avec 2 comptes Player factices avant 13 mai.
-- [ ] **DATA-03** : `lib/workflow-data.ts` ne tombe plus sur le seed quand `hasSupabaseEnv()` est true et que la DB est vide → retourne tableaux vides (suppression du leak)
+- [x] **DATA-03** : `lib/workflow-data.ts` ne tombe plus sur le seed quand `hasSupabaseEnv()` est true et que la DB est vide → retourne tableaux vides (suppression du leak)
 - [ ] **DATA-04** : Toutes les server actions retournent un `WorkflowState = { ok, message, data? }` ; aucune `return;` silencieuse, aucune erreur Supabase swallow
 - [ ] **DATA-05** : Lucide-react repinné à une version résolue correctement (corrige le `^1.14.0` suspect identifié dans `.planning/codebase/CONCERNS.md`)
 - [ ] **DATA-06** : Code mort supprimé : `BonusEvent`, `bonusRules`, `prestige_xp`, enums `Stage`/`Checkpoint`/`MaturityPhase`/`BonusType`, pages `/committee`, `/admin/game`, `/admin/startups`, mailto drafts, exports `committee.csv`/`eml`/`kpi-snapshot`. `lib/data.ts` éclaté en `lib/types.ts` + `lib/seed/*.ts` + `lib/score.ts` + `lib/icons.ts`.
