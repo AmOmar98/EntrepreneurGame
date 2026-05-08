@@ -1,0 +1,301 @@
+// Phase 2 / Plan 02 - Journey data layer.
+// Single source of truth for the /journey page: resolves the connected Player,
+// fetches today's missions + their deliverable templates, computes statuses.
+// Dual-mode (DATA-03): in demo mode (no Supabase env) returns an empty payload
+// rather than leaking seed names into the UI.
+import { createClient } from "@/utils/supabase/server";
+import type {
+  DeliverableTemplate,
+  LevelId,
+  Mission,
+  Player,
+  RubricCriterion,
+  SubmissionStatus,
+} from "@/lib/types";
+
+export type DeliverableStatus = "a_rendre" | SubmissionStatus;
+
+export type JourneyDeliverable = {
+  template: DeliverableTemplate;
+  status: DeliverableStatus;
+  latestSubmissionId: string | null;
+};
+
+export type MissionStatus = "a_venir" | "en_cours" | "passe";
+
+export type JourneyMission = {
+  mission: Mission;
+  status: MissionStatus;
+  deliverables: JourneyDeliverable[];
+};
+
+export type JourneyData = {
+  player: Player | null;
+  levelLabel: string;
+  missions: JourneyMission[];
+  empty: boolean;
+};
+
+// ============================================================================
+// Pure helpers (deterministic, easy to reason about)
+// ============================================================================
+
+// One-hour window: a mission is "en_cours" between scheduledAt and scheduledAt+1h.
+const MISSION_DURATION_MS = 60 * 60 * 1000;
+
+export function missionStatus(scheduledAt: string | null, now: Date): MissionStatus {
+  if (!scheduledAt) return "a_venir";
+  const t = new Date(scheduledAt).getTime();
+  if (Number.isNaN(t)) return "a_venir";
+  const n = now.getTime();
+  if (n < t) return "a_venir";
+  if (n <= t + MISSION_DURATION_MS) return "en_cours";
+  return "passe";
+}
+
+export function computeDeliverableStatus(
+  submissions: { id: string; version: number; status: SubmissionStatus }[],
+): { status: DeliverableStatus; latestSubmissionId: string | null } {
+  if (submissions.length === 0) {
+    return { status: "a_rendre", latestSubmissionId: null };
+  }
+  const latest = submissions.reduce((acc, cur) => (cur.version > acc.version ? cur : acc));
+  return { status: latest.status, latestSubmissionId: latest.id };
+}
+
+const LEVEL_LABELS: Record<LevelId, string> = {
+  L0_diagnostic: "Niveau 0 - Diagnostic",
+  L1_problem: "Niveau 1 - Probleme",
+  L2_solution: "Niveau 2 - Solution",
+  L3_market: "Niveau 3 - Marche",
+  L4_business_model: "Niveau 4 - Modele economique",
+  L5_pitch: "Niveau 5 - Pitch",
+  L6_traction: "Niveau 6 - Traction",
+  L7_alumni: "Niveau 7 - Alumni",
+};
+
+export function levelLabel(levelId: LevelId): string {
+  return LEVEL_LABELS[levelId] ?? String(levelId);
+}
+
+// Same calendar day in local time. We do not store timezone separately; pilot
+// runs in a single TZ (Africa/Casablanca) and the server runs UTC, so this is
+// intentionally a "best effort" same-date match.
+function sameLocalDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// ============================================================================
+// Row mappers (snake_case -> camelCase, mirrors the pattern used in app/actions.ts)
+// ============================================================================
+
+type PlayerRow = {
+  id: string;
+  cohort_id: string;
+  slug: string;
+  name: string;
+  idea: string | null;
+  current_level: LevelId;
+  status: Player["status"];
+  score_project: number | string;
+  score_engagement: number | string;
+  onboarded_at: string | null;
+};
+
+function mapPlayer(row: PlayerRow): Player {
+  return {
+    id: row.id,
+    cohortId: row.cohort_id,
+    slug: row.slug,
+    name: row.name,
+    idea: row.idea,
+    currentLevel: row.current_level,
+    status: row.status,
+    scoreProject: typeof row.score_project === "string" ? Number(row.score_project) : row.score_project,
+    scoreEngagement:
+      typeof row.score_engagement === "string" ? Number(row.score_engagement) : row.score_engagement,
+    onboardedAt: row.onboarded_at,
+  };
+}
+
+type MissionRow = {
+  id: string;
+  event_id: string;
+  level_id: LevelId;
+  ord: number;
+  kind: Mission["kind"];
+  title: string;
+  scheduled_at: string | null;
+};
+
+function mapMission(row: MissionRow): Mission {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    levelId: row.level_id,
+    ord: row.ord,
+    kind: row.kind,
+    title: row.title,
+    scheduledAt: row.scheduled_at,
+  };
+}
+
+type DeliverableTemplateRow = {
+  id: string;
+  mission_id: string;
+  slug: string;
+  title: string;
+  description: string;
+  rubric: RubricCriterion[] | null;
+  max_score: number;
+  ord: number;
+};
+
+function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplate {
+  return {
+    id: row.id,
+    missionId: row.mission_id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    rubric: Array.isArray(row.rubric) ? row.rubric : [],
+    maxScore: row.max_score,
+    ord: row.ord,
+  };
+}
+
+// ============================================================================
+// Server-side accessors
+// ============================================================================
+
+export async function getPlayerForUser(userId: string): Promise<Player | null> {
+  const supabase = await createClient();
+  if (!supabase) return null;
+
+  const { data: membership, error: memberErr } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (memberErr || !membership) return null;
+
+  const { data: playerRow, error: playerErr } = await supabase
+    .from("players")
+    .select(
+      "id, cohort_id, slug, name, idea, current_level, status, score_project, score_engagement, onboarded_at",
+    )
+    .eq("id", membership.player_id)
+    .maybeSingle();
+  if (playerErr || !playerRow) return null;
+
+  return mapPlayer(playerRow as PlayerRow);
+}
+
+const EMPTY: JourneyData = { player: null, levelLabel: "", missions: [], empty: true };
+
+export async function getJourneyData(userId: string, now: Date = new Date()): Promise<JourneyData> {
+  const supabase = await createClient();
+  if (!supabase) return EMPTY;
+
+  const player = await getPlayerForUser(userId);
+  if (!player) return EMPTY;
+
+  // Resolve event via cohort.
+  const { data: cohortRow } = await supabase
+    .from("cohorts")
+    .select("event_id")
+    .eq("id", player.cohortId)
+    .maybeSingle();
+  if (!cohortRow) {
+    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+  }
+  const eventId = (cohortRow as { event_id: string }).event_id;
+
+  // Fetch missions for this event ordered.
+  const { data: missionRows } = await supabase
+    .from("missions")
+    .select("id, event_id, level_id, ord, kind, title, scheduled_at")
+    .eq("event_id", eventId)
+    .order("scheduled_at", { ascending: true, nullsFirst: false })
+    .order("level_id", { ascending: true })
+    .order("ord", { ascending: true });
+
+  const allMissions = ((missionRows ?? []) as MissionRow[]).map(mapMission);
+
+  // Filter to today's missions (or unscheduled, treated as "a_venir" today).
+  const todayMissions = allMissions.filter((m) => {
+    if (!m.scheduledAt) return true;
+    const dt = new Date(m.scheduledAt);
+    if (Number.isNaN(dt.getTime())) return false;
+    return sameLocalDay(dt, now);
+  });
+
+  if (todayMissions.length === 0) {
+    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+  }
+
+  const missionIds = todayMissions.map((m) => m.id);
+
+  // Fetch deliverable templates linked to today's missions.
+  const { data: tplRows } = await supabase
+    .from("deliverable_templates")
+    .select("id, mission_id, slug, title, description, rubric, max_score, ord")
+    .in("mission_id", missionIds)
+    .order("ord", { ascending: true });
+  const templates = ((tplRows ?? []) as DeliverableTemplateRow[]).map(mapDeliverableTemplate);
+
+  // Fetch this player's submissions for these templates.
+  const tplIds = templates.map((t) => t.id);
+  let submissions: { id: string; deliverable_template_id: string; version: number; status: SubmissionStatus }[] = [];
+  if (tplIds.length > 0) {
+    const { data: subRows } = await supabase
+      .from("submissions")
+      .select("id, deliverable_template_id, version, status")
+      .eq("player_id", player.id)
+      .in("deliverable_template_id", tplIds);
+    submissions = (subRows ?? []) as typeof submissions;
+  }
+
+  // Group templates by mission, attach status.
+  const tplByMission = new Map<string, DeliverableTemplate[]>();
+  for (const tpl of templates) {
+    const arr = tplByMission.get(tpl.missionId) ?? [];
+    arr.push(tpl);
+    tplByMission.set(tpl.missionId, arr);
+  }
+
+  const subByTemplate = new Map<string, typeof submissions>();
+  for (const s of submissions) {
+    const arr = subByTemplate.get(s.deliverable_template_id) ?? [];
+    arr.push(s);
+    subByTemplate.set(s.deliverable_template_id, arr);
+  }
+
+  const missions: JourneyMission[] = todayMissions.map((mission) => {
+    const tpls = tplByMission.get(mission.id) ?? [];
+    const deliverables: JourneyDeliverable[] = tpls.map((template) => {
+      const subs = subByTemplate.get(template.id) ?? [];
+      const { status, latestSubmissionId } = computeDeliverableStatus(
+        subs.map((s) => ({ id: s.id, version: s.version, status: s.status })),
+      );
+      return { template, status, latestSubmissionId };
+    });
+    return {
+      mission,
+      status: missionStatus(mission.scheduledAt, now),
+      deliverables,
+    };
+  });
+
+  return {
+    player,
+    levelLabel: levelLabel(player.currentLevel),
+    missions,
+    empty: false,
+  };
+}
