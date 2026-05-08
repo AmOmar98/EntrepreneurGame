@@ -137,6 +137,15 @@ Plans:
 5. Test RLS exhaustif : 2 comptes Player factices ne voient pas leurs données mutuelles ; Mentor voit tous ; GameMaster voit tout
 6. Magic links envoyés à 6-15 testeurs internes (Omar + collègues UEMF) pour répétition la veille du pilote
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — /jury page + savePitchScoreFlow (5 notes x20, upsert juror x player)
+- [ ] 05-02-PLAN.md — /results page + lib/results.ts ranking + publishResultsFlow (gate)
+- [ ] 05-03-PLAN.md — RLS exhaustive test (DATA-02) + magic link invites internal testers
+- [ ] 05-04-PLAN.md — Vercel deploy config + smoke test E2E template
+- [ ] 05-05-PLAN.md — Phase closeout (final smoke + summary + docs)
+
 ---
 
 ## Phases SHOULD (si J5 fini en avance)
