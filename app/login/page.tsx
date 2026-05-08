@@ -1,44 +1,35 @@
-import { ShieldCheck } from "lucide-react";
-import Link from "next/link";
-import { signIn } from "@/app/actions";
-import { hasSupabaseEnv } from "@/lib/supabase-status";
+"use client";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const params = await searchParams;
-  const configured = hasSupabaseEnv();
+import { useActionState } from "react";
+import { signIn, type WorkflowState } from "@/app/actions";
+
+const initialState: WorkflowState = { ok: false, message: "" };
+
+export default function LoginPage() {
+  const [state, formAction] = useActionState(signIn, initialState);
 
   return (
-    <main className="login-shell">
-      <section className="login-panel">
-        <div className="stack">
-          <ShieldCheck aria-hidden="true" color="var(--green)" size={34} />
-          <span className="eyebrow">EIC Venture Journey</span>
-          <h1>Connexion espace startup</h1>
-          <p className="muted">
-            Acces fondateurs, coachs et equipe EIC. En local sans Supabase, l'application reste en mode demo.
+    <main style={{ maxWidth: 360, margin: "10vh auto", padding: 24 }}>
+      <h1 style={{ marginBottom: 8 }}>Entrepreneur Game</h1>
+      <p style={{ color: "#666", marginBottom: 24 }}>EIC / UEMF pilot</p>
+      <form action={formAction} className="stack">
+        <label className="form-row">
+          Email
+          <input className="input" name="email" type="email" required autoComplete="email" />
+        </label>
+        <label className="form-row">
+          Mot de passe
+          <input className="input" name="password" type="password" required minLength={6} autoComplete="current-password" />
+        </label>
+        {state.message && !state.ok ? (
+          <p className="form-error" style={{ color: "#c00" }}>
+            {state.message}
           </p>
-        </div>
-        {configured ? (
-          <form action={signIn} className="stack">
-            <label className="form-row">
-              Email
-              <input className="input" name="email" type="email" required />
-            </label>
-            <label className="form-row">
-              Mot de passe
-              <input className="input" name="password" type="password" required />
-            </label>
-            {params.error ? <p className="form-error">Identifiants invalides.</p> : null}
-            <button className="button primary" type="submit">Se connecter</button>
-          </form>
-        ) : (
-          <Link className="button primary" href="/">Entrer en mode demo</Link>
-        )}
-      </section>
+        ) : null}
+        <button className="button primary" type="submit">
+          Se connecter
+        </button>
+      </form>
     </main>
   );
 }
