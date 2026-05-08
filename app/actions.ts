@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
+import { pathForRole } from "@/lib/auth";
+import type { AppRole } from "@/lib/types";
 
 export type WorkflowState = { ok: boolean; message: string };
 
@@ -31,8 +33,19 @@ export async function signIn(_prev: WorkflowState, formData: FormData): Promise<
   if (error) {
     return { ok: false, message: error.message };
   }
-  // Plan 05 will replace this with role-based redirect.
-  redirect("/");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Login succeeded but no user." };
+  }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (profile?.app_role ?? "player") as AppRole;
+  redirect(pathForRole(role));
 }
 
 export async function signOut(): Promise<void> {

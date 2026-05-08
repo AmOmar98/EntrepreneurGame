@@ -1,8 +1,18 @@
-export default function JourneyPage() {
+import { AppShell } from "@/components/app-shell";
+import { getCurrentRole, getCurrentUser } from "@/lib/auth";
+
+export default async function JourneyPage() {
+  const user = await getCurrentUser();
+  const role = await getCurrentRole();
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Player journey</h1>
-      <p>Implementation Phase 2.</p>
-    </main>
+    <AppShell role={role ?? "player"}>
+      <main style={{ padding: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 600 }}>Player journey</h1>
+        <p style={{ color: "#666", fontSize: 14 }}>Implementation Phase 2 (JOURNEY-*).</p>
+        <pre style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
+          user: {user?.email ?? "none"} | role: {role ?? "none"}
+        </pre>
+      </main>
+    </AppShell>
   );
 }
