@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T21:00:01.299Z"
+last_updated: "2026-05-08T21:08:29.048Z"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 21
-  completed_plans: 20
-  percent: 95
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -81,3 +81,4 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 04]: Demo mode bypasses role gate on /admin/export/players.csv to return header-only CSV (per must_have)
 - [Phase 04]: Conserve les tokens CSS legacy en plus des nouveaux --brand-* pour eviter regressions sur components existants
 - [Phase 04]: PartnerBanner = server component, LoginForm = client subcomponent, LoginPage = server shell
+- [Phase 04]: Plan 04-02: GameMaster CSV bulk import idempotent (parseCsv pure helpers + service-role optional invites)

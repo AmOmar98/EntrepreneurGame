@@ -16,7 +16,7 @@
 
 ### ONBOARD — Onboarding & création comptes
 
-- [ ] **ONBOARD-01** : GameMaster peut uploader un CSV (colonnes : team_name, project_name, project_pitch, leader_email, member_emails) sur `/admin/players/import` ; pour chaque équipe, l'app crée le Player, les PlayerMembers, et envoie un magic link Supabase aux emails fournis. L'opération est idempotente (ré-upload OK).
+- [x] **ONBOARD-01** : GameMaster peut uploader un CSV (colonnes : team_name, project_name, project_pitch, leader_email, member_emails) sur `/admin/players/import` ; pour chaque équipe, l'app crée le Player, les PlayerMembers, et envoie un magic link Supabase aux emails fournis. L'opération est idempotente (ré-upload OK).
 - [x] **ONBOARD-02** : Au premier login, si le profil Player n'a pas `onboarded_at`, il est redirigé vers `/onboarding`
 - [x] **ONBOARD-03** : Sur `/onboarding`, Player confirme nom équipe + nom projet + idée courte (textarea ≤ 500 chars) + diagnostic initial 5 questions Likert 1-5 + cases à cocher membres présents ; soumission marque `onboarded_at = now()` et accorde Score Engagement +10
 
