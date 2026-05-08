@@ -815,3 +815,88 @@ export async function importPlayersCsv(
     : `Import termine avec ${report.errors.length} erreur(s).`;
   return { ok, message, report };
 }
+
+// ============================================================================
+// Jury (JURY-01, JURY-02, DATA-04) - Mentor saves 5x20 pitch scores per Player.
+// Upsert into pitch_scores with unique (event_id, player_id, juror_id).
+// juror_id is forced server-side from auth.uid() (T-05-03 mitigation).
+// ============================================================================
+
+const pitchScoreSchema = z.object({
+  playerId: z.string().uuid(),
+  eventId: z.string().uuid(),
+  c1: z.coerce.number().int().min(0).max(20),
+  c2: z.coerce.number().int().min(0).max(20),
+  c3: z.coerce.number().int().min(0).max(20),
+  c4: z.coerce.number().int().min(0).max(20),
+  c5: z.coerce.number().int().min(0).max(20),
+});
+
+export async function savePitchScoreFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Auth backend not configured." };
+  }
+  const parsed = pitchScoreSchema.safeParse({
+    playerId: formData.get("playerId"),
+    eventId: formData.get("eventId"),
+    c1: formData.get("c1"),
+    c2: formData.get("c2"),
+    c3: formData.get("c3"),
+    c4: formData.get("c4"),
+    c5: formData.get("c5"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Auth backend not configured." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Not authenticated." };
+  }
+
+  // Role gate (defense-in-depth alongside RLS).
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "mentor" && role !== "game_master") {
+    return { ok: false, message: "Acces reserve aux Mentors." };
+  }
+
+  // Upsert with onConflict on the triple key (event_id, player_id, juror_id).
+  // juror_id is set from auth.uid() server-side, never read from FormData.
+  const { error: upsertErr } = await supabase.from("pitch_scores").upsert(
+    {
+      event_id: parsed.data.eventId,
+      player_id: parsed.data.playerId,
+      juror_id: user.id,
+      c1: parsed.data.c1,
+      c2: parsed.data.c2,
+      c3: parsed.data.c3,
+      c4: parsed.data.c4,
+      c5: parsed.data.c5,
+    },
+    { onConflict: "event_id,player_id,juror_id" },
+  );
+  if (upsertErr) {
+    return { ok: false, message: upsertErr.message };
+  }
+
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: "Notes enregistrees." };
+}
