@@ -240,10 +240,45 @@ export async function submitDeliverable(
     return { ok: false, message: selErr.message };
   }
   if (existing && existing.length > 0) {
-    return {
-      ok: false,
-      message: "Une soumission V1 existe deja. Attendez le feedback du Mentor.",
-    };
+    const latest = existing[0] as { id: string; version: number; status: string };
+    if (latest.version === 2) {
+      return { ok: false, message: "V2 deja soumise." };
+    }
+    // latest.version === 1
+    if (latest.status === "submitted_v1") {
+      return {
+        ok: false,
+        message: "Une soumission V1 existe deja. Attendez le feedback du Mentor.",
+      };
+    }
+    if (latest.status === "validated") {
+      return { ok: false, message: "Livrable deja valide." };
+    }
+    if (latest.status === "rejected") {
+      return { ok: false, message: "Livrable rejete. Contactez le Mentor." };
+    }
+    if (latest.status === "feedback_received") {
+      // V2 path (SUBMIT-03): the Mentor requested a V2 after evaluating V1.
+      const { error: insV2Err } = await supabase.from("submissions").insert({
+        player_id: membership.player_id,
+        deliverable_template_id: parsed.data.deliverableTemplateId,
+        version: 2,
+        kind: parsed.data.kind,
+        proof_url: parsed.data.kind === "proof_url" ? parsed.data.proofUrl : null,
+        proof_text: parsed.data.kind === "proof_text" ? parsed.data.proofText : null,
+        status: "submitted_v2",
+        submitted_by: user.id,
+      });
+      if (insV2Err) {
+        return { ok: false, message: insV2Err.message };
+      }
+      revalidatePath("/journey");
+      revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
+      revalidatePath("/mentor");
+      return { ok: true, message: "Soumission V2 enregistree." };
+    }
+    // draft / submitted_v2 / unknown fallback
+    return { ok: false, message: "Soumission impossible dans l'etat actuel." };
   }
 
   const { error: insErr } = await supabase.from("submissions").insert({
