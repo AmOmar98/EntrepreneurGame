@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { dictionaries } from "@/lib/i18n";
@@ -28,8 +29,14 @@ export function AppShell({
     <div className="app-shell">
       <aside className="sidebar" aria-label="Primary navigation">
         <div className="brand">
-          <strong>{t.brand_name}</strong>
-          <span>{t.tagline}</span>
+          <Image
+            src="/brand/logo-eic.svg"
+            alt="EIC - UEMF"
+            width={160}
+            height={40}
+            className="brand-logo"
+          />
+          <span className="brand-tagline">{t.brand_tagline_short}</span>
         </div>
         <nav className="nav">
           {items.map((item) => {
