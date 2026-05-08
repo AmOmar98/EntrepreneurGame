@@ -900,3 +900,86 @@ export async function savePitchScoreFlow(
   revalidatePath("/results");
   return { ok: true, message: "Notes enregistrees." };
 }
+
+// ============================================================================
+// Results publication (JURY-05, DATA-04) - GameMaster only.
+// Sets events.results_published_at; idempotent (re-publish returns ok with
+// "deja publies" message).
+// ============================================================================
+
+const publishResultsSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+export async function publishResultsFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Auth backend not configured." };
+  }
+  const parsed = publishResultsSchema.safeParse({
+    eventId: formData.get("eventId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Auth backend not configured." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Not authenticated." };
+  }
+
+  // Role gate (T-05-06): only game_master may publish.
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // Load event.
+  const { data: eventRow, error: eventErr } = await supabase
+    .from("events")
+    .select("id, results_published_at")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (eventErr) {
+    return { ok: false, message: eventErr.message };
+  }
+  if (!eventRow) {
+    return { ok: false, message: "Aucun event actif." };
+  }
+  const event = eventRow as { id: string; results_published_at: string | null };
+
+  // Idempotent: already published -> ok with explicit message.
+  if (event.results_published_at) {
+    revalidatePath("/results");
+    return { ok: true, message: "Resultats deja publies." };
+  }
+
+  // Conditional update (only when still null) to avoid races.
+  const { error: updErr } = await supabase
+    .from("events")
+    .update({ results_published_at: new Date().toISOString() })
+    .eq("id", event.id)
+    .is("results_published_at", null);
+  if (updErr) {
+    return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/results");
+  return { ok: true, message: "Resultats publies." };
+}
