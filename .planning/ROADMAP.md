@@ -111,7 +111,7 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — /admin cohort dashboard (table + counters)
+- [x] 04-01-PLAN.md — /admin cohort dashboard (table + counters)
 - [ ] 04-02-PLAN.md — /admin/players/import CSV upload + bulk create + magic link invite
 - [ ] 04-03-PLAN.md — /admin/players/[id] detail page
 - [ ] 04-04-PLAN.md — /admin/export/players.csv route handler

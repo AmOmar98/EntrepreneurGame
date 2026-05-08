@@ -61,8 +61,8 @@
 
 ### ADMIN — Vue GameMaster
 
-- [ ] **ADMIN-01** : Sur `/admin`, GameMaster voit un tableau de tous les Players avec colonnes : nom équipe / projet, Niveau actuel, Score Projet, Statut (en avance / à l'heure / retard), Prochain livrable
-- [ ] **ADMIN-02** : Sur `/admin`, GameMaster voit des compteurs globaux : livrables soumis / total, en attente revue, validés
+- [x] **ADMIN-01** : Sur `/admin`, GameMaster voit un tableau de tous les Players avec colonnes : nom équipe / projet, Niveau actuel, Score Projet, Statut (en avance / à l'heure / retard), Prochain livrable
+- [x] **ADMIN-02** : Sur `/admin`, GameMaster voit des compteurs globaux : livrables soumis / total, en attente revue, validés
 - [ ] **ADMIN-03** : Sur `/admin/players/[id]`, GameMaster voit le détail d'un Player : membres, toutes les Submissions, toutes les Evaluations, scores
 - [ ] **ADMIN-04** : Sur `/admin/export/players.csv`, GameMaster télécharge la liste des Players avec leurs scores au format CSV
 
