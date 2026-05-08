@@ -10,7 +10,7 @@
 ### AUTH — Authentification & sessions
 
 - [ ] **AUTH-01** : Player/Mentor/GameMaster peut se connecter avec email + mot de passe initial via Supabase Auth, et obtenir une session persistante (cookies SSR)
-- [ ] **AUTH-02** : Visiteur non authentifié sur route protégée est redirigé vers `/login?redirect=<path>` par le middleware
+- [x] **AUTH-02** : Visiteur non authentifié sur route protégée est redirigé vers `/login?redirect=<path>` par le middleware
 - [ ] **AUTH-03** : Player peut se déconnecter depuis n'importe quelle page et revenir à `/login`
 - [ ] **AUTH-04** : Le rôle (`player` / `mentor` / `gamemaster`) est attaché à l'utilisateur côté DB et fait foi pour le routing et les RLS
 
@@ -68,11 +68,11 @@
 
 ### BRAND — Branding et polish UI
 
-- [ ] **BRAND-01** : Header avec logo EIC sur toutes les pages authentifiées
-- [ ] **BRAND-02** : Page `/login` (et page accueil non-auth si exposée) affiche le bandeau partenaires : Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace, EIC, UEMF
-- [ ] **BRAND-03** : Palette et typographie alignées sur l'identité visuelle EIC (assets fournis par Omar — voir spec §7 décision 6)
-- [ ] **BRAND-04** : Polish tactique sur 5 écrans clés (login, onboarding, journey, mentor, admin) — cohérence visuelle, espacements, états vides explicites, états de chargement
-- [ ] **BRAND-05** : Aucune mention de seed apparente (suppression de `atlas-soil` et autres références démo en prod)
+- [x] **BRAND-01** : Header avec logo EIC sur toutes les pages authentifiées
+- [x] **BRAND-02** : Page `/login` (et page accueil non-auth si exposée) affiche le bandeau partenaires : Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace, EIC, UEMF
+- [x] **BRAND-03** : Palette et typographie alignées sur l'identité visuelle EIC (assets fournis par Omar — voir spec §7 décision 6)
+- [x] **BRAND-04** : Polish tactique sur 5 écrans clés (login, onboarding, journey, mentor, admin) — cohérence visuelle, espacements, états vides explicites, états de chargement
+- [x] **BRAND-05** : Aucune mention de seed apparente (suppression de `atlas-soil` et autres références démo en prod)
 
 ### DATA — Persistence & sécurité
 

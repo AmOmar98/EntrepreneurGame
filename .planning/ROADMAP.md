@@ -115,7 +115,7 @@ Plans:
 - [ ] 04-02-PLAN.md — /admin/players/import CSV upload + bulk create + magic link invite
 - [x] 04-03-PLAN.md — /admin/players/[id] detail page
 - [x] 04-04-PLAN.md — /admin/export/players.csv route handler
-- [ ] 04-05-PLAN.md — Branding (palette, logo, login partner banner, root redirect)
+- [x] 04-05-PLAN.md — Branding (palette, logo, login partner banner, root redirect)
 - [ ] 04-06-PLAN.md — Polish + smoke test E2E (checkpoint)
 
 ---

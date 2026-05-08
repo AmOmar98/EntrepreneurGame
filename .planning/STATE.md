@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T20:54:18.072Z"
+last_updated: "2026-05-08T21:00:01.299Z"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -79,3 +79,5 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 03]: No trigger change: max(total_score) on validated submissions naturally yields V2 score because V1 with request_v2 stays at feedback_received (excluded from validated agg)
 - [Phase 03]: Phase 3 closed via static grep audits (SCORE-01, SUBMIT-03, no Phase 1 concepts) + 03-SMOKE-TEST template; manual E2E deferred to UAT before 2026-05-13
 - [Phase 04]: Demo mode bypasses role gate on /admin/export/players.csv to return header-only CSV (per must_have)
+- [Phase 04]: Conserve les tokens CSS legacy en plus des nouveaux --brand-* pour eviter regressions sur components existants
+- [Phase 04]: PartnerBanner = server component, LoginForm = client subcomponent, LoginPage = server shell
