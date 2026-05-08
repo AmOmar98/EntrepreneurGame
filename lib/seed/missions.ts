@@ -1,6 +1,11 @@
+// DEMO DATA ONLY (DATA-03) — used only when hasSupabaseEnv() is false.
+// In Supabase prod mode, lib/seed/index.ts returns [] (cf DATA-03).
+// Never reference real partners (Tamwilcom, Bank of Africa, Innov Invest, Bluespace)
+// nor pre-prod seed names (atlas-soil...). Real Hack-Days data is seeded via
+// database/seed_event_hackdays.sql (Phase 2 / Plan 04).
 import type { Mission } from "@/lib/types";
 
-// Demo missions only — replaced in Phase 2 with the real Hack-Days seed.
+// Demo missions only — neutral names; the real Hack-Days seed lives in SQL.
 export const demoMissions: Mission[] = [
   {
     id: "00000000-0000-0000-0000-0000000000b1",

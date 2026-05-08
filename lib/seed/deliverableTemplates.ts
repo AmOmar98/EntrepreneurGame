@@ -1,6 +1,11 @@
+// DEMO DATA ONLY (DATA-03) — used only when hasSupabaseEnv() is false.
+// In Supabase prod mode, lib/seed/index.ts returns [] (cf DATA-03).
+// Never reference real partners (Tamwilcom, Bank of Africa, Innov Invest, Bluespace)
+// nor pre-prod seed names (atlas-soil...). Real Hack-Days deliverable templates
+// are seeded via database/seed_event_hackdays.sql (Phase 2 / Plan 04).
 import type { DeliverableTemplate } from "@/lib/types";
 
-// Demo deliverable templates — replaced in Phase 2 with the real Hack-Days seed.
+// Demo deliverable templates — neutral names; the real Hack-Days seed lives in SQL.
 export const demoDeliverableTemplates: DeliverableTemplate[] = [
   {
     id: "00000000-0000-0000-0000-0000000000d1",

@@ -1,6 +1,9 @@
+// DEMO DATA ONLY (DATA-03) — used only when hasSupabaseEnv() is false.
+// In Supabase prod mode, lib/seed/index.ts returns [] (cf DATA-03).
+// Never reference real partners (Tamwilcom, Bank of Africa, Innov Invest, Bluespace)
+// nor pre-prod seed names (atlas-soil...). Demo names MUST stay neutral (BRAND-05).
 import type { Player } from "@/lib/types";
 
-// Demo data only. Used when hasSupabaseEnv() is false.
 // Neutral demo names (BRAND-05) — never references partners or atlas-soil.
 export const demoPlayers: Player[] = [
   {
