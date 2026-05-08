@@ -1,4 +1,22 @@
 :root {
+  /* EIC brand tokens (BRAND-03) */
+  --brand-primary: #0B2545;
+  --brand-primary-hover: #163A6E;
+  --brand-accent: #C9A227;
+  --brand-bg: #FAFAF7;
+  --brand-surface: #FFFFFF;
+  --brand-border: #E5E7EB;
+  --brand-text: #111827;
+  --brand-text-muted: #6B7280;
+  --brand-success: #16A34A;
+  --brand-warning: #D97706;
+  --brand-danger: #DC2626;
+  --brand-radius: 8px;
+  --brand-radius-lg: 12px;
+  --brand-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Legacy tokens (preserved for existing components) */
   --bg: #f6f4ef;
   --surface: #fffefa;
   --surface-strong: #ffffff;
@@ -58,8 +76,8 @@ a {
   top: 0;
   height: 100vh;
   padding: 22px 18px;
-  background: #18251f;
-  color: #eef6ee;
+  background: var(--brand-primary);
+  color: #eef2f8;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -67,10 +85,11 @@ a {
 }
 
 .brand {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding: 6px 8px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .brand strong {
@@ -78,10 +97,17 @@ a {
   letter-spacing: 0;
 }
 
-.brand span {
-  color: #b9c9bf;
+.brand span,
+.brand-tagline {
+  color: #c8d2e2;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.brand-logo {
+  height: 40px;
+  width: auto;
+  display: block;
 }
 
 .nav {
@@ -574,6 +600,74 @@ tr:last-child td {
   padding: 24px;
   display: grid;
   gap: 22px;
+}
+
+/* Auth + partner banner (BRAND-01, BRAND-02) */
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--brand-bg);
+}
+
+.auth-main {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius-lg);
+  box-shadow: var(--brand-shadow-card);
+  display: grid;
+  gap: 18px;
+}
+
+.auth-card .auth-header {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.auth-card h1 {
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--brand-text);
+}
+
+.auth-card .auth-subtitle {
+  color: var(--brand-text-muted);
+  font-size: 14px;
+}
+
+.auth-footer {
+  text-align: center;
+  color: var(--brand-text-muted);
+  font-size: 12px;
+  padding: 16px 24px 24px;
+}
+
+.partner-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+.partner-banner img {
+  height: 40px;
+  width: auto;
+  opacity: 0.9;
 }
 
 .form-error {

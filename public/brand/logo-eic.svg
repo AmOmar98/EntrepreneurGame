@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" role="img" aria-labelledby="logoEicTitle">
+  <title id="logoEicTitle">EIC - UEMF</title>
+  <rect x="0" y="0" width="240" height="64" rx="10" fill="#0B2545"/>
+  <text x="22" y="38" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#FFFFFF" letter-spacing="2">EIC</text>
+  <text x="22" y="54" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#C9A227" letter-spacing="1.4">UEMF</text>
+  <line x1="92" y1="20" x2="92" y2="48" stroke="#C9A227" stroke-width="1.6"/>
+  <text x="104" y="32" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">Entrepreneur</text>
+  <text x="104" y="50" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">Game</text>
+</svg>
