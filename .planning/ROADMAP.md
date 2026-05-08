@@ -88,7 +88,7 @@ Plans:
 - [x] 03-01-PLAN.md — Page /mentor liste Players + filtre en attente
 - [x] 03-02-PLAN.md — /mentor/submission/[id] form + evaluateSubmission action + score recompute
 - [x] 03-03-PLAN.md — /journey feedback display + V2 submission flow
-- [ ] 03-04-PLAN.md — Polish i18n + smoke test E2E + handoff Phase 4
+- [x] 03-04-PLAN.md — Polish i18n + smoke test E2E + handoff Phase 4
 
 ---
 

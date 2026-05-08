@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T20:28:04.399Z"
+last_updated: "2026-05-08T20:31:55.723Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 15
-  completed_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
@@ -77,3 +77,4 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 03]: evaluateSubmission keeps players.score_project untouched - relies on trg_evaluation_recalc trigger
 - [Phase 03]: Single submitDeliverable action routes V1 vs V2 server-side based on latest submission status; client never sends version
 - [Phase 03]: No trigger change: max(total_score) on validated submissions naturally yields V2 score because V1 with request_v2 stays at feedback_received (excluded from validated agg)
+- [Phase 03]: Phase 3 closed via static grep audits (SCORE-01, SUBMIT-03, no Phase 1 concepts) + 03-SMOKE-TEST template; manual E2E deferred to UAT before 2026-05-13
