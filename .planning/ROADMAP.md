@@ -82,6 +82,14 @@ Plans:
 4. Si verdict = « Demander V2 », le Player voit le feedback sur `/journey` (statut « feedback reçu ») et peut soumettre une Submission V2 ; le score final retenu = score V2
 5. Mentor ne peut évaluer 2× la même Submission (contrainte unique ou check applicatif renvoyant erreur visible)
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Page /mentor liste Players + filtre en attente
+- [ ] 03-02-PLAN.md — /mentor/submission/[id] form + evaluateSubmission action + score recompute
+- [ ] 03-03-PLAN.md — /journey feedback display + V2 submission flow
+- [ ] 03-04-PLAN.md — Polish i18n + smoke test E2E + handoff Phase 4
+
 ---
 
 ## Phase 4: GameMaster + Bulk Import + Branding + Page accueil
