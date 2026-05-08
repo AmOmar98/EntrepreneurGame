@@ -116,7 +116,7 @@ Plans:
 - [x] 04-03-PLAN.md — /admin/players/[id] detail page
 - [x] 04-04-PLAN.md — /admin/export/players.csv route handler
 - [x] 04-05-PLAN.md — Branding (palette, logo, login partner banner, root redirect)
-- [ ] 04-06-PLAN.md — Polish + smoke test E2E (checkpoint)
+- [x] 04-06-PLAN.md — Polish + smoke test E2E (checkpoint)
 
 ---
 
