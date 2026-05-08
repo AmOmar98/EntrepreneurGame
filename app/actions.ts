@@ -264,3 +264,188 @@ export async function submitDeliverable(
   revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
   return { ok: true, message: "Livrable soumis." };
 }
+
+// ============================================================================
+// Evaluation (EVAL-02, EVAL-03, SCORE-01, DATA-04)
+// ============================================================================
+//
+// Mentor (or GameMaster) submits a rubric scoring + feedback + verdict for a
+// given submission. Persists 1 row in `evaluations` then updates
+// `submissions.status` according to the verdict. The Postgres trigger
+// `trg_evaluation_recalc` recomputes `players.score_project` automatically;
+// we never touch that column from TypeScript (SCORE-01).
+
+const evaluationSchema = z.object({
+  submissionId: z.string().uuid(),
+  feedback: z.string().min(0).max(4000),
+  verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
+  // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
+  scores: z.record(z.string(), z.coerce.number().min(0).max(100)),
+});
+
+export async function evaluateSubmission(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  // Parse scoresJson -> Record<string, number> before validation.
+  const rawScoresJson = formData.get("scoresJson");
+  let scoresParsed: unknown = {};
+  if (typeof rawScoresJson === "string" && rawScoresJson.length > 0) {
+    try {
+      scoresParsed = JSON.parse(rawScoresJson);
+    } catch {
+      return { ok: false, message: "Notes invalides (JSON)." };
+    }
+  }
+
+  const parsed = evaluationSchema.safeParse({
+    submissionId: formData.get("submissionId"),
+    feedback: formData.get("feedback") ?? "",
+    verdict: formData.get("verdict"),
+    scores: scoresParsed,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Role gate (defense-in-depth alongside RLS).
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "mentor" && role !== "game_master") {
+    return { ok: false, message: "Acces reserve aux mentors." };
+  }
+
+  // Load submission.
+  const { data: subRow, error: subErr } = await supabase
+    .from("submissions")
+    .select("id, version, player_id, deliverable_template_id, status")
+    .eq("id", parsed.data.submissionId)
+    .maybeSingle();
+  if (subErr) {
+    return { ok: false, message: subErr.message };
+  }
+  if (!subRow) {
+    return { ok: false, message: "Submission introuvable." };
+  }
+  const submission = subRow as {
+    id: string;
+    version: number;
+    player_id: string;
+    deliverable_template_id: string;
+    status: string;
+  };
+
+  // Verdict / version coherence.
+  if (submission.version === 1) {
+    if (parsed.data.verdict === "validate_v2") {
+      return { ok: false, message: "Verdict invalide pour une soumission V1." };
+    }
+  } else if (submission.version === 2) {
+    if (parsed.data.verdict === "request_v2" || parsed.data.verdict === "validate_v1") {
+      return { ok: false, message: "Verdict invalide pour une soumission V2." };
+    }
+  }
+
+  // Load template rubric to validate scores and compute total.
+  const { data: tplRow, error: tplErr } = await supabase
+    .from("deliverable_templates")
+    .select("id, rubric")
+    .eq("id", submission.deliverable_template_id)
+    .maybeSingle();
+  if (tplErr) {
+    return { ok: false, message: tplErr.message };
+  }
+  if (!tplRow) {
+    return { ok: false, message: "Modele de livrable introuvable." };
+  }
+  const rubric = (tplRow as { rubric: { key: string; label: string; max: number }[] | null })
+    .rubric;
+  const criteria = Array.isArray(rubric) ? rubric : [];
+
+  let totalScore = 0;
+  for (const criterion of criteria) {
+    const value = parsed.data.scores[criterion.key];
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return { ok: false, message: `Score manquant pour le critere ${criterion.label}.` };
+    }
+    if (value < 0 || value > criterion.max) {
+      return { ok: false, message: `Score invalide pour le critere ${criterion.label}.` };
+    }
+    totalScore += value;
+  }
+
+  // Applicative unique check (readable error before relying on DB 23505).
+  const { data: existingEval, error: existingErr } = await supabase
+    .from("evaluations")
+    .select("id")
+    .eq("submission_id", submission.id)
+    .eq("evaluator_id", user.id)
+    .maybeSingle();
+  if (existingErr) {
+    return { ok: false, message: existingErr.message };
+  }
+  if (existingEval) {
+    return { ok: false, message: "Vous avez deja evalue cette soumission." };
+  }
+
+  // Insert evaluation row. The trg_evaluation_recalc Postgres trigger will
+  // recompute players.score_project automatically (SCORE-01).
+  const { error: insErr } = await supabase.from("evaluations").insert({
+    submission_id: submission.id,
+    evaluator_id: user.id,
+    scores: parsed.data.scores,
+    total_score: totalScore,
+    feedback: parsed.data.feedback,
+    verdict: parsed.data.verdict,
+  });
+  if (insErr) {
+    if ((insErr as { code?: string }).code === "23505") {
+      return { ok: false, message: "Vous avez deja evalue cette soumission." };
+    }
+    return { ok: false, message: insErr.message };
+  }
+
+  // Map verdict -> submission status (EVAL-03).
+  const nextStatus =
+    parsed.data.verdict === "validate_v1" || parsed.data.verdict === "validate_v2"
+      ? "validated"
+      : parsed.data.verdict === "request_v2"
+        ? "feedback_received"
+        : "rejected";
+
+  const { error: updErr } = await supabase
+    .from("submissions")
+    .update({ status: nextStatus })
+    .eq("id", submission.id);
+  if (updErr) {
+    return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/mentor");
+  revalidatePath(`/mentor/submission/${submission.id}`);
+  revalidatePath(`/journey/deliverable/${submission.deliverable_template_id}`);
+  revalidatePath("/journey");
+  return { ok: true, message: "Evaluation enregistree." };
+}
