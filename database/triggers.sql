@@ -1,96 +1,130 @@
-create or replace function public.tg_set_updated_at()
-returns trigger language plpgsql as $$
+-- Entrepreneur Game - Phase 1 triggers
+-- Apply after schema.sql, before rls.sql.
+
+-- ============================================================================
+-- Generic updated_at maintenance
+-- ============================================================================
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
 begin
   new.updated_at = now();
   return new;
-end $$;
+end;
+$$;
 
-create trigger trg_profiles_updated before update on profiles
-  for each row execute function tg_set_updated_at();
+create trigger trg_events_updated_at
+  before update on public.events
+  for each row execute function public.set_updated_at();
 
-create trigger trg_projects_updated before update on projects
-  for each row execute function tg_set_updated_at();
+create trigger trg_missions_updated_at
+  before update on public.missions
+  for each row execute function public.set_updated_at();
 
-create trigger trg_subs_updated before update on submissions
-  for each row execute function tg_set_updated_at();
+create trigger trg_deliverable_templates_updated_at
+  before update on public.deliverable_templates
+  for each row execute function public.set_updated_at();
 
-create trigger trg_founder_kyc_updated before update on founder_kyc
-  for each row execute function tg_set_updated_at();
+create trigger trg_cohorts_updated_at
+  before update on public.cohorts
+  for each row execute function public.set_updated_at();
 
-create trigger trg_project_holder_kyc_updated before update on project_holder_kyc
-  for each row execute function tg_set_updated_at();
+create trigger trg_profiles_updated_at
+  before update on public.profiles
+  for each row execute function public.set_updated_at();
 
-create trigger trg_bootcamp_deliverables_updated before update on bootcamp_deliverables
-  for each row execute function tg_set_updated_at();
+create trigger trg_players_updated_at
+  before update on public.players
+  for each row execute function public.set_updated_at();
 
-create or replace function public.tg_on_submission_validated()
-returns trigger language plpgsql security definer set search_path = public as $$
+create trigger trg_evaluations_updated_at
+  before update on public.evaluations
+  for each row execute function public.set_updated_at();
+
+create trigger trg_pitch_scores_updated_at
+  before update on public.pitch_scores
+  for each row execute function public.set_updated_at();
+
+-- ============================================================================
+-- Project score recalc
+-- For each (player, deliverable_template), take the highest-version validated
+-- submission's max evaluation total_score; sum into players.score_project.
+-- ============================================================================
+
+create or replace function public.recalc_player_score(p_player_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
-  v_xp int;
+  v_total numeric(6,2);
 begin
-  if new.status = 'validated' and (old.status is distinct from 'validated') then
-    select xp into v_xp from missions where id = new.mission_id;
-    insert into xp_ledger(project_id, submission_id, delta, reason)
-      values (new.project_id, new.id, v_xp, 'mission validated: ' || new.mission_id);
-    update projects set total_xp = total_xp + v_xp where id = new.project_id;
+  with best_per_template as (
+    select
+      s.deliverable_template_id,
+      max(e.total_score) as max_score
+    from public.submissions s
+    join public.evaluations e on e.submission_id = s.id
+    where s.player_id = p_player_id
+      and s.status = 'validated'
+    group by s.deliverable_template_id
+  )
+  select coalesce(sum(max_score), 0)
+    into v_total
+    from best_per_template;
+
+  update public.players
+     set score_project = v_total
+   where id = p_player_id;
+end;
+$$;
+
+create or replace function public.on_evaluation_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_submission_id uuid;
+begin
+  v_submission_id := coalesce(new.submission_id, old.submission_id);
+  select s.player_id into v_player_id
+    from public.submissions s
+   where s.id = v_submission_id;
+
+  if v_player_id is not null then
+    perform public.recalc_player_score(v_player_id);
+  end if;
+
+  return coalesce(new, old);
+end;
+$$;
+
+create trigger trg_evaluation_recalc
+  after insert or update or delete on public.evaluations
+  for each row execute function public.on_evaluation_change();
+
+-- ============================================================================
+-- Player onboarding: write-once invariant on onboarded_at
+-- ============================================================================
+
+create or replace function public.guard_player_onboarding()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old.onboarded_at is not null and new.onboarded_at is null then
+    raise exception 'players.onboarded_at cannot be cleared once set';
   end if;
   return new;
-end $$;
+end;
+$$;
 
-create trigger trg_submission_validated after update on submissions
-  for each row execute function tg_on_submission_validated();
-
-create trigger trg_deliverables_updated before update on deliverables
-  for each row execute function tg_set_updated_at();
-
-create trigger trg_bonus_events_updated before update on bonus_events
-  for each row execute function tg_set_updated_at();
-
-create or replace function public.tg_on_deliverable_submitted()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into xp_ledger(project_id, source_type, source_id, xp_state, checkpoint, counts_toward_stage, delta, reason)
-    values (new.project_id, 'deliverable', new.id::text, 'pending', new.checkpoint, false, new.pending_xp, 'deliverable submitted: ' || new.title);
-  insert into startup_activity(project_id, actor, action, checkpoint, metadata)
-    values (new.project_id, new.submitted_by, 'deliverable_submitted', new.checkpoint, jsonb_build_object('title', new.title));
-  return new;
-end $$;
-
-create trigger trg_deliverable_submitted after insert on deliverables
-  for each row execute function tg_on_deliverable_submitted();
-
-create or replace function public.tg_on_deliverable_accepted()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  if new.status = 'accepted' and (old.status is distinct from 'accepted') then
-    insert into xp_ledger(project_id, source_type, source_id, xp_state, checkpoint, counts_toward_stage, delta, reason)
-      values (new.project_id, 'deliverable', new.id::text, 'confirmed', new.checkpoint, true, new.base_xp, 'deliverable accepted: ' || new.title);
-    update projects set total_xp = total_xp + new.base_xp where id = new.project_id;
-    insert into startup_activity(project_id, actor, action, checkpoint, metadata)
-      values (new.project_id, new.reviewed_by, 'deliverable_accepted', new.checkpoint, jsonb_build_object('title', new.title, 'xp', new.base_xp));
-  end if;
-  return new;
-end $$;
-
-create trigger trg_deliverable_accepted after update on deliverables
-  for each row execute function tg_on_deliverable_accepted();
-
-create or replace function public.tg_on_bonus_accepted()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  if new.status = 'accepted' and (old.status is distinct from 'accepted') then
-    insert into xp_ledger(project_id, source_type, source_id, xp_state, checkpoint, counts_toward_stage, delta, reason)
-      values (new.project_id, 'bonus_event', new.id::text, 'confirmed', new.checkpoint, true, new.counts_toward_stage, 'bonus accepted: ' || new.title);
-    if new.prestige_xp > 0 then
-      insert into xp_ledger(project_id, source_type, source_id, xp_state, checkpoint, counts_toward_stage, delta, reason)
-        values (new.project_id, 'bonus_event', new.id::text, 'prestige', new.checkpoint, false, new.prestige_xp, 'bonus prestige: ' || new.title);
-    end if;
-    update projects set total_xp = total_xp + new.counts_toward_stage where id = new.project_id;
-    insert into startup_activity(project_id, actor, action, checkpoint, metadata)
-      values (new.project_id, new.reviewed_by, 'bonus_accepted', new.checkpoint, jsonb_build_object('title', new.title, 'xp', new.awarded_xp));
-  end if;
-  return new;
-end $$;
-
-create trigger trg_bonus_accepted after update on bonus_events
-  for each row execute function tg_on_bonus_accepted();
+create trigger trg_player_onboarding
+  before update on public.players
+  for each row execute function public.guard_player_onboarding();

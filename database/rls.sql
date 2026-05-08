@@ -1,258 +1,270 @@
-create or replace function public.has_role(_role app_role)
-returns boolean language sql stable security definer set search_path = public
+-- Entrepreneur Game - Phase 1 RLS policies
+-- Apply after schema.sql and triggers.sql.
+
+-- ============================================================================
+-- Helper functions
+-- ============================================================================
+
+create or replace function public.current_app_role()
+returns public.app_role
+language sql
+stable
+security definer
+set search_path = public
 as $$
-  select exists (
-    select 1 from public.user_roles
-    where user_id = auth.uid() and role = _role
+  select coalesce(
+    (select app_role from public.profiles where user_id = auth.uid()),
+    'player'::public.app_role
   );
 $$;
 
-create or replace function public.is_staff()
-returns boolean language sql stable security definer set search_path = public
+create or replace function public.is_game_master()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
 as $$
-  select exists (
-    select 1 from public.user_roles
-    where user_id = auth.uid()
-      and role in ('mentor','reviewer','committee_member','eic_admin')
-  );
+  select public.current_app_role() = 'game_master'::public.app_role;
 $$;
 
-alter table public.profiles enable row level security;
-alter table public.user_roles enable row level security;
-alter table public.projects enable row level security;
-alter table public.project_members enable row level security;
-alter table public.founder_kyc enable row level security;
-alter table public.project_holder_kyc enable row level security;
-alter table public.bootcamp_deliverables enable row level security;
-alter table public.missions enable row level security;
-alter table public.submissions enable row level security;
-alter table public.evidence enable row level security;
-alter table public.coach_assignments enable row level security;
-alter table public.deliverables enable row level security;
-alter table public.bonus_events enable row level security;
-alter table public.xp_ledger enable row level security;
-alter table public.startup_activity enable row level security;
-alter table public.committees enable row level security;
-alter table public.committee_dossiers enable row level security;
-alter table public.audit_log enable row level security;
+create or replace function public.is_mentor()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.current_app_role() in ('mentor'::public.app_role, 'game_master'::public.app_role);
+$$;
 
-create policy "profiles_self_or_staff_select"
-on public.profiles for select
-using (id = auth.uid() or public.is_staff());
-
-create policy "projects_member_or_staff_select"
-on public.projects for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "projects_staff_insert"
-on public.projects for insert
-with check (public.has_role('eic_admin') or public.has_role('mentor'));
-
-create policy "members_same_project_or_staff_select"
-on public.project_members for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members self_pm
-    where self_pm.project_id = project_id and self_pm.user_id = auth.uid()
-  )
-);
-
-create policy "founder_kyc_self_or_staff_select"
-on public.founder_kyc for select
-using (user_id = auth.uid() or public.is_staff());
-
-create policy "founder_kyc_self_insert"
-on public.founder_kyc for insert
-with check (user_id = auth.uid() or public.is_staff());
-
-create policy "founder_kyc_self_or_staff_update"
-on public.founder_kyc for update
-using (user_id = auth.uid() or public.is_staff())
-with check (user_id = auth.uid() or public.is_staff());
-
-create policy "project_holder_kyc_member_or_staff_select"
-on public.project_holder_kyc for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "project_holder_kyc_member_insert"
-on public.project_holder_kyc for insert
-with check (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "project_holder_kyc_member_or_staff_update"
-on public.project_holder_kyc for update
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-)
-with check (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "bootcamp_deliverables_all_authenticated_select"
-on public.bootcamp_deliverables for select
-using (auth.role() = 'authenticated');
-
-create policy "bootcamp_deliverables_staff_update"
-on public.bootcamp_deliverables for update
-using (public.is_staff())
-with check (public.is_staff());
-
-create policy "missions_all_authenticated_select"
-on public.missions for select
-using (auth.role() = 'authenticated');
-
-create policy "submissions_member_or_staff_select"
-on public.submissions for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "submissions_project_member_insert"
-on public.submissions for insert
-with check (
-  exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "submissions_reviewer_update"
-on public.submissions for update
-using (public.has_role('reviewer') or public.has_role('eic_admin'))
-with check (public.has_role('reviewer') or public.has_role('eic_admin'));
-
-create policy "evidence_member_or_staff_select"
-on public.evidence for select
-using (
-  public.is_staff()
-  or exists (
+create or replace function public.is_my_player(p_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
     select 1
-    from public.submissions s
-    join public.project_members pm on pm.project_id = s.project_id
-    where s.id = submission_id and pm.user_id = auth.uid()
+      from public.player_members pm
+     where pm.player_id = p_player_id
+       and pm.user_id = auth.uid()
+  );
+$$;
+
+-- ============================================================================
+-- Enable RLS on every table
+-- ============================================================================
+
+alter table public.events enable row level security;
+alter table public.levels enable row level security;
+alter table public.missions enable row level security;
+alter table public.deliverable_templates enable row level security;
+alter table public.cohorts enable row level security;
+alter table public.profiles enable row level security;
+alter table public.players enable row level security;
+alter table public.player_members enable row level security;
+alter table public.submissions enable row level security;
+alter table public.evaluations enable row level security;
+alter table public.pitch_scores enable row level security;
+
+-- ============================================================================
+-- Reference / catalog tables: authenticated read-all, game_master full r/w
+-- ============================================================================
+
+create policy "events_authenticated_select" on public.events
+  for select to authenticated using (true);
+create policy "events_gm_all" on public.events
+  for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
+
+create policy "levels_authenticated_select" on public.levels
+  for select to authenticated using (true);
+create policy "levels_gm_all" on public.levels
+  for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
+
+create policy "missions_authenticated_select" on public.missions
+  for select to authenticated using (true);
+create policy "missions_gm_all" on public.missions
+  for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
+
+create policy "deliverable_templates_authenticated_select" on public.deliverable_templates
+  for select to authenticated using (true);
+create policy "deliverable_templates_gm_all" on public.deliverable_templates
+  for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
+
+create policy "cohorts_authenticated_select" on public.cohorts
+  for select to authenticated using (true);
+create policy "cohorts_gm_all" on public.cohorts
+  for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
+
+-- ============================================================================
+-- profiles
+-- ============================================================================
+
+create policy "profiles_self_or_mentor_select" on public.profiles
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_mentor());
+
+create policy "profiles_self_or_gm_insert" on public.profiles
+  for insert to authenticated
+  with check (user_id = auth.uid() or public.is_game_master());
+
+create policy "profiles_self_or_gm_update" on public.profiles
+  for update to authenticated
+  using (user_id = auth.uid() or public.is_game_master())
+  with check (user_id = auth.uid() or public.is_game_master());
+
+create policy "profiles_gm_delete" on public.profiles
+  for delete to authenticated
+  using (public.is_game_master());
+
+-- ============================================================================
+-- players
+-- ============================================================================
+
+create policy "players_member_or_mentor_select" on public.players
+  for select to authenticated
+  using (public.is_my_player(id) or public.is_mentor());
+
+create policy "players_member_or_gm_update" on public.players
+  for update to authenticated
+  using (public.is_my_player(id) or public.is_game_master())
+  with check (public.is_my_player(id) or public.is_game_master());
+
+create policy "players_gm_insert" on public.players
+  for insert to authenticated
+  with check (public.is_game_master());
+
+create policy "players_gm_delete" on public.players
+  for delete to authenticated
+  using (public.is_game_master());
+
+-- ============================================================================
+-- player_members
+-- ============================================================================
+
+create policy "player_members_self_or_mentor_select" on public.player_members
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_mentor());
+
+create policy "player_members_gm_insert" on public.player_members
+  for insert to authenticated
+  with check (public.is_game_master());
+
+create policy "player_members_gm_update" on public.player_members
+  for update to authenticated
+  using (public.is_game_master())
+  with check (public.is_game_master());
+
+create policy "player_members_gm_delete" on public.player_members
+  for delete to authenticated
+  using (public.is_game_master());
+
+-- ============================================================================
+-- submissions
+-- ============================================================================
+
+create policy "submissions_member_or_mentor_select" on public.submissions
+  for select to authenticated
+  using (public.is_my_player(player_id) or public.is_mentor());
+
+create policy "submissions_member_self_insert" on public.submissions
+  for insert to authenticated
+  with check (
+    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    or public.is_game_master()
+  );
+
+create policy "submissions_member_self_update" on public.submissions
+  for update to authenticated
+  using (
+    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    or public.is_game_master()
   )
-);
+  with check (
+    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    or public.is_game_master()
+  );
 
-create policy "coach_assignments_staff_or_member_select"
-on public.coach_assignments for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
+create policy "submissions_gm_delete" on public.submissions
+  for delete to authenticated
+  using (public.is_game_master());
+
+-- ============================================================================
+-- evaluations
+-- ============================================================================
+
+create policy "evaluations_member_or_mentor_select" on public.evaluations
+  for select to authenticated
+  using (
+    public.is_mentor()
+    or exists (
+      select 1
+        from public.submissions s
+       where s.id = submission_id
+         and public.is_my_player(s.player_id)
+    )
+  );
+
+create policy "evaluations_mentor_self_insert" on public.evaluations
+  for insert to authenticated
+  with check (
+    (public.is_mentor() and evaluator_id = auth.uid())
+    or public.is_game_master()
+  );
+
+create policy "evaluations_mentor_self_update" on public.evaluations
+  for update to authenticated
+  using (
+    (public.is_mentor() and evaluator_id = auth.uid())
+    or public.is_game_master()
   )
-);
+  with check (
+    (public.is_mentor() and evaluator_id = auth.uid())
+    or public.is_game_master()
+  );
 
-create policy "coach_assignments_admin_insert"
-on public.coach_assignments for insert
-with check (public.has_role('eic_admin'));
+create policy "evaluations_gm_delete" on public.evaluations
+  for delete to authenticated
+  using (public.is_game_master());
 
-create policy "deliverables_member_or_staff_select"
-on public.deliverables for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
+-- ============================================================================
+-- pitch_scores
+-- ============================================================================
+
+create policy "pitch_scores_member_or_mentor_select" on public.pitch_scores
+  for select to authenticated
+  using (public.is_my_player(player_id) or public.is_mentor());
+
+create policy "pitch_scores_mentor_self_insert" on public.pitch_scores
+  for insert to authenticated
+  with check (
+    (public.is_mentor() and juror_id = auth.uid())
+    or public.is_game_master()
+  );
+
+create policy "pitch_scores_mentor_self_update" on public.pitch_scores
+  for update to authenticated
+  using (
+    (public.is_mentor() and juror_id = auth.uid())
+    or public.is_game_master()
   )
-);
+  with check (
+    (public.is_mentor() and juror_id = auth.uid())
+    or public.is_game_master()
+  );
 
-create policy "deliverables_project_member_insert"
-on public.deliverables for insert
-with check (
-  exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
+create policy "pitch_scores_gm_delete" on public.pitch_scores
+  for delete to authenticated
+  using (public.is_game_master());
 
-create policy "deliverables_staff_update"
-on public.deliverables for update
-using (public.is_staff())
-with check (public.is_staff());
+-- ============================================================================
+-- Final grants
+-- ============================================================================
 
-create policy "bonus_events_member_or_staff_select"
-on public.bonus_events for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "bonus_events_project_member_insert"
-on public.bonus_events for insert
-with check (
-  exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "bonus_events_staff_update"
-on public.bonus_events for update
-using (public.is_staff())
-with check (public.is_staff());
-
-create policy "xp_ledger_member_or_staff_select"
-on public.xp_ledger for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "startup_activity_member_or_staff_select"
-on public.startup_activity for select
-using (
-  public.is_staff()
-  or exists (
-    select 1 from public.project_members pm
-    where pm.project_id = project_id and pm.user_id = auth.uid()
-  )
-);
-
-create policy "committees_staff_select"
-on public.committees for select
-using (public.is_staff());
-
-create policy "committee_dossiers_staff_select"
-on public.committee_dossiers for select
-using (public.is_staff());
-
-create policy "audit_admin_select"
-on public.audit_log for select
-using (public.has_role('eic_admin'));
+revoke all on schema public from anon;
+grant usage on schema public to authenticated;
+grant select on all tables in schema public to authenticated;
+grant insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;

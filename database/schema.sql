@@ -1,267 +1,235 @@
-create extension if not exists pgcrypto;
-create extension if not exists "uuid-ossp";
-create extension if not exists pg_stat_statements;
+-- Entrepreneur Game - Phase 1 schema
+-- Apply order: schema.sql -> triggers.sql -> rls.sql
+-- Operator note (D-01): on a fresh Supabase project, run once before this file:
+--   drop schema public cascade;
+--   create schema public;
+--   grant usage on schema public to anon, authenticated, service_role;
+-- See database/README.md.
 
-create type app_role as enum (
-  'founder', 'builder', 'researcher', 'mentor',
-  'reviewer', 'committee_member', 'eic_admin'
+create extension if not exists "pgcrypto";
+
+-- ============================================================================
+-- Enums (mirror lib/types.ts)
+-- ============================================================================
+
+create type public.app_role as enum ('player', 'mentor', 'game_master');
+
+create type public.player_status as enum ('active', 'eliminated', 'completed');
+
+create type public.team_role as enum ('owner', 'co_founder', 'contributor');
+
+create type public.level_id as enum (
+  'L0_diagnostic',
+  'L1_problem',
+  'L2_solution',
+  'L3_market',
+  'L4_business_model',
+  'L5_pitch',
+  'L6_traction',
+  'L7_alumni'
 );
 
-create type submission_status as enum (
-  'draft', 'submitted', 'in_review', 'needs_changes',
-  'validated', 'rejected'
+create type public.mission_kind as enum (
+  'atelier',
+  'session',
+  'presentation',
+  'pitch',
+  'admin'
 );
 
-create type project_stage as enum (
-  'L0_diagnostic', 'L1_problem', 'L2_solution',
-  'L3_traction', 'L4_committee', 'L5_alumni'
+create type public.submission_kind as enum ('proof_url', 'proof_text');
+
+create type public.submission_status as enum (
+  'draft',
+  'submitted_v1',
+  'feedback_received',
+  'submitted_v2',
+  'validated',
+  'rejected'
 );
 
-create type checkpoint_band as enum ('make_it', 'sell_it', 'look_after_it');
-create type maturity_phase as enum ('ideation', 'pre_incubation', 'incubation');
-create type deliverable_status as enum ('draft', 'submitted', 'reviewed', 'needs_changes', 'accepted');
-create type bonus_status as enum ('submitted', 'needs_changes', 'accepted', 'rejected');
-create type bonus_type as enum (
-  'prospect_interviews', 'waitlist', 'demo_ready', 'first_sale',
-  'additional_sales', 'pilot_commitment', 'retention_followup'
-);
-create type xp_state as enum ('pending', 'confirmed', 'prestige');
-create type founder_kyc_status as enum ('missing', 'partial', 'complete', 'verified');
-create type project_holder_type as enum ('student', 'researcher', 'alumni', 'external');
-create type bootcamp_day as enum ('day_1', 'day_2', 'day_3');
-create type bootcamp_deliverable_kind as enum ('session', 'atelier', 'presentation', 'pitch', 'admin');
-
-create table public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  full_name text not null,
-  email text not null unique,
-  phone text,
-  language text default 'fr' check (language in ('fr','en','ar')),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+create type public.verdict as enum (
+  'validate_v1',
+  'request_v2',
+  'validate_v2',
+  'reject'
 );
 
-create table public.user_roles (
-  user_id uuid references auth.users(id) on delete cascade,
-  role app_role not null,
-  primary key (user_id, role)
-);
+-- ============================================================================
+-- Tables (in dependency order)
+-- ============================================================================
 
-create table public.projects (
-  id uuid primary key default uuid_generate_v4(),
+-- events: a Hack-Days instance (multi-event ready S3)
+create table public.events (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
   name text not null,
-  slug text unique not null,
-  cohort text not null,
-  summary text default '',
-  sector text default '',
-  maturity_phase maturity_phase not null default 'ideation',
-  checkpoint_focus checkpoint_band not null default 'make_it',
-  stage project_stage not null default 'L0_diagnostic',
-  total_xp int not null default 0,
-  status text not null default 'active' check (status in ('active','paused','dropped','graduated')),
-  health_status text not null default 'watch' check (health_status in ('strong','watch','blocked')),
-  next_action text default '',
-  coach_notes text default '',
-  created_by uuid references auth.users(id),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  is_committee_ready boolean generated always as (
-    stage = 'L3_traction' and total_xp >= 600
-  ) stored
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  results_published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+comment on table public.events is 'A Hack-Days / pilot event instance (S3 multi-event ready).';
 
-create table public.project_members (
-  project_id uuid references public.projects(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete cascade,
-  role_in_project text not null check (role_in_project in ('owner','co_founder','contributor')),
-  added_at timestamptz default now(),
-  primary key (project_id, user_id)
+-- levels: 0..7 enum-keyed reference table
+create table public.levels (
+  id public.level_id primary key,
+  ord smallint not null,
+  label text not null,
+  description text not null
 );
+comment on table public.levels is 'Reference table for the 8 levels (L0..L7).';
 
-create table public.founder_kyc (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  avatar_url text,
-  phone text not null,
-  cin_or_passport text not null,
-  school_or_org text not null,
-  role_title text not null,
-  status founder_kyc_status not null default 'partial',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create table public.project_holder_kyc (
-  project_id uuid primary key references public.projects(id) on delete cascade,
-  logo_url text not null check (logo_url ~ '^https://'),
-  legal_name text not null,
-  project_holder_type project_holder_type not null default 'student',
-  idea_one_liner text not null,
-  problem_statement text not null,
-  target_customer text not null,
-  status founder_kyc_status not null default 'partial',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create table public.bootcamp_deliverables (
-  id text primary key,
-  day bootcamp_day not null,
-  start_time text not null,
-  end_time text not null,
-  duration text not null,
-  title text not null,
-  objective text not null,
-  expected_output text not null,
-  checkpoint checkpoint_band not null,
-  stage project_stage not null,
-  kind bootcamp_deliverable_kind not null,
-  xp int not null default 0 check (xp between 0 and 500),
-  is_active boolean not null default true,
-  is_required boolean not null default true,
-  game_master_note text default '',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
+-- missions: unit of work for a given event
 create table public.missions (
-  id text primary key,
-  level project_stage not null,
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete restrict,
+  level_id public.level_id not null references public.levels(id) on delete restrict,
+  ord smallint not null,
+  kind public.mission_kind not null,
   title text not null,
-  description text not null,
-  xp int not null,
-  rubric jsonb not null,
-  evidence_required jsonb not null,
-  estimated_hours numeric,
-  is_active boolean default true,
-  created_at timestamptz default now()
+  scheduled_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (event_id, level_id, ord)
 );
+comment on table public.missions is 'A unit of work (atelier, session, pitch, ...) for an event.';
 
+-- deliverable_templates: a deliverable expected from a mission
+create table public.deliverable_templates (
+  id uuid primary key default gen_random_uuid(),
+  mission_id uuid not null references public.missions(id) on delete cascade,
+  slug text not null,
+  title text not null,
+  description text not null default '',
+  rubric jsonb not null default '[]'::jsonb,
+  max_score int not null default 100,
+  ord smallint not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (mission_id, slug)
+);
+comment on table public.deliverable_templates is 'Template for an expected deliverable from a mission (with rubric).';
+
+-- cohorts: a cohort scoped to an event
+create table public.cohorts (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete restrict,
+  slug text not null,
+  name text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (event_id, slug)
+);
+comment on table public.cohorts is 'A cohort of players within an event.';
+
+-- profiles: app_role per auth user
+create table public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  app_role public.app_role not null default 'player',
+  full_name text,
+  email text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+comment on table public.profiles is 'Per-user app role (player / mentor / game_master).';
+
+-- players: 1 row per team (renamed from startups)
+create table public.players (
+  id uuid primary key default gen_random_uuid(),
+  cohort_id uuid not null references public.cohorts(id) on delete restrict,
+  slug text not null unique,
+  name text not null,
+  idea text,
+  current_level public.level_id not null default 'L0_diagnostic',
+  status public.player_status not null default 'active',
+  score_project numeric(6,2) not null default 0,
+  score_engagement numeric(6,2) not null default 0,
+  onboarded_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+comment on table public.players is 'A team / player participating in the pilot.';
+
+-- player_members: a user belongs to a player (team)
+create table public.player_members (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid not null references public.players(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role public.app_role not null default 'player',
+  team_role public.team_role not null default 'contributor',
+  joined_at timestamptz not null default now(),
+  unique (player_id, user_id)
+);
+comment on table public.player_members is 'Membership of an auth user inside a player team.';
+
+-- submissions: V1/V2 per (player, deliverable_template)
 create table public.submissions (
-  id uuid primary key default uuid_generate_v4(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  mission_id text not null references public.missions(id),
-  submitted_by uuid not null references auth.users(id),
-  status submission_status not null default 'draft',
-  payload jsonb not null default '{}'::jsonb,
-  score numeric,
-  reviewer_notes text,
-  reviewed_by uuid references auth.users(id),
-  submitted_at timestamptz,
-  reviewed_at timestamptz,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique (project_id, mission_id)
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid not null references public.players(id) on delete cascade,
+  deliverable_template_id uuid not null references public.deliverable_templates(id) on delete restrict,
+  version smallint not null check (version in (1, 2)),
+  kind public.submission_kind not null,
+  proof_url text,
+  proof_text text,
+  status public.submission_status not null default 'submitted_v1',
+  submitted_by uuid not null references auth.users(id) on delete restrict,
+  submitted_at timestamptz not null default now(),
+  unique (player_id, deliverable_template_id, version),
+  check (
+    (kind = 'proof_url' and proof_url is not null and proof_text is null)
+    or (kind = 'proof_text' and proof_text is not null and proof_url is null)
+  )
 );
+comment on table public.submissions is 'Proof-of-work submission for a deliverable, versioned V1/V2.';
 
-create table public.evidence (
-  id uuid primary key default uuid_generate_v4(),
+-- evaluations: 1 per (mentor, submission)
+create table public.evaluations (
+  id uuid primary key default gen_random_uuid(),
   submission_id uuid not null references public.submissions(id) on delete cascade,
-  storage_path text not null,
-  filename text not null,
-  mime_type text not null,
-  size_bytes bigint not null check (size_bytes <= 52428800),
-  uploaded_by uuid references auth.users(id),
-  uploaded_at timestamptz default now()
+  evaluator_id uuid not null references auth.users(id) on delete restrict,
+  scores jsonb not null default '{}'::jsonb,
+  total_score numeric(6,2) not null default 0,
+  feedback text not null default '',
+  verdict public.verdict not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (submission_id, evaluator_id)
 );
+comment on table public.evaluations is 'Mentor evaluation for a submission (rubric scores + feedback + verdict).';
 
-create table public.coach_assignments (
-  project_id uuid references public.projects(id) on delete cascade,
-  coach_id uuid references auth.users(id) on delete cascade,
-  assigned_at timestamptz default now(),
-  primary key (project_id, coach_id)
+-- pitch_scores: jury scoring day 2 (5 criteria x 20 each = 100)
+create table public.pitch_scores (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events(id) on delete restrict,
+  player_id uuid not null references public.players(id) on delete cascade,
+  juror_id uuid not null references auth.users(id) on delete restrict,
+  c1 smallint not null check (c1 between 0 and 20),
+  c2 smallint not null check (c2 between 0 and 20),
+  c3 smallint not null check (c3 between 0 and 20),
+  c4 smallint not null check (c4 between 0 and 20),
+  c5 smallint not null check (c5 between 0 and 20),
+  total_score smallint generated always as (c1 + c2 + c3 + c4 + c5) stored,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (event_id, player_id, juror_id)
 );
+comment on table public.pitch_scores is 'Jury pitch scores day 2 (5 criteria x 20 each).';
 
-create table public.deliverables (
-  id uuid primary key default uuid_generate_v4(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  title text not null,
-  description text not null,
-  doc_url text not null check (doc_url ~ '^https://'),
-  status deliverable_status not null default 'submitted',
-  checkpoint checkpoint_band not null,
-  stage project_stage not null,
-  pending_xp int not null default 10,
-  base_xp int not null check (base_xp between 25 and 150),
-  submitted_by uuid references auth.users(id),
-  reviewed_by uuid references auth.users(id),
-  submitted_at timestamptz default now(),
-  reviewed_at timestamptz,
-  updated_at timestamptz default now(),
-  review_notes text,
-  mailto_opened_at timestamptz
-);
+-- ============================================================================
+-- Indexes (hot FKs)
+-- ============================================================================
 
-create table public.bonus_events (
-  id uuid primary key default uuid_generate_v4(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  bonus_type bonus_type not null,
-  title text not null,
-  proof_url text not null check (proof_url ~ '^https://'),
-  quantity int not null default 1 check (quantity > 0),
-  claimed_xp int not null,
-  awarded_xp int not null default 0,
-  counts_toward_stage int not null default 0,
-  prestige_xp int not null default 0,
-  status bonus_status not null default 'submitted',
-  checkpoint checkpoint_band not null default 'sell_it',
-  stage project_stage not null,
-  submitted_by uuid references auth.users(id),
-  reviewed_by uuid references auth.users(id),
-  submitted_at timestamptz default now(),
-  reviewed_at timestamptz,
-  updated_at timestamptz default now(),
-  review_notes text,
-  mailto_opened_at timestamptz
-);
-
-create table public.xp_ledger (
-  id bigserial primary key,
-  project_id uuid not null references public.projects(id) on delete cascade,
-  submission_id uuid references public.submissions(id) on delete set null,
-  source_type text not null default 'submission',
-  source_id text,
-  xp_state xp_state not null default 'confirmed',
-  checkpoint checkpoint_band,
-  counts_toward_stage boolean not null default true,
-  delta int not null,
-  reason text not null,
-  created_at timestamptz default now()
-);
-
-create table public.startup_activity (
-  id bigserial primary key,
-  project_id uuid not null references public.projects(id) on delete cascade,
-  actor uuid references auth.users(id),
-  action text not null,
-  checkpoint checkpoint_band,
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz default now()
-);
-
-create table public.committees (
-  id uuid primary key default uuid_generate_v4(),
-  cohort text not null,
-  scheduled_at timestamptz not null,
-  location text,
-  status text default 'planned' check (status in ('planned','in_progress','done','cancelled')),
-  created_at timestamptz default now()
-);
-
-create table public.committee_dossiers (
-  committee_id uuid references public.committees(id) on delete cascade,
-  project_id uuid references public.projects(id) on delete cascade,
-  decision text check (decision in ('go','no_go','conditional','deferred')),
-  decision_notes text,
-  decided_at timestamptz,
-  primary key (committee_id, project_id)
-);
-
-create table public.audit_log (
-  id bigserial primary key,
-  actor uuid references auth.users(id),
-  action text not null,
-  entity_type text not null,
-  entity_id text not null,
-  diff jsonb,
-  occurred_at timestamptz default now()
-);
+create index on public.missions (event_id, level_id);
+create index on public.deliverable_templates (mission_id);
+create index on public.cohorts (event_id);
+create index on public.players (cohort_id);
+create index on public.player_members (player_id);
+create index on public.player_members (user_id);
+create index on public.submissions (player_id);
+create index on public.submissions (deliverable_template_id);
+create index on public.evaluations (submission_id);
+create index on public.evaluations (evaluator_id);
+create index on public.pitch_scores (event_id, player_id);
+create index on public.pitch_scores (juror_id);
