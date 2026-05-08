@@ -7,16 +7,20 @@
 
 ---
 
-## Phase 1 — Foundation (Schema + Types + Suppression code obsolète)
+## 🚧 **v0.1 Pilot Hack-Days Fès-Meknès** — Phases 1-5 (in progress)
+
+---
+
+## Phase 1: Foundation (Schema + Types + Suppression code obsolète)
 
 **Quand** : 2026-05-09 (J1)
-**Goal** : avoir un schema Postgres aligné sur le brief, des types TS cohérents, le code obsolète supprimé, et un login qui marche en local sur Supabase prod fresh.
-**Depends on** : —
+**Goal:** avoir un schema Postgres aligné sur le brief, des types TS cohérents, le code obsolète supprimé, et un login qui marche en local sur Supabase prod fresh.
+**Depends on:** —
 **UI hint** : non
 
 **Requirements couverts** : DATA-01, DATA-04, DATA-05, DATA-06, AUTH-01, AUTH-02, AUTH-03, AUTH-04, EVENT-03, EVENT-04 *(schema)*, BRAND-05 *(suppression atlas-soil etc.)*
 
-**Success criteria** :
+**Success Criteria:**
 1. Schema Postgres appliqué sur projet Supabase prod fresh, comprenant : events, levels, missions, deliverable_templates, cohorts, players, player_members, submissions, evaluations, pitch_scores + index sur FK chaudes
 2. Types TS regénérés ou réécrits dans `lib/types.ts` ; `lib/data.ts` éclaté en `lib/types.ts` + `lib/seed/*.ts` + `lib/score.ts` + `lib/icons.ts`
 3. Code mort supprimé du repo (BonusEvent, Checkpoint, MaturityPhase, prestige_xp, pages committee/admin-game/admin-startups, mailto drafts, exports committee/eml/kpi-snapshot)
@@ -25,16 +29,16 @@
 
 ---
 
-## Phase 2 — Player Flow (Onboarding + Journey + Submission)
+## Phase 2: Player Flow (Onboarding + Journey + Submission)
 
 **Quand** : 2026-05-10 (J2)
-**Goal** : un Player peut se logger, faire son onboarding (Niveau 0), voir sa progression, et soumettre un livrable V1 sur un DeliverableTemplate.
-**Depends on** : Phase 1
+**Goal:** un Player peut se logger, faire son onboarding (Niveau 0), voir sa progression, et soumettre un livrable V1 sur un DeliverableTemplate.
+**Depends on:** Phase 1
 **UI hint** : oui
 
 **Requirements couverts** : ONBOARD-02, ONBOARD-03, EVENT-01, EVENT-02, JOURNEY-01, JOURNEY-02, JOURNEY-03, SUBMIT-01, SUBMIT-02, SUBMIT-04, DATA-03 *(suppression seed leak)*
 
-**Success criteria** :
+**Success Criteria:**
 1. Au premier login d'un Player sans `onboarded_at`, redirect vers `/onboarding` et formulaire complet (nom équipe, idée, diagnostic 5 questions, membres) ; soumission sets `onboarded_at`
 2. Sur `/journey`, Player voit header (équipe, niveau, score), timeline ateliers du jour, liste des DeliverableTemplates avec statuts corrects
 3. Sur `/journey/deliverable/[id]`, Player peut soumettre une Submission V1 (proof_url ou proof_text) ; après soumission, statut = `submitted_v1` et formulaire se verrouille
@@ -43,16 +47,16 @@
 
 ---
 
-## Phase 3 — Mentor Flow (Évaluation + Boucle V1→V2 + Scoring)
+## Phase 3: Mentor Flow (Évaluation + Boucle V1→V2 + Scoring)
 
 **Quand** : 2026-05-11 (J3)
-**Goal** : un Mentor peut évaluer une Submission selon la grille, donner un feedback, choisir un verdict ; le Player voit le feedback et peut soumettre V2.
-**Depends on** : Phase 2
+**Goal:** un Mentor peut évaluer une Submission selon la grille, donner un feedback, choisir un verdict ; le Player voit le feedback et peut soumettre V2.
+**Depends on:** Phase 2
 **UI hint** : oui
 
 **Requirements couverts** : EVAL-01, EVAL-02, EVAL-03, SUBMIT-03, SCORE-01, SCORE-02
 
-**Success criteria** :
+**Success Criteria:**
 1. Sur `/mentor`, Mentor voit la liste des Players avec score Projet courant, nb livrables soumis / total, filtre « livrables en attente de revue »
 2. Sur `/mentor/submission/[id]`, Mentor remplit la grille de scoring (un input par critère de la rubric), un feedback texte, et choisit verdict « Valider V1 » / « Demander V2 » / « Rejeter »
 3. La soumission de l'évaluation crée une Evaluation row, met à jour le statut Submission, et recalcule le Score Projet du Player en serveur
@@ -61,16 +65,16 @@
 
 ---
 
-## Phase 4 — GameMaster + Bulk Import + Branding + Page accueil
+## Phase 4: GameMaster + Bulk Import + Branding + Page accueil
 
 **Quand** : 2026-05-12 (J4)
-**Goal** : GameMaster peut tout piloter (dashboard, import CSV, export, détail Player) ; l'app a une identité visuelle EIC professionnelle ; page d'accueil avec partenaires.
-**Depends on** : Phase 3
+**Goal:** GameMaster peut tout piloter (dashboard, import CSV, export, détail Player) ; l'app a une identité visuelle EIC professionnelle ; page d'accueil avec partenaires.
+**Depends on:** Phase 3
 **UI hint** : oui
 
 **Requirements couverts** : ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ONBOARD-01, BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05
 
-**Success criteria** :
+**Success Criteria:**
 1. Sur `/admin`, GameMaster voit le tableau cohorte (Player, Niveau, Score Projet, Statut, Prochain livrable) + compteurs globaux
 2. Sur `/admin/players/import`, GameMaster uploade un CSV ; l'app crée les Players, PlayerMembers, et envoie magic links Supabase ; ré-upload est idempotent
 3. Sur `/admin/players/[id]`, GameMaster voit le détail Player (membres, submissions, evaluations, scores)
@@ -79,16 +83,16 @@
 
 ---
 
-## Phase 5 — Pitch Jury + Results + Smoke Test E2E + Déploiement Vercel prod
+## Phase 5: Pitch Jury + Results + Smoke Test E2E + Déploiement Vercel prod
 
 **Quand** : 2026-05-13 (J5 matin)
-**Goal** : page jury fonctionnelle pour le jour 2, classement publié à 15h, app déployée en prod sur Vercel, smoke test E2E réussi avec données seed pilote, magic links envoyés à des testeurs internes pour répétition.
-**Depends on** : Phase 4
+**Goal:** page jury fonctionnelle pour le jour 2, classement publié à 15h, app déployée en prod sur Vercel, smoke test E2E réussi avec données seed pilote, magic links envoyés à des testeurs internes pour répétition.
+**Depends on:** Phase 4
 **UI hint** : oui
 
 **Requirements couverts** : JURY-01, JURY-02, JURY-03, JURY-04, JURY-05, DATA-02 *(RLS test exhaustif)*, DEPLOY-01, DEPLOY-02, DEPLOY-03
 
-**Success criteria** :
+**Success Criteria:**
 1. Sur `/jury`, Mentor saisit pour chaque Player les 5 notes pitch (×20 chacune) ; resoumission update la PitchScore existante (contrainte unique juror×player)
 2. `/results` affiche le classement (moyenne PitchScore + Score Projet pondéré) ; pour les rôles non-GameMaster, page « Résultats à venir » jusqu'à `events.results_published_at` ; bouton GameMaster « Publier » set le timestamp
 3. App déployée sur Vercel (`entrepreneur-game.vercel.app` ou domaine custom EIC) avec env vars Supabase prod configurées
