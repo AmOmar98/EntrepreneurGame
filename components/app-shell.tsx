@@ -7,7 +7,7 @@ export type AppRole = "player" | "mentor" | "game_master";
 
 const navItems: Record<AppRole, { href: string; label: string }[]> = {
   player: [{ href: "/journey", label: "Mon parcours" }],
-  mentor: [{ href: "/coach", label: "Evaluations" }], // route renamed in plan 04
+  mentor: [{ href: "/mentor", label: "Evaluations" }],
   game_master: [{ href: "/admin", label: "Admin" }],
 };
 
