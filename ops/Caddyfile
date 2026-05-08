@@ -1,0 +1,27 @@
+{
+  email ops@uemf.ma
+}
+
+eic-game.uemf.ma {
+  encode zstd gzip
+  reverse_proxy app:3000
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  }
+}
+
+api.eic-game.uemf.ma {
+  encode zstd gzip
+  reverse_proxy kong:8000
+}
+
+studio.eic-game.uemf.ma {
+  reverse_proxy studio:3000
+}
+
+status.eic-game.uemf.ma {
+  reverse_proxy kuma:3001
+}

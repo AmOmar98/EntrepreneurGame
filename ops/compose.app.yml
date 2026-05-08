@@ -1,0 +1,41 @@
+networks:
+  default:
+    name: supabase_default
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  kuma_data:
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  app:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      NODE_ENV: production
+
+  kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    expose:
+      - "3001"
+    volumes:
+      - kuma_data:/app/data
