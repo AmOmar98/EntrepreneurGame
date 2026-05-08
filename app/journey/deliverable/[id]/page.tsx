@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { SubmissionFeedbackCard } from "@/components/submission-feedback-card";
 import { SubmissionForm } from "@/components/submission-form";
 import { SubmissionReadonly } from "@/components/submission-readonly";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
@@ -19,6 +20,7 @@ import type {
   Submission,
   SubmissionKind,
   SubmissionStatus,
+  Verdict,
 } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -157,10 +159,43 @@ export default async function DeliverableDetailPage({
 
   const latest =
     subRows && subRows.length > 0 ? mapSubmission(subRows[0] as SubmissionRow) : null;
+  const latestRow = subRows && subRows.length > 0 ? (subRows[0] as SubmissionRow) : null;
 
   const lockedStatuses: SubmissionStatus[] = ["submitted_v1", "submitted_v2", "validated", "rejected"];
   const isLocked = latest !== null && lockedStatuses.includes(latest.status);
   const isFeedbackPendingV2 = latest !== null && latest.status === "feedback_received";
+
+  // When V1 has feedback_received, load the latest evaluation to display the
+  // verdict, scores, and feedback to the Player (SUBMIT-03).
+  let latestEvaluation: {
+    scores: Record<string, number>;
+    totalScore: number;
+    feedback: string;
+    verdict: Verdict;
+  } | null = null;
+  if (latestRow && latestRow.status === "feedback_received") {
+    const { data: evalRow } = await supabase
+      .from("evaluations")
+      .select("scores, total_score, feedback, verdict")
+      .eq("submission_id", latestRow.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (evalRow) {
+      const row = evalRow as {
+        scores: Record<string, number> | null;
+        total_score: number | null;
+        feedback: string | null;
+        verdict: Verdict;
+      };
+      latestEvaluation = {
+        scores: row.scores ?? {},
+        totalScore: Number(row.total_score ?? 0),
+        feedback: row.feedback ?? "",
+        verdict: row.verdict,
+      };
+    }
+  }
 
   return (
     <AppShell role="player">
@@ -200,20 +235,22 @@ export default async function DeliverableDetailPage({
         {isLocked && latest ? (
           <SubmissionReadonly submission={latest} />
         ) : isFeedbackPendingV2 ? (
-          <p
-            role="status"
-            style={{
-              marginTop: 16,
-              padding: "10px 14px",
-              background: "#fae8ff",
-              color: "#86198f",
-              border: "1px solid #f0abfc",
-              borderRadius: 8,
-              fontSize: 13,
-            }}
-          >
-            {t.submission_feedback_pending_v2}
-          </p>
+          <>
+            {latestEvaluation ? (
+              <SubmissionFeedbackCard evaluation={latestEvaluation} rubric={rubric} />
+            ) : null}
+            <h2
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#0f172a",
+                margin: "24px 0 8px",
+              }}
+            >
+              {t.submission_v2_title}
+            </h2>
+            <SubmissionForm deliverableTemplateId={id} version={2} />
+          </>
         ) : (
           <SubmissionForm deliverableTemplateId={id} />
         )}
