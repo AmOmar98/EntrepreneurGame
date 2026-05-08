@@ -77,7 +77,7 @@
 ### DATA — Persistence & sécurité
 
 - [ ] **DATA-01** : Schema Postgres appliqué sur le projet Supabase prod (création/migration). Comprend les tables : events, levels, missions, deliverable_templates, cohorts, players, player_members, submissions, evaluations, pitch_scores, et leurs FK + index sur les FK chaudes
-- [ ] **DATA-02** : RLS policies en place : Player ne voit que ses propres Submissions/Evaluations + données publiques (DeliverableTemplates, Missions, Levels, Event public info) ; Mentor voit tous les Players de l'event ; GameMaster voit tout. Test exhaustif RLS avec 2 comptes Player factices avant 13 mai.
+- [x] **DATA-02** : RLS policies en place : Player ne voit que ses propres Submissions/Evaluations + données publiques (DeliverableTemplates, Missions, Levels, Event public info) ; Mentor voit tous les Players de l'event ; GameMaster voit tout. Test exhaustif RLS avec 2 comptes Player factices avant 13 mai.
 - [x] **DATA-03** : `lib/workflow-data.ts` ne tombe plus sur le seed quand `hasSupabaseEnv()` est true et que la DB est vide → retourne tableaux vides (suppression du leak)
 - [x] **DATA-04** : Toutes les server actions retournent un `WorkflowState = { ok, message, data? }` ; aucune `return;` silencieuse, aucune erreur Supabase swallow
 - [ ] **DATA-05** : Lucide-react repinné à une version résolue correctement (corrige le `^1.14.0` suspect identifié dans `.planning/codebase/CONCERNS.md`)

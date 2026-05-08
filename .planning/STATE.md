@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T21:30:58.264Z"
+last_updated: "2026-05-08T21:34:46.644Z"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 26
-  completed_plans: 25
-  percent: 96
+  completed_plans: 26
+  percent: 100
 ---
 
 # Project State
@@ -84,3 +84,4 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 - [Phase 04]: Plan 04-02: GameMaster CSV bulk import idempotent (parseCsv pure helpers + service-role optional invites)
 - [Phase 05]: Pondération ranking 50/50 par défaut + dense ranking
 - [Phase 05]: Publish results idempotent (UPDATE conditionnel sur results_published_at IS NULL)
+- [Phase 05]: Plan 05-03: RLS test suite via set_config Supabase pattern + 10 scenarios + templates operateur
