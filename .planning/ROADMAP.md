@@ -30,12 +30,12 @@
 **Plans:** 6 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Fresh Postgres schema + triggers + RLS
-- [ ] 01-02-PLAN.md — Hard-delete obsolete pages, exports, components, server actions
-- [ ] 01-03-PLAN.md — Split lib/data.ts into types/seed/score/icons
-- [ ] 01-04-PLAN.md — Move route folders coach->mentor, startup->player
-- [ ] 01-05-PLAN.md — Login email/password + role-based redirect + role-aware stub pages
-- [ ] 01-06-PLAN.md — Repin lucide-react, clean lint/typecheck/build, phase summary
+- [x] 01-01-PLAN.md — Fresh Postgres schema + triggers + RLS
+- [x] 01-02-PLAN.md — Hard-delete obsolete pages, exports, components, server actions
+- [x] 01-03-PLAN.md — Split lib/data.ts into types/seed/score/icons
+- [x] 01-04-PLAN.md — Move route folders coach->mentor, startup->player
+- [x] 01-05-PLAN.md — Login email/password + role-based redirect + role-aware stub pages
+- [x] 01-06-PLAN.md — Repin lucide-react, clean lint/typecheck/build, phase summary
 
 ---
 

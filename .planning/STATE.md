@@ -18,7 +18,7 @@ Project A : 5 phases sur 5 jours (J1=09/05 → J5=13/05). Délivre les 12 MUST. 
 
 | Phase | Goal | Status | Date prévue |
 |---|---|---|---|
-| 1 | Foundation (schema, types, suppression code mort, login) | not_started | 2026-05-09 |
+| 1 | Foundation (schema, types, suppression code mort, login) | complete | 2026-05-08 |
 | 2 | Player Flow (onboarding, journey, submission V1) | not_started | 2026-05-10 |
 | 3 | Mentor Flow (évaluation, V1→V2, scoring) | not_started | 2026-05-11 |
 | 4 | GameMaster + bulk import + branding | not_started | 2026-05-12 |
@@ -26,7 +26,7 @@ Project A : 5 phases sur 5 jours (J1=09/05 → J5=13/05). Délivre les 12 MUST. 
 
 ## Next Action
 
-Lancer `/gsd-plan-phase 1` pour créer le plan détaillé de la Phase 1 (Foundation).
+Phase 1 complete (6/6 plans). Lancer `/gsd-plan-phase 2` pour créer le plan détaillé de la Phase 2 (Player Flow). Avant Phase 2 : Omar applique `database/schema.sql + triggers.sql + rls.sql` sur projet Supabase fresh + crée 1 GameMaster bootstrap, et valide le smoke-test login email/password (M1).
 
 ## Critical Decisions Pending (avant J1)
 
@@ -42,11 +42,16 @@ Voir spec §7 — 7 décisions à confirmer rapidement :
 
 ## Risk Watch
 
-- **Refactor schema** vs migration Supabase prod : décider J1 si projet Supabase fresh ou existant
-- **Lucide-react `^1.14.0`** : vérifier version résolue, repinner J1
+- **Refactor schema** vs migration Supabase prod : Phase 1 a choisi fresh schema (D-01) ; à confirmer fresh project Supabase au début de Phase 2
+- ✅ **Lucide-react `^1.14.0`** : repinné `^0.577.0` (Phase 1 plan 06)
 - **Magic link Supabase** : tester envoi sur Gmail/Outlook/UEMF à J4
 - **Solo dev malade** : pas de mitigation tech, communication précoce EIC si problème
 
+## Decisions
+
+- 2026-05-08: lucide-react pinné à `^0.577.0` (latest 0.x stable). Le 1.x existe mais upgrade différé jusqu'à présence de tests (V2).
+- 2026-05-08: Phase 1 ferme avec stub `/auth/callback` posé pour Phase 4 (magic link bulk import).
+
 ---
 
-*Last updated: 2026-05-08 after roadmap creation*
+*Last updated: 2026-05-08 after Phase 1 completion (6/6 plans)*
