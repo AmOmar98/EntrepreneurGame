@@ -58,7 +58,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Onboarding Niveau 0 form + saveOnboarding action + middleware redirect
+- [x] 02-01-PLAN.md — Onboarding Niveau 0 form + saveOnboarding action + middleware redirect
 - [ ] 02-02-PLAN.md — /journey page (header + timeline + deliverables list with status)
 - [ ] 02-03-PLAN.md — /journey/deliverable/[id] page + submitDeliverable V1 action
 - [x] 02-04-PLAN.md — Seed Event Hack-Days SQL idempotent + DATA-03 anti-leak audit
