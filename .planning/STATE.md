@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès
 status: Ready to plan
-last_updated: "2026-05-08T21:13:02.377Z"
+last_updated: "2026-05-08T21:26:09.013Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 21
-  completed_plans: 23
-  percent: 100
+  total_plans: 26
+  completed_plans: 24
+  percent: 92
 ---
 
 # Project State

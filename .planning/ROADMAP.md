@@ -140,7 +140,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — /jury page + savePitchScoreFlow (5 notes x20, upsert juror x player)
+- [x] 05-01-PLAN.md — /jury page + savePitchScoreFlow (5 notes x20, upsert juror x player)
 - [ ] 05-02-PLAN.md — /results page + lib/results.ts ranking + publishResultsFlow (gate)
 - [ ] 05-03-PLAN.md — RLS exhaustive test (DATA-02) + magic link invites internal testers
 - [ ] 05-04-PLAN.md — Vercel deploy config + smoke test E2E template
