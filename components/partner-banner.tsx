@@ -9,19 +9,39 @@ const PARTNERS = [
   { slug: "uemf", name: "UEMF" },
 ] as const;
 
+// Set at write time based on `ls public/brand/partners/`. Flip a slug flag to true
+// once its SVG exists; default false uses the typographic Montserrat lockup fallback.
+// Phase 6 (2026-05-09): all 6 SVGs present in public/brand/partners/, all flagged true.
+const PARTNER_SVG_AVAILABLE: Record<(typeof PARTNERS)[number]["slug"], boolean> = {
+  "tamwilcom": true,
+  "bank-of-africa": true,
+  "innov-invest": true,
+  "bluespace": true,
+  "eic": true,
+  "uemf": true,
+};
+
 export function PartnerBanner() {
   return (
-    <section aria-label="Partenaires" className="partner-banner">
-      {PARTNERS.map((p) => (
-        <Image
-          key={p.slug}
-          src={`/brand/partners/${p.slug}.svg`}
-          alt={p.name}
-          width={160}
-          height={40}
-          unoptimized
-        />
-      ))}
+    <section aria-label="Partenaires" className="eic-partner-banner">
+      {PARTNERS.map((p) => {
+        const hasSvg = PARTNER_SVG_AVAILABLE[p.slug] === true;
+        return (
+          <span className="eic-partner" key={p.slug}>
+            {hasSvg ? (
+              <Image
+                alt={p.name}
+                height={40}
+                src={`/brand/partners/${p.slug}.svg`}
+                unoptimized
+                width={160}
+              />
+            ) : (
+              <span className="eic-partner__name">{p.name.toUpperCase()}</span>
+            )}
+          </span>
+        );
+      })}
     </section>
   );
 }
