@@ -268,3 +268,18 @@ grant usage on schema public to authenticated;
 grant select on all tables in schema public to authenticated;
 grant insert, update, delete on all tables in schema public to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
+
+-- service_role : bypass RLS pour les server actions et queries server-side
+-- (cf. lib/results.ts:computeRanking quand events.results_published_at != null,
+-- et app/actions.ts:importPlayersCsv pour les invites magic-link).
+-- Si le schema public a ete recreate via "drop schema public cascade; create
+-- schema public;" (cf. schema.sql ligne 4), service_role perd ses grants par
+-- defaut Supabase et il faut les restaurer explicitement, sinon "permission
+-- denied for table cohorts" sur les queries service-role.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
+alter default privileges in schema public grant usage, select on sequences to service_role;
+alter default privileges in schema public grant execute on functions to service_role;
