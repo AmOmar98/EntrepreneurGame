@@ -1087,3 +1087,172 @@ tr:last-child td {
   text-transform: uppercase;
   line-height: 1;
 }
+
+/* ==========================================================================
+   EIC Design v2 — AppShell variants (DSY-05)
+   Player: .eic-shell + .eic-topbar + .eic-mobile-tabbar
+   Staff:  .eic-staff-sidebar (overrides .sidebar background to use --eic-blue)
+   ========================================================================== */
+
+/* === Player shell === */
+.eic-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--home-ivory);
+  color: var(--home-ink);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+}
+.eic-shell__main {
+  flex: 1 1 auto;
+  display: block;
+  position: relative;
+}
+.eic-shell--player .eic-shell__main {
+  /* Bottom padding ensures content not occluded by fixed mobile tab bar */
+  padding-bottom: 0;
+}
+@media (max-width: 1099px) {
+  .eic-shell--player .eic-shell__main { padding-bottom: 76px; }
+}
+
+/* === TopbarLite === */
+.eic-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  border-bottom: 1px solid var(--home-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.eic-topbar__brand { display: inline-flex; align-items: center; text-decoration: none; }
+.eic-topbar__brand-text {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
+}
+.eic-topbar__brand-name {
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--home-ink);
+}
+.eic-topbar__brand-sub {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wf-ink-soft);
+}
+.eic-topbar__grow { flex: 1 1 auto; }
+.eic-topbar__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.eic-topbar__nav-link {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--home-ink);
+  text-decoration: none;
+}
+.eic-topbar__nav-link:hover { color: var(--eic-blue); background: rgba(27, 58, 92, 0.06); }
+.eic-topbar__nav-link:focus-visible { outline: 3px solid rgba(27, 58, 92, 0.22); outline-offset: 0; }
+.eic-topbar__logout-form { margin: 0; }
+.eic-topbar__logout {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--home-border-strong);
+  background: transparent;
+  color: var(--home-ink);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.eic-topbar__logout:hover { box-shadow: var(--shadow-hover); }
+.eic-topbar__logout:focus-visible { outline: 3px solid rgba(27, 58, 92, 0.22); outline-offset: 0; }
+
+@media (max-width: 1099px) {
+  .eic-topbar { height: 64px; padding: 12px 18px; gap: 10px; }
+  .eic-topbar__nav { display: none; } /* nav lives in bottom tab bar on mobile */
+  .eic-topbar__brand-sub { display: none; }
+}
+
+/* === Mobile tab bar (player only) === */
+.eic-mobile-tabbar {
+  display: none;
+}
+@media (max-width: 1099px) {
+  .eic-mobile-tabbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    padding: 6px 14px 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--home-border);
+    z-index: 10;
+  }
+}
+.eic-mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 44px;
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--wf-ink-faint);
+  text-decoration: none;
+}
+.eic-mobile-tab__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid currentColor;
+  font-size: 11px;
+}
+.eic-mobile-tab.is-active { color: var(--eic-blue); font-weight: 700; }
+.eic-mobile-tab.is-active .eic-mobile-tab__icon {
+  background: var(--eic-blue);
+  color: #fff;
+  border-color: var(--eic-blue);
+}
+.eic-mobile-tab:focus-visible { outline: 3px solid rgba(27, 58, 92, 0.22); outline-offset: 0; }
+
+/* === Staff sidebar restyle (DSY-05) ===
+   Overrides the .sidebar background only when the new .eic-staff-sidebar class is present.
+   Existing .sidebar rules in this file (lines ~74-185) remain the structural baseline. */
+.eic-staff-sidebar {
+  background: var(--eic-blue);
+}
+.eic-staff-sidebar .nav a.is-active,
+.eic-staff-sidebar .nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.14);
+}
+.eic-staff-sidebar .brand-tagline {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.78);
+}
