@@ -43,10 +43,12 @@ export default async function OnboardingPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const player = membership?.players as
+  const rawPlayer = membership?.players as
     | { id: string; name: string | null; idea: string | null; onboarded_at: string | null }
+    | { id: string; name: string | null; idea: string | null; onboarded_at: string | null }[]
     | null
     | undefined;
+  const player = Array.isArray(rawPlayer) ? rawPlayer[0] : rawPlayer;
 
   if (!player) {
     return (
