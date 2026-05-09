@@ -14,11 +14,11 @@ export function LoginForm() {
   return (
     <form action={formAction} className="stack">
       <label className="form-row">
-        {t.login_email}
+        <span>{t.login_email}</span>
         <input className="input" name="email" type="email" required autoComplete="email" />
       </label>
       <label className="form-row">
-        {t.login_password}
+        <span>{t.login_password}</span>
         <input
           className="input"
           name="password"
