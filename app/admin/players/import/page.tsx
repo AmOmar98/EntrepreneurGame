@@ -19,7 +19,7 @@ export default async function AdminPlayersImportPage() {
   }
 
   return (
-    <AppShell role={role ?? "game_master"}>
+    <AppShell role={role ?? "game_master"} variant="staff">
       <main style={{ padding: 24, maxWidth: 900 }}>
         <header style={{ marginBottom: 16 }}>
           <Link

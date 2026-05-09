@@ -36,7 +36,7 @@ export default async function ResultsPage() {
   // Demo mode banner.
   if (!hasSupabaseEnv()) {
     return (
-      <AppShell role={role ?? "player"}>
+      <AppShell role={role ?? "game_master"} variant="staff">
         <main style={{ padding: 24, maxWidth: 1100 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
             {t.results_title}
@@ -54,7 +54,7 @@ export default async function ResultsPage() {
   // Gate: non-GM users see "results coming" until publication.
   if (!isGm && !isPublished) {
     return (
-      <AppShell role={role ?? "player"}>
+      <AppShell role={role ?? "game_master"} variant="staff">
         <main style={{ padding: 24, maxWidth: 700 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
             {t.results_pending_title}
@@ -68,7 +68,7 @@ export default async function ResultsPage() {
   }
 
   return (
-    <AppShell role={role ?? "player"}>
+    <AppShell role={role ?? "game_master"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1100 }}>
         <header
           style={{

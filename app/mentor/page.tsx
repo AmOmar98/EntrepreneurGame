@@ -28,7 +28,7 @@ export default async function MentorPage({
   const rows = hasSupabaseEnv() ? await getMentorPlayersOverview({ onlyPending }) : [];
 
   return (
-    <AppShell role={role ?? "mentor"}>
+    <AppShell role={role ?? "mentor"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1100 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
           {t.mentor_title}

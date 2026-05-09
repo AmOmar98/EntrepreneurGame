@@ -107,7 +107,7 @@ export default async function MentorSubmissionPage({
 
   if (!hasSupabaseEnv()) {
     return (
-      <AppShell role={role ?? "mentor"}>
+      <AppShell role={role ?? "mentor"} variant="staff">
         <main style={SHELL_MAIN_STYLE}>
           <BackLink />
           <p style={{ color: "#64748b", fontSize: 14 }}>{t.evaluation_demo_disabled}</p>
@@ -119,7 +119,7 @@ export default async function MentorSubmissionPage({
   const supabase = await createClient();
   if (!supabase) {
     return (
-      <AppShell role={role ?? "mentor"}>
+      <AppShell role={role ?? "mentor"} variant="staff">
         <main style={SHELL_MAIN_STYLE}>
           <BackLink />
           <p style={{ color: "#64748b", fontSize: 14 }}>{t.evaluation_demo_disabled}</p>
@@ -170,7 +170,7 @@ export default async function MentorSubmissionPage({
   const submissionVersion: 1 | 2 = submission.version === 2 ? 2 : 1;
 
   return (
-    <AppShell role={role ?? "mentor"}>
+    <AppShell role={role ?? "mentor"} variant="staff">
       <main style={SHELL_MAIN_STYLE}>
         <BackLink />
 

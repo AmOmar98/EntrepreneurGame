@@ -100,7 +100,7 @@ export default async function DeliverableDetailPage({
 
   if (!hasSupabaseEnv()) {
     return (
-      <AppShell role="player">
+      <AppShell role="player" variant="player">
         <main style={SHELL_MAIN_STYLE}>
           <BackLink />
           <p style={{ color: "#64748b", fontSize: 14 }}>{t.submission_demo_disabled}</p>
@@ -112,7 +112,7 @@ export default async function DeliverableDetailPage({
   const supabase = await createClient();
   if (!supabase) {
     return (
-      <AppShell role="player">
+      <AppShell role="player" variant="player">
         <main style={SHELL_MAIN_STYLE}>
           <BackLink />
           <p style={{ color: "#64748b", fontSize: 14 }}>{t.submission_demo_disabled}</p>
@@ -198,7 +198,7 @@ export default async function DeliverableDetailPage({
   }
 
   return (
-    <AppShell role="player">
+    <AppShell role="player" variant="player">
       <main style={SHELL_MAIN_STYLE}>
         <BackLink />
 

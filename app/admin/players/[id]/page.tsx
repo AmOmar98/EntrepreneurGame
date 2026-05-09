@@ -93,7 +93,7 @@ export default async function PlayerDetailPage({
 
   if (!detail) {
     return (
-      <AppShell role={role ?? "game_master"}>
+      <AppShell role={role ?? "game_master"} variant="staff">
         <main style={SHELL_MAIN_STYLE}>
           <BackLink />
           <p style={{ color: "#64748b", fontSize: 14 }}>{t.admin_detail_not_found}</p>
@@ -103,7 +103,7 @@ export default async function PlayerDetailPage({
   }
 
   return (
-    <AppShell role={role ?? "game_master"}>
+    <AppShell role={role ?? "game_master"} variant="staff">
       <main style={SHELL_MAIN_STYLE}>
         <BackLink />
         <HeaderCard detail={detail} />

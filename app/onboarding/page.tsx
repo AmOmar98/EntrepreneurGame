@@ -50,7 +50,7 @@ export default async function OnboardingPage() {
 
   if (!player) {
     return (
-      <AppShell role="player">
+      <AppShell hideTabBar role="player" variant="player">
         <main style={{ padding: 24 }}>
           <h1>{t.onboarding_title}</h1>
           <p>{t.onboarding_no_player}</p>
@@ -82,7 +82,7 @@ export default async function OnboardingPage() {
   });
 
   return (
-    <AppShell role="player">
+    <AppShell hideTabBar role="player" variant="player">
       <main style={{ padding: 24, display: "grid", gap: 24 }}>
         <header>
           <h1>{t.onboarding_title}</h1>

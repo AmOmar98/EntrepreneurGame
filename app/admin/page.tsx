@@ -25,7 +25,7 @@ export default async function AdminPage() {
       ];
 
   return (
-    <AppShell role={role ?? "game_master"}>
+    <AppShell role={role ?? "game_master"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1200 }}>
         <header
           style={{

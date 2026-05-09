@@ -27,7 +27,7 @@ export default async function JourneyPage() {
 
   if (data.empty || !data.player) {
     return (
-      <AppShell role="player">
+      <AppShell role="player" variant="player">
         <main style={{ padding: 24, maxWidth: 960 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px", color: "#0f172a" }}>
             {t.journey_title}
@@ -41,7 +41,7 @@ export default async function JourneyPage() {
   const allDeliverables = data.missions.flatMap((m) => m.deliverables);
 
   return (
-    <AppShell role="player">
+    <AppShell role="player" variant="player">
       <main style={{ padding: 24, maxWidth: 960 }}>
         <JourneyHeader
           teamName={data.player.name}
