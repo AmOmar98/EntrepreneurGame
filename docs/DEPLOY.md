@@ -31,16 +31,16 @@ Dashboard -> Project -> Settings -> Environment Variables :
 | `NEXT_PUBLIC_SUPABASE_URL` | https://<ref>.supabase.co | Production, Preview, Development | Plain |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (anon key Supabase) | Production, Preview, Development | Plain |
 | `SUPABASE_SERVICE_ROLE_KEY` | (service role key Supabase) | **Production only** | **Secret/Sensitive** |
-| `NEXT_PUBLIC_APP_URL` | https://entrepreneur-game.vercel.app | Production, Preview, Development | Plain |
+| `NEXT_PUBLIC_APP_URL` | https://entrepreneur-game-six.vercel.app | Production, Preview, Development | Plain |
 
 SECURITY : `SUPABASE_SERVICE_ROLE_KEY` doit etre marque "Sensitive" et ne JAMAIS commencer par `NEXT_PUBLIC_`. Bypass RLS - server only.
 
 ### 3. Configurer Supabase Auth pour la prod
 Supabase Dashboard -> Authentication -> URL Configuration :
-- Site URL : `https://entrepreneur-game.vercel.app` (ou domaine custom)
+- Site URL : `https://entrepreneur-game-six.vercel.app` (ou domaine custom)
 - Redirect URLs : ajouter
-  - `https://entrepreneur-game.vercel.app/auth/callback`
-  - `https://entrepreneur-game.vercel.app/**` (preview deploys)
+  - `https://entrepreneur-game-six.vercel.app/auth/callback`
+  - `https://entrepreneur-game-six.vercel.app/**` (preview deploys)
   - URL custom domain si applicable
 
 Templates email (Authentication -> Email Templates -> Magic Link) :
@@ -49,12 +49,12 @@ Templates email (Authentication -> Email Templates -> Magic Link) :
 
 ### 4. Premier deploy
 ```bash
-git push origin master
+git push origin main
 ```
 Vercel build + deploy auto. Attendre statut "Ready" dans le dashboard.
 
 ## Procedure deploy continu
-- Push sur `master` -> Vercel build + deploy auto en Production
+- Push sur `main` -> Vercel build + deploy auto en Production
 - Push sur autre branche / PR -> Preview deploy (tester avant merge)
 - Logs : Vercel Dashboard -> Deployments -> selectionner deploy -> Function Logs
 

@@ -19,7 +19,7 @@ Objectif : valider le flux complet bout-en-bout sur l'URL prod avant ouverture a
 ## 1. GameMaster import CSV
 - [ ] Login GM via `/login` (magic link envoye au compte GM seedé)
 - [ ] Aller sur `/admin` -> tableau cohorte vide
-- [ ] `/admin/players/import` -> coller CSV de 2 equipes test (format : team_name,leader_email,leader_name,member2_name,member2_email,...)
+- [ ] `/admin/players/import` -> coller CSV de 2 equipes test (format reel : `team_name,project_name,project_pitch,leader_email,member_emails` ; member_emails optionnel, multi-adresses separees par `;` - cf. `tests/fixtures/startups-2-teams.csv` et `lib/admin-import.ts`)
 - [ ] Verifier rapport import (created=2, invites=N selon emails fournis)
 - [ ] Magic links recus dans inbox des leaders (verifier 2 boites mail differentes)
 

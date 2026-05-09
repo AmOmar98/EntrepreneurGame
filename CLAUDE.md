@@ -34,7 +34,18 @@ Core enums — `Stage` (L0_diagnostic…L5_alumni), `Checkpoint`, `MaturityPhase
 
 ### Routes (App Router)
 
-Role-segmented under `app/`: `journey/`, `startup/`, `projects/`, `coach/`, `review/`, `committee/`, `admin/` (with `admin/game` and `admin/startups`), `ops/`, `mailto/`, `onboarding/`, `login/`. CSV / committee pack / EML exports are route handlers under `app/api/export/` — names match the README contract (`cohort.csv`, `review-queue.csv`, `kpi-snapshot.csv`, `committee/[id]`, `eml/[id]`); CSV serialization uses `lib/csv.ts`.
+Role-segmented pages under `app/`:
+- Player flow: `onboarding/`, `journey/`, `journey/deliverable/[id]/`
+- Mentor flow: `mentor/`, `mentor/submission/[id]/`
+- GameMaster flow: `admin/`, `admin/players/[id]/`, `admin/players/import/`
+- Pitch + results: `jury/`, `results/`
+- Public: `login/`, `player/[slug]/`, root `/` (redirects auth)
+
+Route handlers (non-page):
+- `auth/callback/route.ts` — Supabase magic link landing
+- `admin/export/players.csv/route.ts` — GameMaster CSV export (auth-gated, `dynamic = "force-dynamic"`)
+
+Earlier phases referenced `app/api/export/{cohort,review-queue,kpi-snapshot}.csv`, `committee/[id]`, `eml/[id]` route handlers; these were retired during the Phase 4 admin refactor and only `admin/export/players.csv` remains. CSV serialization still flows through `lib/csv.ts`.
 
 ### Database
 
@@ -46,7 +57,8 @@ SQL lives in `database/` and must be applied in order: `schema.sql` → `trigger
 
 ### Ops
 
-`ops/compose.app.yml` and `ops/Caddyfile` describe the deploy target; not used for local dev.
+- Pilot prod is deployed on Vercel (region `cdg1`) at https://entrepreneur-game-six.vercel.app — config in `vercel.json`, deploy procedure in `docs/DEPLOY.md`. Note the slug is `entrepreneur-game-six` (Vercel auto-suffixed `-six` because `entrepreneur-game.vercel.app` is squatted by an unrelated quiz project — do not link to or test against the squat URL).
+- `ops/compose.app.yml` and `ops/Caddyfile` describe an alternative Docker+Caddy deploy target; not used for local dev or the Vercel pilot.
 
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
