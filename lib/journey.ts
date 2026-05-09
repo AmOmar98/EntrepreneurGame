@@ -235,11 +235,17 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     return sameLocalDay(dt, now);
   });
 
-  if (todayMissions.length === 0) {
+  // Fallback : pre-pilot preview / post-pilot recap. When no mission lands on
+  // "today" (smoke pre-13 May, J-1 rehearsal, post-event recap), display the
+  // full mission list so the Player can still see the parcours instead of an
+  // empty page. On the actual event days the today-filter above takes over.
+  const displayMissions = todayMissions.length > 0 ? todayMissions : allMissions;
+
+  if (displayMissions.length === 0) {
     return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
   }
 
-  const missionIds = todayMissions.map((m) => m.id);
+  const missionIds = displayMissions.map((m) => m.id);
 
   // Fetch deliverable templates linked to today's missions.
   const { data: tplRows } = await supabase
@@ -276,7 +282,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     subByTemplate.set(s.deliverable_template_id, arr);
   }
 
-  const missions: JourneyMission[] = todayMissions.map((mission) => {
+  const missions: JourneyMission[] = displayMissions.map((mission) => {
     const tpls = tplByMission.get(mission.id) ?? [];
     const deliverables: JourneyDeliverable[] = tpls.map((template) => {
       const subs = subByTemplate.get(template.id) ?? [];
