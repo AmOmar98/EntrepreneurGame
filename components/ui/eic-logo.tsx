@@ -20,7 +20,7 @@ export function EICLogo({ variant = "default", className }: EICLogoProps) {
     .filter(Boolean)
     .join(" ");
   return (
-    <span className={classes} role="img">
+    <span className={classes} role="img" aria-label="EIC - Euromed Innovation Center">
       <svg
         aria-hidden="true"
         focusable="false"
@@ -29,7 +29,6 @@ export function EICLogo({ variant = "default", className }: EICLogoProps) {
         width="28"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <title>EIC — Euromed Innovation Center</title>
         <rect
           fill={markBg}
           height="28"
@@ -62,7 +61,7 @@ export function EICLogo({ variant = "default", className }: EICLogoProps) {
           strokeWidth="2"
         />
       </svg>
-      <span className="eic-logo__word">
+      <span className="eic-logo__word" aria-hidden="true">
         <span className="eic-logo__name" style={{ color: wordColor }}>
           EIC
         </span>
