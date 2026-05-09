@@ -246,13 +246,12 @@
 | DEPLOY-03 | 5 | validated (checklist livree, operator UAT requis) |
 | NOTIF-01, SCORE-03, EVENT-05, RESOURCE-01 | (SHOULD) | pending (post-pilote ou si buffer) |
 | **v0.2 — EIC Design v2 Refresh** | | |
-| DSY-01..07 | 6 | pending (à remplir par roadmap) |
-| PLR-01..08 | 7 | pending (à remplir par roadmap) |
-| MNT-01..06 | 8 | pending (à remplir par roadmap) |
-| GMR-01..03, GMR-05..06, GMR-08 | 9 | pending — MUST réels jour 2 |
-| GMR-04 (annonces) | 9 | best-effort SHOULD ou différé v0.3 |
-| GMR-07 (Pixel SVG) | 9 | best-effort si buffer après GMR-08 |
-| GMR-09 (toggle deliverable) | 9 | compromis minimal nouveau req « blocs préfaits » |
+| DSY-01..07 | 6 | mapped (ROADMAP.md Phase 6) |
+| PLR-01..08 | 7 | mapped (ROADMAP.md Phase 7) |
+| MNT-01..06 | 8 | mapped (ROADMAP.md Phase 8) |
+| GMR-01..03, GMR-05..06, GMR-08, GMR-09 | 9 | mapped — MUST réels jour 2 (Phase 9 commit atomique GMR-01+GMR-02) |
+| GMR-04 (annonces) | 9 | mapped, best-effort SHOULD ou différé v0.3 |
+| GMR-07 (Pixel SVG) | 9 | mapped, best-effort si buffer après GMR-08 |
 
 ---
 

@@ -150,21 +150,123 @@ Plans:
 
 ---
 
-## Phases SHOULD (si J5 fini en avance)
+## v0.2 EIC Design v2 Refresh — Phases 6-9 (pré-pilote, J-4 → J-1)
 
-### Phase 6 — Notifications & Engagement (S1, SCORE-03)
+**Cadrage v0.2** : refonte visuelle + UX selon le bundle Claude Design `.planning/design-v2/`. La fonctionnalité v0.1 reste intacte (pilote du 13-14 mai protégé). Chaque phase commit atomique → fallback v0.1 garanti si Phase 9 ne finit pas le 12 mai.
 
-**Quand** : 2026-05-13 (J5 après-midi) si buffer
+**Pré-requis opérateur (avant Phase 6 démarre)** : tagger `v0.1-pilot-ready` sur la branche main (`git tag v0.1-pilot-ready && git push --tags`). Permet rollback complet si Phase 6 casse le shell partagé.
+
+**Couplages atomiques explicites (DoD-bloquants)** :
+- DSY-04 (composants partagés) = DoD-bloquant Phase 6 → Phases 7-9 en dépendent.
+- PLR-03 (hero unique) + PLR-04 (drawer) → 1 commit atomique en Phase 7.
+- GMR-01 (toggle live) + GMR-02 (radar) → 1 commit atomique en Phase 9 (pulsations calibrées fond sombre).
+- GMR-08 (bandeau alert) AVANT GMR-07 (Pixel SVG) en Phase 9 — bandeau seul reste shippable.
+
+**Source de vérité design** : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08, voir `chats/chat1.md`).
+
+---
+
+## Phase 6: Design System EIC — Tokens + Composants partagés + AppShell + Login branded
+
+**Quand** : 2026-05-09 (J-4)
+**Goal:** la fondation visuelle EIC v2 est en place — tokens CSS, polices self-hosted, composants partagés `<Button>`/`<Pill>`/`<LevelBadge>`/`<ProgressBar>`, AppShell refondu, login branded — sans casser les écrans v0.1 existants.
+**Depends on:** Phase 5 (v0.1 pilot-ready préservé) — git tag `v0.1-pilot-ready` posé en pré-requis opérateur
+**UI hint** : oui
+
+**Requirements couverts** : DSY-01, DSY-02, DSY-03, DSY-04, DSY-05, DSY-06, DSY-07
+
+**Success Criteria** (what must be TRUE):
+1. Player/Mentor/GameMaster qui se connecte voit la palette EIC (bleu `#1B3A5C`, vert `#2E7D32`, ivoire `#F6F1E8`) sur toutes les surfaces principales (login, journey, mentor, admin) — aucun reste de slate/blue v0.1 sur les pages refondues. Les tokens v0.1 legacy (`--brand-*`, `--green`, `--blue`) restent définis en parallèle des `--eic-*` pour ne pas casser les composants v0.1 non touchés.
+2. Toutes les pages chargent Baskervville (titres `<h1>`-`<h4>`) + Montserrat (corps) via `next/font/google` (self-hosted, zéro round-trip réseau, zero `@import url(...)` synchrone). LCP `/login` reste sous 2.5s sur 3G simulé.
+3. Visiteur sur `/login` voit la page refondue : background ivoire avec aurora doux, logo EIC haut-gauche, bandeau partenaires (Tamwilcom, BoA Academy, Innov Invest, Bluespace, EIC, UEMF), formulaire centré sur card glass — fallback `@supports not (backdrop-filter: blur(1px))` rend la card en blanc 92% opaque sur Android Chrome <90.
+4. Développeur peut importer `<Button variant="primary|success|ghost">`, `<Pill tone="blue|green|amber|rose">`, `<LevelBadge state="done|current|locked">`, `<ProgressBar value={0..1}>` depuis `components/ui/` — chaque primitive a un seul responsable de styles (pas d'inline `style={...}` ad hoc dans les pages refondues).
+5. AppShell : Player voit topbar légère + tab bar mobile bottom (sidebar dark green retirée chez Player) ; Mentor + GameMaster gardent la sidebar restylée tokens EIC.
+6. `npm run typecheck` passe sans erreur, `npm run lint` sans nouveau warning, `npm run build` produit un bundle qui se sert correctement en prod.
+
+**Plans:** TBD
+
+---
+
+## Phase 7: Joueur — Barre de charge L0→L7 + Drawer + Onboarding 3 étapes + Ticket SOUMIS
+
+**Quand** : 2026-05-10 (J-3)
+**Goal:** le Player vit le journey refondu — barre verticale L0→L7 (descendante desktop, ascendante mobile), hero unique « Prochaine étape » avec drawer livrables, onboarding 3 étapes éditoriales, ticket SOUMIS avec stamp, écran révision V2 pédagogique.
+**Depends on:** Phase 6 (composants partagés DSY-04 + AppShell topbar léger DSY-05)
+**UI hint** : oui
+
+**Requirements couverts** : PLR-01, PLR-02, PLR-03, PLR-04, PLR-05, PLR-06, PLR-07, PLR-08
+
+**Success Criteria** (what must be TRUE):
+1. Player sur `/journey` desktop (≥1100px) voit la barre verticale L0→L7 **descendante** (top=L7 pitch, bottom=L0 diagnostic) ; sur mobile (<1100px) la barre est **ascendante** (bottom=L0, top=L7 sommet à atteindre). Niveau courant pulsé bleu, niveaux faits verts, niveaux locked grisés/dashed.
+2. Player voit au-dessus de la barre un hero unique « Prochaine étape » avec UN seul CTA primaire visible (le prochain livrable à rendre OU « Voir le feedback » si V2 demandée) — jamais de secondary action sur le hero. Hover/clic sur un niveau ouvre un drawer latéral (~400px desktop, full-width mobile) avec les missions/livrables de ce niveau, chaque mission rendue comme card (code `M3.1`, titre FR, statut pill, reward XP, bouton action contextuel). [PLR-03 + PLR-04 = 1 commit atomique]
+3. Player en première session (`onboarded_at IS NULL`) traverse 3 étapes éditoriales sur `/onboarding` avec navigation `← Précédent / Suivant →` : (1) bienvenue + chiffres clés Hack-Days, (2) ton équipe avec coéquipiers chargés depuis `player_members`, (3) 3 règles du jeu en numéros éditoriaux. Soumission finale = redirect `/journey`.
+4. Player après soumission V1 sur `/journey/deliverable/[id]` voit l'écran SOUMIS éditorial : fond cream avec sunburst rays, gros « +XP » en gradient, ticket avec stamp « SOUMIS » rotated, sentence soumise, CTA primaire « Retour au journey ».
+5. Player après verdict `revision` du Mentor voit `/journey/deliverable/[id]` avec : message mentor en haut, checklist « Ce qui passe ✓ / Ce qui manque ⚠ », bandeau vert pédagogique « Votre V1 est conservé. Le V2 affine, il ne remplace pas votre démarche initiale. », CTA « Soumettre un nouveau lien ».
+6. Player après V1 (avant verdict) voit dans le drawer la card livrable en état « En revue » avec timestamp + nom mentor assigné (ex: « Sami K. · soumis il y a 8 min ») — évite le silence muet entre V1 et feedback.
+
+**Plans:** TBD
+
+---
+
+## Phase 8: Mentor — Vue lien + Historique + Commentaires async tagués + Action attendue
+
+**Quand** : 2026-05-11 (J-2)
+**Goal:** le Mentor évalue une soumission link-based (URL ou texte) avec commentaires async tagués (`remarque`/`à corriger`), historique V1/V2, champ « Action attendue » obligatoire en cas de demande V2, et confirmation post-évaluation explicite — sans aucun chat live ni Realtime.
+**Depends on:** Phase 7 (les commentaires Mentor s'affichent côté Player sur l'écran révision PLR-07)
+**UI hint** : oui
+
+**Requirements couverts** : MNT-01, MNT-02, MNT-03, MNT-04, MNT-05, MNT-06
+
+**Success Criteria** (what must be TRUE):
+1. Mentor sur `/mentor/submission/[id]` voit le lien soumis comme objet central : card avec type détecté (Google Docs / GitHub / Notion / autre selon hostname), URL cliquable, note jointe (texte de la submission), bouton « Ouvrir ↗ » ouvre le lien dans un nouvel onglet.
+2. Mentor voit sous la submission courante l'historique des liens (V1 puis V2 si soumise), chacun avec sa date et son lien — file antichrono, pas de threading.
+3. Mentor peut ajouter des commentaires tagués (`remarque` neutre / `à corriger` rouge) au niveau du livrable via un composer textarea + select tag ; chaque commentaire est persisté avec auteur+timestamp et visible côté Player sur l'écran révision (PLR-07). Tous les commentaires sont des posts async en liste antichrono — aucun chat live, aucun WebSocket / Supabase Realtime.
+4. Mentor avec verdict=`revision` est obligé de remplir un champ « Action attendue » (texte libre court, ex: « refaire le BMC en intégrant le feedback ») persisté dans `evaluations.feedback_text` ou colonne dédiée — la soumission échoue côté server action si le champ est vide en cas de verdict=`revision`.
+5. Mentor après soumission d'une évaluation voit un toast/banner de confirmation « Score envoyé · +X XP attribués à [équipe] · Player notifié » qui empêche la double-soumission par incertitude.
+
+**Plans:** TBD
+
+---
+
+## Phase 9: GameMaster + Jury + Replay + Pixel — Mode live + Radar + Pitch théâtre + Podium + Mascotte
+
+**Quand** : 2026-05-12 (J-1)
+**Goal:** GameMaster peut basculer `/admin` en mode live (radar pulsant fond sombre + bandeau status alert), animer le pitch jury jour 2 en mode théâtre (timer 5 min + grille /5), publier le replay/podium éditorial, et activer/désactiver des deliverable_templates. Pixel SVG mascotte = best-effort si buffer après GMR-08.
+**Depends on:** Phase 8 (Mentor évalue → données alimentent radar XP) + Phase 6 (composants partagés)
+**UI hint** : oui
+
+**Requirements couverts** : GMR-01, GMR-02, GMR-03, GMR-04 *(SHOULD/best-effort)*, GMR-05, GMR-06, GMR-07 *(best-effort si buffer après GMR-08)*, GMR-08, GMR-09
+
+**Success Criteria** (what must be TRUE):
+1. GameMaster sur `/admin` peut basculer un toggle « Mode live » dans le topbar : (mode standard) tableau cohorte v0.1 stylé v0.2 / (mode live) fond sombre, radar de la salle (cercles XP des équipes), fil du jeu textuel en bas. Chaque équipe = cercle SVG dont taille = score Projet courant ; cercle vibre + pulsations rouges (CSS animation pure, pas de re-render React par tick) quand activité dans les 5 dernières minutes, gris/figé quand inactif >5 min. Visibilité par défaut = `gm_only` (Players ne voient PAS le radar). [GMR-01 + GMR-02 = 1 commit atomique]
+2. GameMaster clique sur un cercle dans le radar → vue Focus équipe : layout éditorial avec gros « 01 » filigrane (numéro classement), titre Baskervville surdimensionné (équipe + projet italic), citation idée projet, avatars membres, bandeau stats vitales (Score Projet, niveau, livrables soumis, dernière activité), barre activité verticale à droite.
+3. GameMaster sur `/admin` voit en topbar un bandeau status simple (texte + icône + CTA) qui détecte 4 états du hack — **serein** (vert, tout flue), **concentré** (bleu, phase de revue), **inquiet** (rouge, ≥3 équipes silencieuses >15 min), **euphorique** (orange, célébration en cours) — avec micro-action contextuelle (ex: « Réveiller les 3 équipes »). Ce bandeau (GMR-08) est livré AVANT la mascotte Pixel SVG (GMR-07) — si Phase 9 manque de temps, le bandeau seul reste utilisable.
+4. GameMaster sur `/jury` jour 2 peut basculer un toggle « Mode pitch » → page théâtre : fond sombre, équipe en cours grand format avec timer 5 min décompte, file de passage ordonnée à droite, grille notation /5 sur 5 critères + textarea commentaire global, indicateur « X/5 jurés ont noté » en bas.
+5. GameMaster publie les résultats → tout le monde voit `/results` en mode Replay : fond ivoire, hero verdict éditorial (« L'équipe Atlas remporte le Hack-Days 2026 »), podium 3 marches (or/argent/bronze), strip 5 stats globales, classement complet en tableau, timeline moments forts (manuelle, seedée par GM), bandeau exports (Certificats CSV / Rapport CSV / page publique).
+6. GameMaster peut activer/désactiver un `deliverable_template` existant via un toggle on/off sur `/admin/deliverables` (ou intégré au tableau `/admin`) ; un template désactivé n'apparaît plus dans le journey des Players. Schema = ajout colonne `deliverable_templates.is_active boolean default true`, server action `toggleDeliverableActive(id)`, RLS GM-only (commit DDL atomique séparé). [Compromis minimal v0.2 du nouveau requirement « blocs préfaits éditables » — version complète différée v0.3.]
+7. *(Best-effort)* Si buffer Phase 9 après GMR-08 : Pixel SVG mascotte (blob doux + oreilles + yeux) floating bottom-right sur `/admin` mode live, 4 humeurs (serein/concentré/inquiet/euphorique) reflet du bandeau status, repliable en pill au clic. *(Best-effort)* Si buffer après tout le reste : annonces live `/admin/announce` (4 types info/urgence/célébration/appel, ciblage, persistance DB sans Realtime, lecture côté Player via reload). GMR-04 et GMR-07 sont SHOULD/best-effort, ordre d'abandon documenté dans REQUIREMENTS.md.
+
+**Plans:** TBD
+
+**Note d'ordre d'abandon (si Phase 9 tronquée)** : ordre de descope GMR-04 > GMR-07 > GMR-09 > GMR-02 (animation) > GMR-08 > GMR-06 > GMR-05 > GMR-03 > GMR-01. Les 4 derniers (GMR-01/03/05/06) sont les MUST réels du jour 2 du pilote.
+
+---
+
+## Phases SHOULD (si J5 fini en avance) — héritées v0.1
+
+### Phase 6 — Notifications & Engagement (S1, SCORE-03) [renumérotée mentalement → différée]
+
+**Quand** : post-pilote
 **Goal** : badges in-page de notifs non-lues + Score Engagement calculé serveur affiché sur `/admin`
-**Depends on** : Phase 5
 **Requirements couverts** : NOTIF-01, SCORE-03
 
-### Phase 7 — Multi-event readiness + Resources (S3, S4)
+### Phase 7 — Multi-event readiness + Resources (S3, S4) [renumérotée mentalement → différée]
 
-**Quand** : 2026-05-13 si buffer
+**Quand** : post-pilote
 **Goal** : schema multi-event prêt (event_id partout, levels 0-7 référencés en table), page Resources statique avec gabarits
-**Depends on** : Phase 5
 **Requirements couverts** : EVENT-05, RESOURCE-01
+
+*(Note : ces deux Phases SHOULD historiques portaient les numéros 6 et 7 dans la planification v0.1 ; v0.2 réutilise les numéros 6-9 pour le design refresh. Si l'un de ces SHOULD doit reprendre, il sera renuméroté Phase 10+ post-pilote.)*
 
 ---
 
@@ -175,6 +277,8 @@ Voir `PROJECT.md` § Out of Scope. Brainstorming Project B après le 14 mai en s
 ---
 
 ## Coverage check
+
+### v0.1 (Phases 1-5) — pilot-ready
 
 Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
@@ -195,6 +299,17 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
 ✓ Tous les v1 requirements couverts par les phases 1-5.
 
+### v0.2 (Phases 6-9) — design refresh pré-pilote
+
+| Catégorie | REQ-IDs | Phase |
+|---|---|---|
+| DSY (Design System) | DSY-01, DSY-02, DSY-03, DSY-04, DSY-05, DSY-06, DSY-07 (7 REQ) | Phase 6 |
+| PLR (Joueur) | PLR-01, PLR-02, PLR-03, PLR-04, PLR-05, PLR-06, PLR-07, PLR-08 (8 REQ) | Phase 7 |
+| MNT (Mentor) | MNT-01, MNT-02, MNT-03, MNT-04, MNT-05, MNT-06 (6 REQ) | Phase 8 |
+| GMR (GameMaster + Jury + Replay + Pixel) | GMR-01, GMR-02, GMR-03, GMR-04, GMR-05, GMR-06, GMR-07, GMR-08, GMR-09 (9 REQ) | Phase 9 |
+
+✓ **30/30 v0.2 requirements mappés** — coverage 100%, aucun orphan, aucun duplicate.
+
 ---
 
-*Last updated: 2026-05-08 after Phase 5 completion (pilot-ready). All 5 phases / 26 plans complete. Operator UAT pending before 13 mai 2026.*
+*Last updated: 2026-05-09 — v0.2 EIC Design v2 Refresh appended (Phases 6-9). v0.1 pilot-ready (Phases 1-5) préservé intégralement. Source design v0.2 : `.planning/design-v2/`.*
