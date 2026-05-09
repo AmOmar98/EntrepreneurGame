@@ -2,6 +2,15 @@
 // Server-side queries for /results: combined ranking based on the average
 // PitchScore (mean over jurors) and players.score_project, weighted 50/50 by
 // default. Dual-mode (DATA-03): demo mode (no Supabase env) returns empty.
+//
+// Post-publish visibility (Finding 1, smoke 2026-05-09): once
+// events.results_published_at is set, the ranking must be visible to ALL
+// authenticated users (Players included). RLS on `players` filters per
+// player_member, which would only show each Player their own row. We bypass
+// that with a service-role client *only after publication* — the page route
+// itself is still gated by middleware auth and the role check in
+// app/results/page.tsx, so we are not exposing data publicly.
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import type { Player, LevelId } from "@/lib/types";
 
@@ -87,6 +96,23 @@ function dense(rows: Omit<RankingRow, "rank">[]): RankingRow[] {
 }
 
 // ============================================================================
+// Service-role client builder (post-publish bypass — see file header).
+// Returns null when SUPABASE_SERVICE_ROLE_KEY is missing/placeholder; in that
+// case computeRanking falls back to the RLS-aware client (preview-only).
+// ============================================================================
+
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+function buildServiceClient(): ServiceClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || key === "replace-me") return null;
+  return createServiceClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+// ============================================================================
 // Server-side accessors
 // ============================================================================
 
@@ -120,11 +146,12 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
   const pitchWeight = clampWeight(opts?.pitchWeight);
   const projectWeight = 1 - pitchWeight;
 
-  const supabase = await createClient();
-  if (!supabase) return { eventId: null, publishedAt: null, rows: [] };
+  const rlsClient = await createClient();
+  if (!rlsClient) return { eventId: null, publishedAt: null, rows: [] };
 
-  // 1. Resolve current event (latest by starts_at).
-  const { data: eventRow, error: eventErr } = await supabase
+  // 1. Resolve current event (latest by starts_at). RLS-aware — events SELECT
+  // is open to all authenticated users.
+  const { data: eventRow, error: eventErr } = await rlsClient
     .from("events")
     .select("id, results_published_at")
     .order("starts_at", { ascending: false })
@@ -138,6 +165,17 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
   const event = eventRow as { id: string; results_published_at: string | null };
   const eventId = event.id;
   const publishedAt = event.results_published_at;
+
+  // Post-publish, switch to service-role to bypass RLS on players + pitch_scores
+  // so every authenticated user (Players included) sees the full ranking. The
+  // page itself stays gated by middleware auth + the in-page non-GM/published
+  // check in app/results/page.tsx, so we never expose data anonymously.
+  const useServiceRole = publishedAt !== null;
+  const serviceClient = useServiceRole ? buildServiceClient() : null;
+  // Fallback: if SUPABASE_SERVICE_ROLE_KEY is missing in prod, we keep using
+  // the RLS-aware client. Players will still only see their own row, which is
+  // the pre-patch behaviour — degraded but not broken.
+  const supabase = serviceClient ?? rlsClient;
 
   // 2. Cohorts of this event -> players.
   const { data: cohortRows, error: cohortErr } = await supabase
