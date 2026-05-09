@@ -1,5 +1,22 @@
 import type { Metadata } from "next";
+import { Baskervville, Montserrat } from "next/font/google";
 import "./globals.css";
+import "./eic-tokens.css";
+
+const baskervville = Baskervville({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: { default: "Entrepreneur Game - EIC / UEMF", template: "%s - Entrepreneur Game" },
@@ -13,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html className={`${baskervville.variable} ${montserrat.variable}`} lang="fr">
       <body>{children}</body>
     </html>
   );
