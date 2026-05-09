@@ -72,9 +72,10 @@ function StaffShell({
           <Image
             alt="EIC - UEMF"
             className="brand-logo"
-            height={40}
+            height={64}
+            priority
             src="/brand/logo-eic.svg"
-            width={160}
+            width={240}
           />
           <span className="brand-tagline">{t.brand_tagline_short}</span>
         </div>
