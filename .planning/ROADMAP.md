@@ -182,7 +182,7 @@ Plans:
 5. AppShell : Player voit topbar légère + tab bar mobile bottom (sidebar dark green retirée chez Player) ; Mentor + GameMaster gardent la sidebar restylée tokens EIC.
 6. `npm run typecheck` passe sans erreur, `npm run lint` sans nouveau warning, `npm run build` produit un bundle qui se sert correctement en prod.
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 06-01-PLAN.md — Tokens EIC + next/font/google + glass/aurora utilities (DSY-01, DSY-02, DSY-03)
