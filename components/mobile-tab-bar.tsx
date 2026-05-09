@@ -15,7 +15,7 @@ export function MobileTabBar({ items }: MobileTabBarProps) {
     <nav aria-label="Mobile primary" className="eic-mobile-tabbar">
       {items.map((item) => {
         const active =
-          pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false);
+          pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             aria-current={active ? "page" : undefined}
