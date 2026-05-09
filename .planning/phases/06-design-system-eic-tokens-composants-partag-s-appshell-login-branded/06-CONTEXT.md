@@ -7,7 +7,7 @@
 <domain>
 ## Phase Boundary
 
-La fondation visuelle EIC v2 est en place — tokens CSS, polices self-hosted, composants partagés `<Button>`/`<Pill>`/`<LevelBadge>`/`<ProgressBar>`, AppShell refondu, login branded — sans casser les écrans v0.1 existants. La fonctionnalité v0.1 reste fonctionnelle (pilote du 13-14 mai protégé).
+La fondation visuelle EIC v2 est en place — tokens CSS, polices self-hosted, composants partagés `<Button>`/`<Pill>`/`<LevelBadge>`/`<ProgressBar>`, AppShell refondu, login branded — sans casser les écrans v0.1 existants. La fonctionnalité v0.1 reste fonctionnelle. Mode qualité sans deadline.
 
 **Couvre** : DSY-01, DSY-02, DSY-03, DSY-04, DSY-05, DSY-06, DSY-07.
 

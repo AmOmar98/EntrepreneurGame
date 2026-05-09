@@ -4,7 +4,7 @@
 - v0.1 (Pilot) : `docs/superpowers/specs/2026-05-08-entrepreneur-game-pilot-design.md` §3
 - v0.2 (Design v2 Refresh) : `.planning/design-v2/` (bundle Claude Design 2026-05-08, voir `chats/chat1.md`)
 
-**Cadrage** : Project A v0.1 (5 jours solo dev) livré 2026-05-08. v0.2 (4 jours solo dev, J-4 → J-1 du pilote) en cours. MUST = non-négociable, SHOULD = tenté J4-J5, COULD = V2.
+**Cadrage** : Project A v0.1 livré 2026-05-08 (pilot-ready). v0.2 EIC Design v2 Refresh en cours, mode qualité sans deadline. MUST = non-négociable, SHOULD = bonus, COULD = V2.
 
 ---
 
@@ -94,11 +94,11 @@
 
 ---
 
-## v0.2 Requirements (EIC Design v2 Refresh — pré-pilote, J-4 → J-1)
+## v0.2 Requirements (EIC Design v2 Refresh)
 
-**Cadrage** : refonte visuelle + UX de l'app v0.1 selon le bundle Claude Design `.planning/design-v2/`. La fonctionnalité v0.1 reste fonctionnelle (pilote du 13-14 mai protégé). Changements = visuels, structurels (composants partagés), UX (drawer, hero unique, mascotte). DDL minimal autorisé si commit atomique séparé (ex: `submission_comments`, `deliverable_templates.is_active`) ; refus de toute migration destructive ou changement de RLS gates.
+**Cadrage** : refonte visuelle + UX de l'app v0.1 selon le bundle Claude Design `.planning/design-v2/`. La fonctionnalité v0.1 reste fonctionnelle. Changements = visuels, structurels (composants partagés), UX (drawer, hero unique, mascotte). DDL minimal autorisé si commit atomique séparé (ex: `submission_comments`, `deliverable_templates.is_active`) ; refus de toute migration destructive ou changement de RLS gates. Pas de deadline : qualité avant timing.
 
-**Pré-requis opérateur (avant Phase 6)** : tagger `v0.1-pilot-ready` sur la branche main. Permet rollback complet si Phase 6 casse le shell partagé.
+**Pré-requis opérateur (avant Phase 6)** : tag `v0.1-pilot-ready` posé localement sur `8176419`. `git push --tags` recommandé pour rollback distant possible.
 
 **Couplages atomiques explicites** :
 - PLR-03 (hero unique) + PLR-04 (drawer) → 1 commit ; livrer le drawer sans le hero = retour comportement v0.1.
@@ -150,18 +150,16 @@
 - [ ] **GMR-01** : Sur `/admin`, GameMaster a un toggle « Mode live » dans le topbar qui bascule la vue : (mode standard) tableau cohorte v0.1 stylé v0.2 / (mode live) fond sombre, radar de la salle (cercles XP des équipes), fil du jeu textuel en bas, mascotte Pixel floating bottom-right
 - [ ] **GMR-02** : En mode live, chaque équipe est un cercle SVG dont **taille = score Projet courant** (rayon proportionnel) ; cercle **vibre + pulsations rouges** (CSS animation pure, pas de re-render React par tick) quand activité dans les 5 dernières minutes (submission ou évaluation reçue), **gris/figé** quand inactif >5 min. **Visibilité par défaut = GameMaster + Mentors uniquement** (les Players ne voient PAS le radar) — risque pédagogique de démoralisation des équipes en queue avant le pitch J2. Flag `live_radar_visibility = 'gm_only' | 'public'` côté event, défaut `gm_only`.
 - [ ] **GMR-03** : Clic sur un cercle dans le radar ouvre la vue Focus équipe : layout éditorial avec gros « 01 » filigrane (numéro de classement), titre Baskervville surdimensionné (nom équipe + projet en italic), citation/idée projet, avatars membres, bandeau stats vitales (Score Projet, niveau, livrables soumis, dernière activité), barre verticale d'activité à droite
-- [ ] **GMR-04** *(SHOULD — best-effort si buffer Phase 9, sinon différé v0.3)* : GameMaster peut composer une annonce live depuis `/admin/announce` : 4 types (info bleu / urgence rouge / célébration vert / appel à action ambre), ciblage (toutes équipes / par niveau / équipes choisies / mentors), aperçu temps réel sur mockup phone côté éditeur, action « Diffuser maintenant » ou « Programmer ». Diffusion = persistance en DB (table `announcements`), lecture côté Player via reload (pas de realtime). **Justification descope** : ~6-8h, viole « DDL minimal », GM peut annoncer à voix haute dans la salle physique (15 équipes même lieu).
+- [ ] **GMR-04** : GameMaster peut composer une annonce live depuis `/admin/announce` : 4 types (info bleu / urgence rouge / célébration vert / appel à action ambre), ciblage (toutes équipes / par niveau / équipes choisies / mentors), aperçu temps réel sur mockup phone côté éditeur, action « Diffuser maintenant » ou « Programmer ». Diffusion = persistance en DB (table `announcements`), lecture côté Player via reload (pas de Realtime nécessaire pour cette milestone, polling acceptable).
 - [ ] **GMR-05** : Sur `/jury`, GameMaster a un toggle « Mode pitch » qui bascule la page en mode théâtre : fond sombre, équipe en cours grand format avec timer 5 min décompte, file de passage ordonnée à droite, grille de notation /5 sur 5 critères + textarea commentaire global, indicateur « X/5 jurés ont noté » en bas
 - [ ] **GMR-06** : Sur `/results` quand `events.results_published_at IS NOT NULL`, page Replay : fond ivoire, hero verdict éditorial (« L'équipe Atlas remporte le Hack-Days 2026 »), podium 3 marches (or/argent/bronze), strip de 5 stats globales (équipes, livrables, XP cumulés, etc.), classement complet en tableau, timeline des moments forts (manuelle, seedée par GM), bandeau exports : « Certificats joueurs » (CSV) / « Rapport global » (CSV) / page publique
-- [ ] **GMR-07** : Mascotte Pixel (SVG inline abstrait : blob doux + oreilles + yeux) floating bottom-right de `/admin` en mode live : affiche 4 humeurs selon état du hack — **serein** (vert, tout flue), **concentré** (bleu, phase de revue), **inquiet** (rouge, ≥3 équipes silencieuses >15 min), **euphorique** (orange, célébration en cours) — avec micro-action contextuelle (ex: « Réveiller les 3 équipes »). Forme repliée en pill discrète au clic. **Ordre d'implémentation Phase 9 : (1) GMR-08 logique de détection en bandeau topbar d'abord, (2) Pixel SVG par-dessus si buffer**.
-- [ ] **GMR-08** : Logique de détection des 4 états (serein/concentré/inquiet/euphorique) implémentée comme **bandeau status simple dans le topbar `/admin`** (texte + icône + CTA) AVANT GMR-07 (mascotte SVG). Permet à Omar (animateur le 13 mai) de capter les signaux d'animation pédagogique (ex: « 3 équipes silencieuses depuis 18 min ») sans dépendre de l'habillage SVG. Si Phase 9 manque de temps, GMR-08 livré seul reste utilisable.
+- [ ] **GMR-07** : Mascotte Pixel (SVG inline abstrait : blob doux + oreilles + yeux) floating bottom-right de `/admin` en mode live : affiche 4 humeurs selon état du hack — **serein** (vert, tout flue), **concentré** (bleu, phase de revue), **inquiet** (rouge, ≥3 équipes silencieuses >15 min), **euphorique** (orange, célébration en cours) — avec micro-action contextuelle (ex: « Réveiller les 3 équipes »). Forme repliée en pill discrète au clic.
+- [ ] **GMR-08** : Logique de détection des 4 états (serein/concentré/inquiet/euphorique) implémentée comme **bandeau status simple dans le topbar `/admin`** (texte + icône + CTA), à coupler avec GMR-07 (la mascotte reflète l'état détecté par le bandeau). Permet à l'animateur de capter les signaux d'animation pédagogique (ex: « 3 équipes silencieuses depuis 18 min »).
 - [ ] **GMR-09** : GameMaster peut activer/désactiver un `deliverable_template` existant via un toggle on/off sur `/admin/deliverables` (ou intégré au tableau `/admin`) ; un template désactivé n'apparaît plus dans le journey des Players. Schema = ajout colonne `deliverable_templates.is_active boolean default true`, server action `toggleDeliverableActive(id)`, RLS GM-only. **Compromis minimal du nouveau requirement « blocs préfaits éditables » — la version complète (CRUD blocs, drag, presets) est différée v0.3 post-pilote.**
-
-**Note de scope minimum viable** : si Phase 9 doit être coupée, ordre de priorité d'abandon : GMR-04 (annonces) > GMR-07 (Pixel SVG) > GMR-09 (toggle template) > GMR-02 (radar animé) > GMR-08 (bandeau alerte) > GMR-06 (replay) > GMR-05 (mode pitch) > GMR-03 (focus team) > GMR-01 (toggle mode live). Les 4 derniers sont les MUST réels pour le jour 2 du pilote.
 
 ---
 
-## v1.5 Requirements (SHOULD — tentés J4-J5)
+## v1.5 Requirements (SHOULD — bonus)
 
 - [ ] **NOTIF-01** : Badge in-page sur header avec compte de notifications non-lues (déclenché quand Mentor évalue un livrable du Player)
 - [ ] **SCORE-03** : Score Engagement calculé serveur (présence onboarding +10, livrable rendu V1 +10, V2 soumis +5, livrable rendu dans temps imparti de l'atelier +5). Affiché sur `/admin` quand activé.
@@ -205,7 +203,7 @@
 - Détection avancée de type de lien (preview thumbnail, OG tags) — v0.2 = juste hostname / icône
 - Système de tags commentaires extensible (custom tags par GM) — v0.2 = `remarque` / `à corriger` hardcodés
 - Drag-to-reorder file de passage jury — v0.2 = ordre fixé seedé
-- **« Blocs livrables préfaits éditables » version complète** (CRUD UI, presets réutilisables BMC/Persona/etc., drag reorder, JSONB editor de `scoring_rubric`) → différé v0.3 post-pilote. v0.2 livre juste GMR-09 (toggle on/off d'un template existant). Justification : programme pilote figé annoncé J-7 aux partenaires, modifier dynamiquement les livrables casse le contrat pédagogique. Multi-event flexible = chantier post-pilote naturel.
+- **« Blocs livrables préfaits éditables » version complète** (CRUD UI, presets réutilisables BMC/Persona/etc., drag reorder, JSONB editor de `scoring_rubric`) → différé v0.3. v0.2 livre juste GMR-09 (toggle on/off d'un template existant). Justification : un bootcamp fonctionne sur un programme figé annoncé en amont aux partenaires ; modifier dynamiquement les livrables casse le contrat pédagogique. Multi-event flexible = chantier v0.3 naturel.
 
 ---
 
@@ -249,9 +247,7 @@
 | DSY-01..07 | 6 | mapped (ROADMAP.md Phase 6) |
 | PLR-01..08 | 7 | mapped (ROADMAP.md Phase 7) |
 | MNT-01..06 | 8 | mapped (ROADMAP.md Phase 8) |
-| GMR-01..03, GMR-05..06, GMR-08, GMR-09 | 9 | mapped — MUST réels jour 2 (Phase 9 commit atomique GMR-01+GMR-02) |
-| GMR-04 (annonces) | 9 | mapped, best-effort SHOULD ou différé v0.3 |
-| GMR-07 (Pixel SVG) | 9 | mapped, best-effort si buffer après GMR-08 |
+| GMR-01..09 | 9 | mapped — Phase 9 commit atomique GMR-01+GMR-02, et GMR-07+GMR-08 couplés |
 
 ---
 

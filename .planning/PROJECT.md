@@ -10,9 +10,9 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 
 ## Current Milestone: v0.2 EIC Design v2 Refresh
 
-**Goal :** Appliquer le design v2 EIC complet (bundle Claude Design `.planning/design-v2/`) sur l'app v0.1 pilot-ready, AVANT le pilote du 13 mai 2026 — refonte visuelle qui transforme l'app de fonctionnelle-mais-fade à digne des partenaires UEMF/EIC, sans casser la fonctionnalité v0.1.
+**Goal :** Appliquer le design v2 EIC complet (bundle Claude Design `.planning/design-v2/`) sur l'app v0.1 pilot-ready — refonte visuelle qui transforme l'app de fonctionnelle-mais-fade à digne des partenaires UEMF/EIC, sans casser la fonctionnalité v0.1. Qualité avant timing, pas de deadline.
 
-**Target features (4 phases, J-4 → J-1) :**
+**Target features (4 phases) :**
 
 - **Design system EIC** — `eic-tokens.css` (palette bleu `#1B3A5C` + vert `#2E7D32` + ivoire `#F6F1E8`), polices Baskervville (titres) + Montserrat (corps), glass effect (`backdrop-filter: blur+saturate`), primitives partagées (boutons, pills, cards, level badges), refonte AppShell, login branded avec partenaires
 - **Joueur** — barre de charge verticale L0→L7 (montante mobile, descendante desktop), hero « Prochaine étape » unique + drawer livrables au hover/clic, onboarding 3 étapes éditoriales (bienvenue/équipe/règles), écran SOUMIS avec stamp éditorial, écran révision V2 avec bandeau « aucune perte d'XP »
@@ -21,7 +21,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 
 **Source de vérité design** : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08, voir `chats/chat1.md` pour l'historique d'itérations utilisateur).
 
-**Risque assumé** : 4 phases sur 4 jours (J-4 → J-1). Chaque phase commit atomique → fallback v0.1 garanti si Phase 9 ne finit pas le 12 mai.
+**Approche** : chaque phase commit atomique → fallback v0.1 garanti à tout moment via `git reset --hard v0.1-pilot-ready`. Pas de descope sous pression : on prend le temps nécessaire pour livrer chaque phase proprement.
 
 ## Requirements
 
@@ -46,7 +46,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 - [x] **M11** — Branding EIC minimal : logo, palette, page accueil avec partenaires — Phase 4 (v0.2 push plus loin)
 - [x] **M12** — Persistence Supabase + RLS minimal correct, server actions non silencieuses — Phase 1+5
 
-**Bloc v0.2 — EIC Design v2 Refresh (pré-pilote, J-4 → J-1) :**
+**Bloc v0.2 — EIC Design v2 Refresh (mode qualité, sans deadline) :**
 
 - [ ] **DSY-*** — Design system EIC : tokens, polices, glass, primitives, AppShell, login branded (Phase 6, voir `REQUIREMENTS.md`)
 - [ ] **PLR-*** — Joueur : barre charge verticale, drawer livrables, onboarding 3 étapes, ticket SOUMIS, révision V2 (Phase 7)
@@ -84,7 +84,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 
 ## Constraints
 
-- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. T-4 jours au démarrage de v0.2 (2026-05-09). v0.1 pilot-ready, v0.2 = refonte visuelle parallèle au setup pilote.
+- **Timeline** : v0.1 pilot-ready (toutes fonctions MUST opérationnelles). v0.2 = refonte qualité sans deadline ; sera shippée quand prête, l'app v0.1 reste utilisable en prod tant que v0.2 n'est pas mergée.
 - **Tech stack** : Next.js 15 + React 19 + TypeScript + Supabase + Vercel (figés, héritage codebase).
 - **Équipe** : solo dev (Omar) avec Claude Code en pair. Triple casquette : code + setup pilote + animation workshop le 13. Pas de débogage en live possible.
 - **Volume pilote** : 6-15 Players, 2-4 Mentors, 1 GameMaster — concurrence max ~30 sessions.
@@ -106,7 +106,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 | 1 seul classement (Score Projet × pondération + PitchScore moyen), pas multi-classements | Pilote = simplicité ; multi-classement V2 | — Pending |
 | Pas de tests automatisés au pilote | Solo dev en 5j ; validation par smoke test manuel J5 | ⚠️ Revisit en V2 |
 | Suppression du seed leak en mode Supabase prod | Crédibilité partenaires, sécurité données pilote | — Pending |
-| 2026-05-09 — Lancer milestone v0.2 (design v2 EIC) AVANT le pilote, en 4 jours | Le design v2 (bundle Claude Design 2026-05-08) est prêt et significativement supérieur à v0.1 pour la crédibilité partenaires ; risque accepté car chaque phase commit atomique = fallback v0.1 garanti | — In progress (v0.2 démarrée) |
+| 2026-05-09 — Lancer milestone v0.2 (design v2 EIC) en mode qualité sans deadline | Le design v2 (bundle Claude Design 2026-05-08) est significativement supérieur à v0.1 pour la crédibilité partenaires ; chaque phase commit atomique = fallback v0.1 garanti à tout moment | — In progress (v0.2 démarrée) |
 | 2026-05-09 — Numérotation phases continue (Phase 6, 7, 8, 9) sans `--reset-phase-numbers` | v0.1 non formellement archivée via `/gsd-complete-milestone` ; on préserve les artefacts `.planning/phases/01-*` à `05-*` | — Done |
 | 2026-05-09 — Source de vérité design v2 = `.planning/design-v2/` (extraction du tar.gz Claude Design) | Bundle export figé, peut diverger du canvas source ; le code se base sur les fichiers locaux pas sur l'URL Anthropic | — Done |
 
