@@ -1256,3 +1256,115 @@ tr:last-child td {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.78);
 }
+
+/* ==========================================================================
+   EIC Design v2 — Login layout (DSY-06)
+   Used exclusively by app/login/page.tsx.
+   ========================================================================== */
+
+.eic-login-shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--home-ivory);
+  color: var(--home-ink);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.eic-login-header {
+  position: relative;
+  z-index: 2;
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+}
+
+.eic-login-main {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.eic-login-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 460px);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.eic-login-card .kicker { margin: 0; }
+.eic-login-card h1 { margin: 0; }
+.eic-login-card .lead { margin: 0 0 var(--space-2); }
+
+.eic-login-form__submit { display: flex; }
+.eic-login-form__submit > .eic-button { width: 100%; }
+
+.form-error {
+  margin: var(--space-2) 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--wf-rose-tint);
+  border: 1px solid #DCB1B1;
+  color: var(--wf-rose);
+  font-size: 14px;
+}
+
+.eic-login-partners {
+  position: relative;
+  z-index: 2;
+  padding: 24px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.eic-login-partners__caption {
+  margin: 0;
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eic-green);
+  text-align: center;
+}
+
+.eic-partner-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px 28px;
+  max-width: 920px;
+  width: 100%;
+}
+.eic-partner {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+}
+.eic-partner__name {
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--home-muted-strong);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .eic-login-main { padding: 24px 16px; }
+  .eic-login-card { padding: 24px; }
+  .eic-login-partners { padding: 16px 16px 24px; }
+  .eic-partner-banner { gap: 12px 20px; }
+  .eic-partner__name { font-size: 12px; }
+}
