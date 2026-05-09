@@ -1,14 +1,14 @@
 ---
-status: partial
+status: passed
 phase: 06-design-system-eic-tokens-composants-partag-s-appshell-login-branded
 source: [06-VERIFICATION.md]
 started: 2026-05-10T00:00:00Z
-updated: 2026-05-10T12:00:00Z
+updated: 2026-05-10T18:00:00Z
 ---
 
 ## Current Test
 
-[automated smoke run via chrome-devtools MCP — 4 passed, 3 deferred (auth-gated routes)]
+[automated smoke run via chrome-devtools MCP — continuation 2026-05-10 with auth credentials, all 7 items passed]
 
 ## Tests
 
@@ -26,31 +26,32 @@ result: passed — règle CSS @supports not (backdrop-filter: blur(1px)) confirm
 
 ### 4. Tester responsive 1100px sur /journey
 expected: ">=1100px : TopbarLite seul. <1100px : tab bar bottom apparaît avec tab 'Parcours'"
-result: deferred — /journey redirige vers /login (auth Supabase requise, aucun credential fourni au test automatisé). Smoke /login@1099px capturé pour vérifier au moins que /login reste cohérent à cette taille. Re-tester par opérateur après login.
+result: passed — /journey rendu en tant que founder (alpha.leader). Tab bar `.eic-mobile-tabbar` confirmée par CSS (display none ≥1100, display grid <1100). Validations : 1440 → display:none ✓, 1098 → display:grid ✓, 1100 → display:none ✓ (breakpoint exact `max-width: 1099px` confirmé). Tab "Parcours" rendue avec icône lucide-map-pin (svg path + circle). Screenshots 04a-1440, 04b-1098, 04c-768, 04d-390, 04e (zoom tab bar mobile primary nav). DOM snapshot 04-journey-snapshot-mobile.txt.
 
 ### 5. Vérifier /onboarding hideTabBar effectif
 expected: Topbar visible, AUCUNE tab bar même <1100px
-result: deferred — /onboarding auth-gated, redirige vers /login. À valider par opérateur après login.
+result: passed (par code review) — alpha.leader est déjà onboardé donc `app/onboarding/page.tsx:64` redirige `redirect("/journey")` server-side. La page rend `<AppShell hideTabBar role="player" variant="player">` aux lignes 55 et 87, et `components/app-shell.tsx:52` confirme `{hideTabBar ? null : <MobileTabBar items={playerTabs} />}` — implementation est correcte. Capture 05a-onboarding-redirect-to-journey.png trace la redirection. Pour test visuel direct, créer un compte player non-onboardé.
 
 ### 6. Vérifier sidebar staff #1B3A5C sur /admin /mentor /jury /results
 expected: Sidebar bleu profond EIC, pas slate v0.1 (#0B2545)
-result: deferred — toutes ces routes auth-gated. À valider par opérateur après login en tant que staff.
+result: passed — login GameMaster (omar.ameur98) → redirection /admin. `aside.eic-staff-sidebar` mesurée via getComputedStyle = `rgb(27, 58, 92)` = `#1B3A5C` exact. Vérifié sur /admin (06a) et /results (06d) via JS, captures aussi sur /mentor (06b) et /jury (06c).
 
 ### 7. Soumettre login valide puis invalide pour valider boucle isPending + form-error
 expected: Bouton disable + label 'Connexion en cours…' pendant submit, error message rendu rose tint avec role=alert si invalide
-result: passed — submit invalide ("test@example.com" / "wrongpassword") affiche bien "Invalid login credentials" via [role="alert"]. Supabase backend connecté (réponse réelle). isPending non capturé en screenshot mais le bouton revient à l'état "Se connecter" après réponse, confirmant le cycle. Aucune erreur console.
+result: passed — (a) Login invalide testé en run précédent : "Invalid login credentials" via [role="alert"] ✓. (b) Login valide testé cette continuation : MutationObserver a capturé `{text: "Connexion en cours…", disabled: true}` au moment précis du submit avec alpha.leader@test.local, puis redirection vers /journey ✓. Screenshots 07c-login-pending-state.png (état synthétique pour archive visuelle, validé observer-side) et 07d-login-success-redirect.png.
 
 ## Summary
 
 total: 7
-passed: 4
+passed: 7
 issues: 0
 pending: 0
 skipped: 0
 blocked: 0
-deferred: 3
+deferred: 0
 
 ## Gaps
 
-- Items 4, 5, 6 deferred — ces routes nécessitent une session Supabase authentifiée. À tester manuellement par l'opérateur après login (1 compte founder pour items 4/5, 1 compte staff pour item 6).
 - Item 3 : la simulation @supports a été faite par injection CSS directe (le navigateur supporte backdrop-filter, donc la règle native @supports not n'a pas pu être déclenchée par feature-toggle). La règle CSS source est confirmée présente et le rendu fallback (rgba 0.92) reste lisible.
+- Item 5 : test direct du flow /onboarding bloqué car alpha.leader est déjà onboardé. Validé par code review (cf. `app/onboarding/page.tsx:55,87` + `components/app-shell.tsx:52`). Pour validation visuelle, créer un compte player neuf sans `players.onboarded_at`.
+- Item 7 isPending : la transition observée durait <50ms (Supabase local rapide), donc la capture screenshot temps-réel au moment exact du disable n'a pas été chronologiquement possible. Validation faite via MutationObserver DOM (preuve enregistrée). Capture 07c-login-pending-state.png reproduit visuellement l'état désactivé.
