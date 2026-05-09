@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
 status: executing
-last_updated: "2026-05-09T22:35:17.289Z"
+last_updated: "2026-05-09T22:42:43.362Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 5
@@ -26,7 +26,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-09)
 ## Current Position
 
 Phase: 6 (Design System EIC — Tokens + Composants partagés + AppShell + Login branded) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-09
 
@@ -80,6 +80,7 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 - 2026-05-09 : numérotation phases continue (Phase 6, 7, 8, 9) sans `--reset-phase-numbers`.
 - 2026-05-09 : Source de vérité design = `.planning/design-v2/` (extraction locale du bundle Claude Design `tar.gz`). L'URL Anthropic ne sera pas re-fetchée.
 - [Phase 06]: Phase 6 Plan 01: EIC tokens copied verbatim, next/font/google self-hosted, glass/aurora utilities prefixed .eic-* — v0.1 surfaces preserved
+- [Phase 06]: Phase 6 Plan 02: 5 typed primitives + CSS contracts in globals.css — server-renderable, BEM modifiers, prefers-reduced-motion guard on pulse keyframe
 
 ## Accumulated Context (préservé v0.1)
 
