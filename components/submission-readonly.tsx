@@ -67,7 +67,7 @@ export function SubmissionReadonly({ submission }: { submission: Submission }) {
         }}
       >
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "#0f172a" }}>
-          {t.submission_readonly_title}
+          {t.submission_readonly_title} V{submission.version}
         </h2>
         <dl
           style={{

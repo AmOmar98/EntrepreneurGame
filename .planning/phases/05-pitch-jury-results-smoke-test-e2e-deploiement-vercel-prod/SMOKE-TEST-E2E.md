@@ -39,7 +39,7 @@ Objectif : valider le flux complet bout-en-bout sur l'URL prod avant ouverture a
 - [ ] Logout Player, login Mentor (autre compte / autre browser/incognito)
 - [ ] `/mentor` -> voir Player A avec 1 deliverable en attente
 - [ ] Cliquer evaluer -> `/mentor/submission/[id]`
-- [ ] Remplir scores rubric (5 criteres), feedback texte, verdict "Demander V2" -> submit
+- [ ] Remplir scores rubric (N criteres - Fiche Personae a 4 criteres x 25 = total 100, autres deliverables peuvent varier - cf. seed_event_hackdays.sql), feedback texte, verdict "Demander V2" -> submit
 - [ ] Retour `/mentor`, pending=0 pour cette submission specifique
 - [ ] Verifier : email/notif (si configure) au Player
 
