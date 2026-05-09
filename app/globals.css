@@ -922,3 +922,168 @@ tr:last-child td {
   left: 38%;
   top: 40%;
 }
+
+/* ==========================================================================
+   EIC Design v2 — Shared primitives CSS (DSY-04)
+   Used by components/ui/{button,pill,level-badge,progress-bar,eic-logo}.tsx.
+   Style ownership rule: each primitive's visual contract lives here.
+   Pages MUST NOT pass style={...} to override these primitives.
+   ========================================================================== */
+
+/* === Button === */
+.eic-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--home-border-strong);
+  background: var(--home-surface);
+  color: var(--home-ink);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+}
+.eic-button:hover { box-shadow: var(--shadow-hover); }
+.eic-button:active { transform: translateY(1px); box-shadow: none; }
+.eic-button:focus-visible { outline: 3px solid rgba(27, 58, 92, 0.22); outline-offset: 0; }
+.eic-button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.eic-button--primary { background: var(--eic-blue); border-color: var(--eic-blue); color: #fff; }
+.eic-button--success { background: var(--eic-green); border-color: var(--eic-green); color: #fff; }
+.eic-button--ghost   { background: transparent; border-color: var(--home-border-strong); color: var(--home-ink); }
+
+.eic-button--lg { min-height: 48px; padding: 12px 20px; }
+
+/* === Pill === */
+.eic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--wf-line);
+  background: var(--wf-paper-deep);
+  color: var(--wf-ink-soft);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.eic-pill__icon { display: inline-grid; place-items: center; width: 14px; height: 14px; }
+
+.eic-pill--blue  { background: var(--wf-blue-tint);  color: var(--eic-blue);   border-color: #B6C5DA; }
+.eic-pill--green { background: var(--wf-green-tint); color: var(--eic-green);  border-color: #B7D4B7; }
+.eic-pill--amber { background: var(--wf-amber-tint); color: var(--wf-amber);   border-color: #DCC394; }
+.eic-pill--rose  { background: var(--wf-rose-tint);  color: var(--wf-rose);    border-color: #DCB1B1; }
+
+.eic-pill--lg { padding: 6px 12px; font-size: 13px; }
+
+/* === Level badge === */
+.eic-level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--wf-line);
+  background: var(--home-surface);
+  color: var(--wf-ink-soft);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+.eic-level-badge--done {
+  background: var(--eic-green);
+  border-color: var(--eic-green);
+  color: #fff;
+}
+.eic-level-badge--current {
+  background: var(--eic-blue);
+  border-color: var(--eic-blue);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(27, 58, 92, 0.15);
+}
+.eic-level-badge--locked {
+  background: var(--wf-paper-deep);
+  color: var(--wf-ink-faint);
+  border-style: dashed;
+}
+.eic-level-badge--lg { width: 36px; height: 36px; font-size: 13px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .eic-level-badge--current {
+    animation: pulse-eic 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-eic {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(27, 58, 92, 0.15);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(27, 58, 92, 0.25);
+  }
+}
+
+/* === Progress bar === */
+.eic-progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--wf-paper-deep);
+  border: 1px solid var(--wf-line);
+  overflow: hidden;
+}
+.eic-progress--lg { height: 12px; border-radius: 6px; }
+.eic-progress__fill {
+  height: 100%;
+  background: var(--eic-green);
+  transition: width var(--transition-base);
+}
+.eic-progress--blue .eic-progress__fill {
+  background: var(--eic-blue);
+}
+
+/* === EIC logo lockup === */
+.eic-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  line-height: 1;
+}
+.eic-logo > svg { flex: 0 0 28px; }
+.eic-logo__word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.eic-logo__name {
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+.eic-logo__kicker {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
+}
