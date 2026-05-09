@@ -122,8 +122,8 @@
 - [x] **DSY-03** : Cards et panneaux principaux (header journey, login form, drawer livrables, focus team) ont l'effet glass (`backdrop-filter: blur+saturate`) sur fond aurora doux ; fallback `@supports not (backdrop-filter: blur(1px))` → background opaque blanc 92% pour navigateurs anciens (Android Chrome <90)
 - [x] **DSY-04** : Composants partagés exportés depuis `components/ui/` : `<Button variant="primary|success|ghost">`, `<Pill tone="blue|green|amber|rose">`, `<LevelBadge state="done|current|locked">`, `<ProgressBar value={0..1}>` ; chaque composant a un seul responsable de styles (pas d'inline `style={...}` ad hoc)
 - [x] **DSY-05** : `AppShell` refactor : sidebar dark green retirée chez Player (remplacée par topbar légère + tab bar mobile bottom selon design `TopbarLite`), conservée et restylée chez Mentor/GameMaster avec tokens EIC. **Tokens v0.1 legacy (`--brand-*`, `--green`, `--blue`) conservés en parallèle** des tokens `--eic-*` pour éviter régressions sur composants v0.1 (cf. décision Phase 04)
-- [ ] **DSY-06** : Page `/login` refondue : background ivoire avec aurora, logo EIC haut-gauche (lockup `EICLogo`), bandeau partenaires (Tamwilcom, BoA Academy, Innov Invest, Bluespace, EIC, UEMF), formulaire centré sur card glass
-- [ ] **DSY-07** : `npm run typecheck` passe sans erreur après refonte ; `npm run lint` passe sans nouveau warning ; `npm run build` produit un bundle qui se sert correctement en prod
+- [x] **DSY-06** : Page `/login` refondue : background ivoire avec aurora, logo EIC haut-gauche (lockup `EICLogo`), bandeau partenaires (Tamwilcom, BoA Academy, Innov Invest, Bluespace, EIC, UEMF), formulaire centré sur card glass
+- [x] **DSY-07** : `npm run typecheck` passe sans erreur après refonte ; `npm run lint` passe sans nouveau warning ; `npm run build` produit un bundle qui se sert correctement en prod
 
 ### PLR — Joueur (Journey + Onboarding + Submission)
 

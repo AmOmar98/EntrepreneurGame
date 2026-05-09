@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
-status: executing
-last_updated: "2026-05-09T22:52:01.404Z"
+status: verifying
+last_updated: "2026-05-09T23:00:16.198Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 5
@@ -27,7 +27,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-09)
 
 Phase: 6 (Design System EIC — Tokens + Composants partagés + AppShell + Login branded) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-09
 
 ## Active Milestone
@@ -82,6 +82,7 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 - [Phase 06]: Phase 6 Plan 01: EIC tokens copied verbatim, next/font/google self-hosted, glass/aurora utilities prefixed .eic-* — v0.1 surfaces preserved
 - [Phase 06]: Phase 6 Plan 02: 5 typed primitives + CSS contracts in globals.css — server-renderable, BEM modifiers, prefers-reduced-motion guard on pulse keyframe
 - [Phase 06]: Phase 6 Plan 03: AppShell variant prop split player/staff — TopbarLite + MobileTabBar extracted, .eic-staff-sidebar additive class swaps sidebar to --eic-blue, v0.1 default backward compat preserved
+- [Phase 06]: Phase 6 Plan 04: /login refactored to branded EIC v2 — eic-aurora + EICLogo + eic-glass card + 6-partner footer. LoginForm uses React 19 3-tuple useActionState + Button primitive size=lg. PartnerBanner conditional per-partner (PARTNER_SVG_AVAILABLE, all 6 SVGs present). Phase 6 closes — DSY-01..07 all delivered.
 
 ## Accumulated Context (préservé v0.1)
 
