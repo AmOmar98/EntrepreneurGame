@@ -1,0 +1,188 @@
+/* ==========================================================================
+   EIC Design System — Colors & Type
+   Euromed Innovation Center
+   Source of truth: SKILL.md (charte graphique officielle)
+   ========================================================================== */
+
+/* Google Fonts — Baskervville (display, closest revival of Baskerville Old Face) + Montserrat (body)
+   Official EIC fonts per the Charte graphique PDF:
+     Titles: Baskerville Old Face  → substituted with Baskervville (high-fidelity Baskerville revival on Google Fonts)
+     Body:   Montserrat             → exact match on Google Fonts
+*/
+@import url('https://fonts.googleapis.com/css2?family=Baskervville:ital@0;1&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ---- Brand colors ---- */
+  --eic-blue:        #1B3A5C;   /* Primary — logo, titles, hero backgrounds */
+  --eic-blue-light:  #2A5A8C;   /* Links, hover, accents */
+  --eic-green:       #2E7D32;   /* Accent — logo dot, success, active */
+  --eic-green-light: #4CAF50;   /* Green hover, tags, secondary icons */
+
+  /* ---- Surfaces & backgrounds ---- */
+  --home-ivory:        #F6F1E8; /* Warm page background (NOT pure white) */
+  --home-surface:      #FFFFFF; /* Cards, modals, containers */
+  --home-surface-soft: rgba(255, 255, 255, 0.78); /* Navbar glass, overlays */
+
+  /* ---- Text ---- */
+  --home-ink:          #14243D; /* Primary text, titles */
+  --home-muted:        #617084; /* Secondary text, captions */
+  --home-muted-strong: #44556C; /* Labels, subtitles */
+
+  /* ---- Borders ---- */
+  --home-border:        #D8D0C2;
+  --home-border-strong: #B7AE9D;
+
+  /* ---- Gradients ---- */
+  --gradient-blue:   linear-gradient(135deg, #1B3A5C 0%, #2A5A8C 50%, #1B4F7A 100%);
+  --gradient-green:  linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+  --gradient-border: linear-gradient(270deg, #2E7D32, #1B3A5C, #4CAF50, #2A5A8C);
+
+  /* ---- Typography ---- */
+  --font-heading: 'Baskervville', 'Baskerville Old Face', Baskerville, Georgia, serif;
+  --font-body:    'Montserrat', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ---- Radii ---- */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+  --radius-pill: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card:   0 24px 60px rgba(17, 30, 48, 0.08);
+  --shadow-hover:  0 28px 70px rgba(17, 30, 48, 0.14);
+  --shadow-navbar: 0 18px 45px rgba(17, 30, 48, 0.08);
+
+  /* ---- Transitions ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* ---- Spacing (base 4px) ---- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+}
+
+/* Dark mode */
+.dark, [data-theme="dark"] {
+  --eic-blue:        #3A7CC0;
+  --eic-blue-light:  #5A9AD8;
+  --eic-green:       #4CAF50;
+  --eic-green-light: #66BB6A;
+
+  --home-ivory:        #1A2332;
+  --home-surface:      #1E2A3A;
+  --home-surface-soft: rgba(30, 42, 58, 0.78);
+
+  --home-ink:           #E8E2D8;
+  --home-muted:         #8A9AB0;
+  --home-muted-strong:  #B7C6DA;
+
+  --home-border:        #2A3A4E;
+  --home-border-strong: #3A4E66;
+}
+
+/* ==========================================================================
+   Semantic typography — apply these classes (or element selectors) directly
+   ========================================================================== */
+
+html { font-family: var(--font-body); color: var(--home-ink); }
+
+.h1, h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(40px, 5.5vw, 72px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--home-ink);
+  margin: 0 0 var(--space-6);
+}
+
+.h2, h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(30px, 3.8vw, 48px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--home-ink);
+  margin: 0 0 var(--space-4);
+}
+
+.h3, h3 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.35;
+  color: var(--home-ink);
+  margin: 0 0 var(--space-3);
+}
+
+.h4, h4 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--home-ink);
+  margin: 0 0 var(--space-3);
+}
+
+.lead {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--home-muted-strong);
+}
+
+p, .body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--home-ink);
+}
+
+.body-sm, small {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--home-muted);
+}
+
+.kicker, .home-kicker {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eic-green);
+}
+
+.ui, .btn-label {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+code, pre, .mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 14px;
+}
+
+a {
+  color: var(--eic-blue-light);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--eic-blue); text-decoration: underline; }

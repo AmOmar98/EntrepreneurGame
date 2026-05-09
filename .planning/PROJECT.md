@@ -8,35 +8,50 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 2026) où chaque livrable produit pendant les ateliers est soumis, évalué et noté en ligne, avec un classement final calculé et publié — sans perte de données, sans honte devant les partenaires (Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace).
 
+## Current Milestone: v0.2 EIC Design v2 Refresh
+
+**Goal :** Appliquer le design v2 EIC complet (bundle Claude Design `.planning/design-v2/`) sur l'app v0.1 pilot-ready, AVANT le pilote du 13 mai 2026 — refonte visuelle qui transforme l'app de fonctionnelle-mais-fade à digne des partenaires UEMF/EIC, sans casser la fonctionnalité v0.1.
+
+**Target features (4 phases, J-4 → J-1) :**
+
+- **Design system EIC** — `eic-tokens.css` (palette bleu `#1B3A5C` + vert `#2E7D32` + ivoire `#F6F1E8`), polices Baskervville (titres) + Montserrat (corps), glass effect (`backdrop-filter: blur+saturate`), primitives partagées (boutons, pills, cards, level badges), refonte AppShell, login branded avec partenaires
+- **Joueur** — barre de charge verticale L0→L7 (montante mobile, descendante desktop), hero « Prochaine étape » unique + drawer livrables au hover/clic, onboarding 3 étapes éditoriales (bienvenue/équipe/règles), écran SOUMIS avec stamp éditorial, écran révision V2 avec bandeau « aucune perte d'XP »
+- **Mentor** — pas de chat live ; commentaires async tagués (`remarque` / `à corriger`) sur le lien soumis, vue lien (URL ou texte), historique des liens, action attendue avec composer
+- **GameMaster + Jury + Replay + Pixel** — mode live + radar salle (cercles XP qui pulsent par activité), focus équipe éditorial (filigrane numéroté + Baskervville), annonces live ciblées, mode pitch jury théâtre (timer 5 min + grille /5 critères), replay/podium fin de hack, mascotte Pixel floating bottom-right (4 humeurs : serein/concentré/inquiet/euphorique)
+
+**Source de vérité design** : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08, voir `chats/chat1.md` pour l'historique d'itérations utilisateur).
+
+**Risque assumé** : 4 phases sur 4 jours (J-4 → J-1). Chaque phase commit atomique → fallback v0.1 garanti si Phase 9 ne finit pas le 12 mai.
+
 ## Requirements
 
 ### Validated
 
-(Aucun pour le moment — le pilote 13-14 mai validera M1-M12)
+(Aucun formellement validé — v0.1 = pilot-ready, validation au pilote 13-14 mai)
 
 ### Active
 
-**Bloc MUST — non-négociable pour 13 mai 8h30 :**
+**Bloc v0.1 — pilot-ready (validation au pilote 13-14 mai 2026) :**
 
-- [ ] **M1** — Auth Supabase réelle (login email/password, sessions persistantes SSR)
-- [ ] **M2** — Création comptes Players en bulk par GameMaster via upload CSV (magic link)
-- [ ] **M3** — Onboarding Player (Niveau 0) : profil équipe, idée courte, diagnostic initial 5 questions
-- [ ] **M4** — Event configuré « Hack-Days Fès-Meknès Mai 2026 » avec 6 missions et ~9 deliverable_templates seed
-- [ ] **M5** — Vue Player `/journey` : niveau, score Projet, timeline ateliers, liste livrables avec statuts
-- [ ] **M6** — Soumission de livrable (proof_url https:// OU proof_text markdown) avec versioning V1/V2
-- [ ] **M7** — Vue Mentor `/mentor` : liste Players, évaluation selon scoring rubric, feedback textuel, 3 verdicts (validé / V2 demandée / rejeté)
-- [ ] **M8** — Boucle V1→V2 : feedback visible Player, soumission V2, score final = score V2
-- [ ] **M9** — Vue GameMaster `/admin` : dashboard cohorte (Player / Niveau / Score / Statut / Prochain livrable)
-- [ ] **M10** — Pitch jury jour 2 : page `/jury` avec 5 critères × 20 points, classement calculé, page `/results` avec publication contrôlée 15h00
-- [ ] **M11** — Branding EIC : logo, palette UEMF, page accueil avec partenaires, polish 5 écrans clés
-- [ ] **M12** — Persistence Supabase + RLS minimal correct, suppression du leak seed prod, server actions non silencieuses
+- [x] **M1** — Auth Supabase réelle (login email/password, sessions persistantes SSR) — Phase 1
+- [x] **M2** — Création comptes Players en bulk par GameMaster via upload CSV (magic link) — Phase 4
+- [x] **M3** — Onboarding Player (Niveau 0) : profil équipe, idée courte, diagnostic initial 5 questions — Phase 2
+- [x] **M4** — Event configuré « Hack-Days Fès-Meknès Mai 2026 » avec 6 missions et ~9 deliverable_templates seed — Phase 1
+- [x] **M5** — Vue Player `/journey` : niveau, score Projet, timeline ateliers, liste livrables avec statuts — Phase 2
+- [x] **M6** — Soumission de livrable (proof_url https:// OU proof_text markdown) avec versioning V1/V2 — Phase 2
+- [x] **M7** — Vue Mentor `/mentor` : liste Players, évaluation selon scoring rubric, feedback textuel, 3 verdicts — Phase 3
+- [x] **M8** — Boucle V1→V2 : feedback visible Player, soumission V2, score final = score V2 — Phase 3
+- [x] **M9** — Vue GameMaster `/admin` : dashboard cohorte (Player / Niveau / Score / Statut / Prochain livrable) — Phase 4
+- [x] **M10** — Pitch jury jour 2 : page `/jury` avec 5 critères × 20 points, classement calculé, page `/results` — Phase 5
+- [x] **M11** — Branding EIC minimal : logo, palette, page accueil avec partenaires — Phase 4 (v0.2 push plus loin)
+- [x] **M12** — Persistence Supabase + RLS minimal correct, server actions non silencieuses — Phase 1+5
 
-**Bloc SHOULD — tenté jour 4-5 :**
+**Bloc v0.2 — EIC Design v2 Refresh (pré-pilote, J-4 → J-1) :**
 
-- [ ] **S1** — Notifications in-page (badge non-lus quand Mentor évalue)
-- [ ] **S2** — Score Engagement calculé serveur (présence onboarding, rendu V1, V2, dans temps imparti)
-- [ ] **S3** — Schema multi-event (event_id partout, levels 0-7 référencés) prêt sans coder le multi
-- [ ] **S4** — Page Ressources statique (gabarits BMC, Personae, etc.)
+- [ ] **DSY-*** — Design system EIC : tokens, polices, glass, primitives, AppShell, login branded (Phase 6, voir `REQUIREMENTS.md`)
+- [ ] **PLR-*** — Joueur : barre charge verticale, drawer livrables, onboarding 3 étapes, ticket SOUMIS, révision V2 (Phase 7)
+- [ ] **MNT-*** — Mentor : commentaires async sur lien, tags, historique, composer V2 (Phase 8)
+- [ ] **GMR-*** — GameMaster + jury + replay + Pixel : live mode, radar, jury théâtre, podium, mascotte (Phase 9)
 
 ### Out of Scope
 
@@ -69,7 +84,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 
 ## Constraints
 
-- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. T-5 jours au moment de l'écriture.
+- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. T-4 jours au démarrage de v0.2 (2026-05-09). v0.1 pilot-ready, v0.2 = refonte visuelle parallèle au setup pilote.
 - **Tech stack** : Next.js 15 + React 19 + TypeScript + Supabase + Vercel (figés, héritage codebase).
 - **Équipe** : solo dev (Omar) avec Claude Code en pair. Triple casquette : code + setup pilote + animation workshop le 13. Pas de débogage en live possible.
 - **Volume pilote** : 6-15 Players, 2-4 Mentors, 1 GameMaster — concurrence max ~30 sessions.
@@ -91,6 +106,9 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 | 1 seul classement (Score Projet × pondération + PitchScore moyen), pas multi-classements | Pilote = simplicité ; multi-classement V2 | — Pending |
 | Pas de tests automatisés au pilote | Solo dev en 5j ; validation par smoke test manuel J5 | ⚠️ Revisit en V2 |
 | Suppression du seed leak en mode Supabase prod | Crédibilité partenaires, sécurité données pilote | — Pending |
+| 2026-05-09 — Lancer milestone v0.2 (design v2 EIC) AVANT le pilote, en 4 jours | Le design v2 (bundle Claude Design 2026-05-08) est prêt et significativement supérieur à v0.1 pour la crédibilité partenaires ; risque accepté car chaque phase commit atomique = fallback v0.1 garanti | — In progress (v0.2 démarrée) |
+| 2026-05-09 — Numérotation phases continue (Phase 6, 7, 8, 9) sans `--reset-phase-numbers` | v0.1 non formellement archivée via `/gsd-complete-milestone` ; on préserve les artefacts `.planning/phases/01-*` à `05-*` | — Done |
+| 2026-05-09 — Source de vérité design v2 = `.planning/design-v2/` (extraction du tar.gz Claude Design) | Bundle export figé, peut diverger du canvas source ; le code se base sur les fichiers locaux pas sur l'URL Anthropic | — Done |
 
 ## Evolution
 
@@ -110,4 +128,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-08 after initialization (issu du brainstorming et spec design `docs/superpowers/specs/2026-05-08-entrepreneur-game-pilot-design.md`)*
+*Last updated: 2026-05-09 — milestone v0.2 EIC Design v2 Refresh started. v0.1 pilot-ready préservé, design source = `.planning/design-v2/`.*

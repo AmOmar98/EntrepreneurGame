@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Entrepreneur Game v2 — Joueur · Ligne</title>
+<link rel="stylesheet" href="eic-tokens.css"/>
+<link rel="stylesheet" href="wf-base.css"/>
+<style>html,body{margin:0;height:100%;background:#f0eee9;}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="player-screens.jsx"></script>
+<script type="text/babel" src="mission-workspace.jsx"></script>
+<script type="text/babel" src="admin-screens.jsx"></script>
+<script type="text/babel" src="player-flows.jsx"></script>
+<script type="text/babel" src="gm-flows.jsx"></script>
+<script type="text/babel" src="pixel-mascot.jsx"></script>
+<script type="text/babel" src="player-extras.jsx"></script>
+<script type="text/babel" data-presets="env,react">
+const { PlayerMetroDesktop, PlayerMetroMobile, MissionWorkspaceDesktop, MissionWorkspaceMobile, AdminDashboard, AdminReview, AdminDashboardLive, AdminAchievement, AdminFocus, AdminRoom, OnboardA, OnboardB, OnboardC, MentorFeedback, RevisionRequested, GMAnnounce, GMPitchJury, GMReplay, PixelFloating, PixelStates, PitchPrep, StuckHelp, PlayerProfile } = window;
+const App = () => (
+  <DesignCanvas
+    title="Entrepreneur Game · Joueur"
+    subtitle="Parcours → mission → soumission. Mobile ascendant, desktop avec barre de progression et fiches contextuelles."
+  >
+    <DCSection id="onboarding" title="0 · Onboarding L0" subtitle="Première ouverture · 3 étapes — bienvenue, ton équipe, les règles">
+      <DCArtboard id="onboard-a" label="Étape 1 · bienvenue" width={1280} height={900}>
+        <OnboardA/>
+      </DCArtboard>
+      <DCArtboard id="onboard-b" label="Étape 2 · ton équipe" width={1280} height={900}>
+        <OnboardB/>
+      </DCArtboard>
+      <DCArtboard id="onboard-c" label="Étape 3 · règles du jeu" width={1280} height={900}>
+        <OnboardC/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="mentor-feedback" title="2b · Mentor ↔ équipe" subtitle="Annotations sur le livrable + thread conversationnel + action concrète">
+      <DCArtboard id="mentor-thread" label="Desktop · feedback annoté" width={1280} height={1000}>
+        <MentorFeedback/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="revision" title="3b · Révision demandée" subtitle="État positif — pas une sanction. Élan préservé, étapes claires.">
+      <DCArtboard id="revision-desktop" label="Desktop · révision claire" width={1280} height={1100}>
+        <RevisionRequested/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="player-line" title="1 · Parcours" subtitle="Barre verticale · survol = fiche · clic = livrables">
+      <DCArtboard id="desktop" label="Desktop · 1280 — barre montante, hero CTA" width={1280} height={1180}>
+        <PlayerMetroDesktop/>
+      </DCArtboard>
+      <DCArtboard id="mobile" label="Mobile · 360 — barre + CTA" width={360} height={900}>
+        <PlayerMetroMobile/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="player-mission" title="2 · Espace de mission" subtitle="M3.3 · Hypothèse de proposition de valeur — phrase guidée">
+      <DCArtboard id="mission-empty" label="Desktop · état vierge" width={1280} height={900}>
+        <MissionWorkspaceDesktop initialState="empty"/>
+      </DCArtboard>
+      <DCArtboard id="mission-filled" label="Desktop · phrase complétée" width={1280} height={900}>
+        <MissionWorkspaceDesktop initialState="filled"/>
+      </DCArtboard>
+      <DCArtboard id="mission-mobile" label="Mobile · phrase complétée" width={360} height={900}>
+        <MissionWorkspaceMobile initialState="filled"/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="player-submitted" title="3 · Mission envoyée" subtitle="Confirmation rapide — l'élan continue">
+      <DCArtboard id="submitted-desktop" label="Desktop · confirmation" width={1280} height={900}>
+        <MissionWorkspaceDesktop initialState="submitted"/>
+      </DCArtboard>
+      <DCArtboard id="submitted-mobile" label="Mobile · confirmation" width={360} height={900}>
+        <MissionWorkspaceMobile initialState="submitted"/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="admin" title="4 · Régie · Animateur" subtitle="Tableau de bord vivant — classement, file de revue, mentors. Mascotte qui veille.">
+      <DCArtboard id="admin-dashboard" label="Régie · vue d'ensemble" width={1440} height={1000}>
+        <AdminDashboard/>
+      </DCArtboard>
+      <DCArtboard id="admin-review" label="Régie · revue d'un livrable" width={1440} height={900}>
+        <AdminReview/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="admin-live" title="5 · Régie · variantes vivantes" subtitle="Toasts qui glissent · fil du jeu en bas · accomplissements · focus équipe">
+      <DCArtboard id="admin-live" label="Mode live · toasts + fil du jeu" width={1440} height={1000}>
+        <AdminDashboardLive/>
+      </DCArtboard>
+      <DCArtboard id="admin-achievement" label="Accomplissement débloqué" width={1440} height={900}>
+        <AdminAchievement/>
+      </DCArtboard>
+      <DCArtboard id="admin-focus" label="Focus équipe · Atlas" width={1440} height={1000}>
+        <AdminFocus/>
+      </DCArtboard>
+      <DCArtboard id="admin-room" label="Mode salle · radar live" width={1440} height={1000}>
+        <AdminRoom/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="gm-announce" title="6 · Régie · annonce live" subtitle="Composer un message qui pulse chez tous les joueurs — type, cible, planification, aperçu temps réel.">
+      <DCArtboard id="gm-announce" label="Régie · diffuser une annonce" width={1440} height={1100}>
+        <GMAnnounce/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="gm-jury" title="7 · Mode pitch · jury" subtitle="Bascule sombre — équipe en cours, file de passage, grille de notation /5 par juré.">
+      <DCArtboard id="gm-jury" label="Pitch en cours · grille jury" width={1440} height={1100}>
+        <GMPitchJury/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="gm-replay" title="8 · Replay · fin de hack" subtitle="Récap journée — podium, classement, moments forts, exports + certificats.">
+      <DCArtboard id="gm-replay" label="Replay · clôture du hack" width={1440} height={1400}>
+        <GMReplay/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="pixel" title="9 · Vie de Pixel" subtitle="Mascotte flottante sur le tableau régie — humeur lue à partir du pouls collectif, micro-action ciblée.">
+      <DCArtboard id="pixel-float" label="En contexte · flottant sur la régie" width={1440} height={900}>
+        <PixelFloating/>
+      </DCArtboard>
+      <DCArtboard id="pixel-states" label="4 humeurs · serein · concentré · inquiet · euphorique" width={1440} height={900}>
+        <PixelStates/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="pitch-prep" title="10 · Pitch prep · H-2" subtitle="Compte à rebours, dernière ligne droite, ordre de passage, brief jury, 3 rappels avant de monter.">
+      <DCArtboard id="pitch-prep" label="Joueur · pitch dans 1h38" width={1280} height={1700}>
+        <PitchPrep/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="stuck" title="11 · Coup de pouce" subtitle="L'échec n'est pas une sanction. Empathie + contexte auto-rempli + 3 portes de sortie.">
+      <DCArtboard id="stuck-help" label="Joueur bloqué · sortir du blocage" width={1280} height={1300}>
+        <StuckHelp/>
+      </DCArtboard>
+    </DCSection>
+
+    <DCSection id="profile" title="12 · Profil joueur" subtitle="Parcours sur plusieurs hacks — stats long-terme, compétences signature, badges, mentors rencontrés.">
+      <DCArtboard id="profile" label="Profil long-terme · Yasmine A." width={1280} height={1700}>
+        <PlayerProfile/>
+      </DCArtboard>
+    </DCSection>
+  </DesignCanvas>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

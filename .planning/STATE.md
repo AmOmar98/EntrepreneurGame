@@ -1,90 +1,92 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1
-milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
-status: unknown
-last_updated: "2026-05-08T21:44:46.915Z"
+milestone: v0.2
+milestone_name: EIC Design v2 Refresh — Phases 6-9
+status: planning
+last_updated: "2026-05-09T00:00:00.000Z"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 26
-  completed_plans: 28
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-08)
+See: `.planning/PROJECT.md` (updated 2026-05-09)
 
 **Core value** : Permettre à 6-15 équipes réelles de vivre le Hack-Days 13-14 mai 2026 — chaque livrable d'atelier soumis, évalué, noté en ligne, classement publié — sans perte de données et sans honte devant les partenaires.
 
-**Current focus** : Pilot-ready — handoff Hack-Days 13-14 mai 2026 (UAT operateur)
+**Current focus** : v0.2 EIC Design v2 Refresh — appliquer le design v2 EIC complet sur l'app v0.1 avant le pilote du 13 mai.
+
+## Current Position
+
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-09 — Milestone v0.2 started
 
 ## Active Milestone
 
-**v0.1 — Pilot Hack-Days Fès-Meknès (13-14 mai 2026)**
+**v0.2 — EIC Design v2 Refresh (J-4 → J-1 du pilote)**
 
-Project A : 5 phases sur 5 jours (J1=09/05 → J5=13/05). Délivre les 12 MUST. SHOULD (4 items) tentés J5 après-midi si buffer.
+4 phases sur 4 jours (J1=09/05 → J4=12/05). Chaque phase commit atomique → fallback v0.1 garanti si Phase 9 ne finit pas le 12 mai.
+
+Source de vérité design : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08).
 
 ## Phase Status
 
 | Phase | Goal | Status | Date prévue |
 |---|---|---|---|
-| 1 | Foundation (schema, types, suppression code mort, login) | complete | 2026-05-08 |
-| 2 | Player Flow (onboarding, journey, submission V1) | complete | 2026-05-08 |
-| 3 | Mentor Flow (évaluation, V1→V2, scoring) | complete | 2026-05-08 |
-| 4 | GameMaster + bulk import + branding | complete | 2026-05-08 |
-| 5 | Pitch jury + results + déploiement Vercel + smoke test E2E | complete | 2026-05-08 |
+| 1-5 | Pilot v0.1 (Foundation, Player, Mentor, GameMaster, Pitch+Deploy) | complete | 2026-05-08 |
+| 6 | Design system EIC + AppShell + Login branded | pending | 2026-05-09 (J-4) |
+| 7 | Joueur : barre charge L0-L7 + drawer + onboarding + ticket SOUMIS | pending | 2026-05-10 (J-3) |
+| 8 | Mentor : commentaires async sur lien + composer V2 | pending | 2026-05-11 (J-2) |
+| 9 | GameMaster + jury + replay + Pixel mascotte | pending | 2026-05-12 (J-1) |
 
 ## Next Action
 
-**Phase 5 close - pilot-ready.** Roadmap v0.1 livrée (5/5 phases, 26/26 plans, 9 requirements Phase 5 validés). Action operateur (Omar) avant 13 mai 2026 :
+**Définir REQUIREMENTS.md v0.2 (DSY-* / PLR-* / MNT-* / GMR-*) puis spawner gsd-roadmapper pour ROADMAP.md.** Une fois roadmap approuvée :
 
-1. Apply schema Supabase prod fresh (`schema.sql` -> `triggers.sql` -> `rls.sql`)
-2. Run `database/rls_test.sql` -> verdict ALL PASS dans `RLS-TEST-RESULTS.md`
+1. `/gsd-discuss-phase 6` — cadrer la fondation design system
+2. `/gsd-plan-phase 6` — détailler les plans de Phase 6
+3. `/gsd-execute-phase 6` — exécuter
+
+## Pilot Operator Action Items (Omar — préservés depuis v0.1)
+
+Ces actions restent à faire avant 13 mai 2026, indépendamment de v0.2 :
+
+1. Apply schema Supabase prod fresh (`schema.sql` → `triggers.sql` → `rls.sql`)
+2. Run `database/rls_test.sql` → verdict ALL PASS dans `RLS-TEST-RESULTS.md`
 3. Vercel deploy (env vars + push) selon `docs/DEPLOY.md`
-4. Smoke test E2E sur URL prod -> verdict PASS dans `SMOKE-TEST-E2E.md`
+4. Smoke test E2E sur URL prod → verdict PASS dans `SMOKE-TEST-E2E.md`
 5. Magic links 6-15 testeurs internes (cf. `INTERNAL-TESTERS.md`) pour répétition J-1 (12 mai)
-6. (Optionnel) Tag git `v0.1-pilot-ready`
+6. (Optionnel) Tag git `v0.1-pilot-ready` AVANT de commencer Phase 6
 
-**Pilote** : Hack-Days Fès-Meknès 13-14 mai 2026.
+## Risk Watch (v0.2)
 
-## Critical Decisions Pending (avant J1)
-
-Voir spec §7 — 7 décisions à confirmer rapidement :
-
-1. Liste exacte des livrables ateliers 3, 4, 5 du PDF programme
-2. Grilles de scoring par livrable (utiliser brief §5 par niveau ou simplifier §14 ?)
-3. Pondération Score Projet vs Pitch dans le classement final
-4. Domaine Vercel — sous-domaine ou custom EIC ?
-5. SMTP magic link — défaut Supabase ou config UEMF ?
-6. Assets de marque (logos EIC, UEMF, partenaires)
-7. Mentor = Jury au pilote ?
-
-## Risk Watch
-
-- **Refactor schema** vs migration Supabase prod : Phase 1 a choisi fresh schema (D-01) ; à confirmer fresh project Supabase au début de Phase 2
-- ✅ **Lucide-react `^1.14.0`** : repinné `^0.577.0` (Phase 1 plan 06)
-- **Magic link Supabase** : tester envoi sur Gmail/Outlook/UEMF à J4
-- **Solo dev malade** : pas de mitigation tech, communication précoce EIC si problème
+- **Timing serré J-4 → J-1** : 4 phases × 1 jour. Mitigation = chaque phase commit atomique, ordre = fondation → joueur → mentor → admin (du plus critique au plus optionnel pour pilote).
+- **Ne pas casser v0.1** : Phase 6 (design system) refactor le shell partagé, risque de régression sur tous les écrans. Mitigation = tester `/login`, `/journey`, `/mentor`, `/admin`, `/jury`, `/results` après chaque commit.
+- **Drawer + glass effect mobile** : `backdrop-filter: blur` impacte perfs sur Android low-end. À vérifier avec Chrome devtools throttling.
+- **Polices Google Fonts** : Baskervville + Montserrat = 2 imports. Acceptable mais à monitorer (LCP).
+- **Mascotte Pixel SVG** : nouveau composant, risque visuel. À builder en isolé d'abord (Storybook-style page de dev) avant de l'intégrer au dashboard GM.
 
 ## Decisions
 
-- 2026-05-08: lucide-react pinné à `^0.577.0` (latest 0.x stable). Le 1.x existe mais upgrade différé jusqu'à présence de tests (V2).
-- 2026-05-08: Phase 1 ferme avec stub `/auth/callback` posé pour Phase 4 (magic link bulk import).
-- 2026-05-08: Phase 5 closeout (Plan 05-05) en mode FULL AUTO - artefacts livres, deploy + smoke test reels deferres a Omar avant 13 mai.
+- 2026-05-09 : milestone v0.2 démarrée avant clôture formelle de v0.1 (artefacts `.planning/phases/01-*` à `05-*` préservés). v0.1 sera archivée via `/gsd-complete-milestone` après le pilote du 13-14 mai.
+- 2026-05-09 : numérotation phases continue (Phase 6, 7, 8, 9) sans `--reset-phase-numbers`.
+- 2026-05-09 : Source de vérité design = `.planning/design-v2/` (extraction locale du bundle Claude Design `tar.gz`). L'URL Anthropic ne sera pas re-fetchée.
 
----
+## Accumulated Context (préservé v0.1)
 
-## Blockers
+- 2026-05-08 : lucide-react pinné à `^0.577.0` (latest 0.x stable). Le 1.x existe mais upgrade différé jusqu'à présence de tests (V2).
+- 2026-05-08 : Phase 1 ferme avec stub `/auth/callback` posé pour Phase 4 (magic link bulk import).
+- 2026-05-08 : Phase 5 closeout (Plan 05-05) en mode FULL AUTO — artefacts livres, deploy + smoke test reels deferres a Omar avant 13 mai.
 
-_None_ - pilot-ready.
-
----
-
-*Last updated: 2026-05-08 after Phase 5 completion (5/5 phases, 26/26 plans). Project v0.1 pilot-ready.*
+### Décisions héritées des phases 1-5
 
 - [Phase 02]: Likert q1..q5 et membres present non persistes (pas de table diagnostic Phase 1) - validation server-side conservee pour UX
 - [Phase 02]: Plan 03: V2 fully blocked at action level until Phase 3 introduces verdict-based gating
@@ -101,3 +103,13 @@ _None_ - pilot-ready.
 - [Phase 05]: Pondération ranking 50/50 par défaut + dense ranking
 - [Phase 05]: Publish results idempotent (UPDATE conditionnel sur results_published_at IS NULL)
 - [Phase 05]: Plan 05-03: RLS test suite via set_config Supabase pattern + 10 scenarios + templates operateur
+
+---
+
+## Blockers
+
+_None_
+
+---
+
+*Last updated: 2026-05-09 — milestone v0.2 EIC Design v2 Refresh started. v0.1 pilot-ready préservé, design source = `.planning/design-v2/`.*
