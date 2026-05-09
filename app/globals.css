@@ -670,11 +670,6 @@ tr:last-child td {
   opacity: 0.9;
 }
 
-.form-error {
-  color: var(--red);
-  font-weight: 700;
-}
-
 .project-card {
   display: grid;
   gap: 14px;
