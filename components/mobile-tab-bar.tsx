@@ -1,5 +1,6 @@
 "use client";
 
+import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -24,7 +25,7 @@ export function MobileTabBar({ items }: MobileTabBarProps) {
             key={item.key}
           >
             <span aria-hidden="true" className="eic-mobile-tab__icon">
-              ·
+              <MapPin size={18} aria-hidden />
             </span>
             <span className="eic-mobile-tab__label">{item.label}</span>
           </Link>
