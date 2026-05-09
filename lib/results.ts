@@ -166,57 +166,92 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
   const eventId = event.id;
   const publishedAt = event.results_published_at;
 
-  // Post-publish, switch to service-role to bypass RLS on players + pitch_scores
+  // Post-publish, prefer service-role to bypass RLS on players + pitch_scores
   // so every authenticated user (Players included) sees the full ranking. The
   // page itself stays gated by middleware auth + the in-page non-GM/published
   // check in app/results/page.tsx, so we never expose data anonymously.
+  //
+  // Defensive fallback: if SUPABASE_SERVICE_ROLE_KEY is missing OR misconfigured
+  // (e.g. the env var was set to the anon key by mistake — observed in prod
+  // 2026-05-09: cohorts query "permission denied" via service client because
+  // anon role has no SELECT grant on public.cohorts), retry every query through
+  // the RLS-aware client. Players see only their own row in that degraded mode
+  // but the page still renders.
   const useServiceRole = publishedAt !== null;
   const serviceClient = useServiceRole ? buildServiceClient() : null;
-  // Fallback: if SUPABASE_SERVICE_ROLE_KEY is missing in prod, we keep using
-  // the RLS-aware client. Players will still only see their own row, which is
-  // the pre-patch behaviour — degraded but not broken.
-  const supabase = serviceClient ?? rlsClient;
 
-  // 2. Cohorts of this event -> players.
-  const { data: cohortRows, error: cohortErr } = await supabase
-    .from("cohorts")
-    .select("id")
-    .eq("event_id", eventId);
-  if (cohortErr) {
-    console.error("[results] cohorts query failed", cohortErr);
-    return { eventId, publishedAt, rows: [] };
+  async function fetchCohortsAndPlayers(client: NonNullable<typeof rlsClient>) {
+    const { data: cohortRows, error: cohortErr } = await client
+      .from("cohorts")
+      .select("id")
+      .eq("event_id", eventId);
+    if (cohortErr) return { error: cohortErr, players: [] as Player[] };
+    const cohortIds = (cohortRows ?? []).map((r) => (r as { id: string }).id);
+    if (cohortIds.length === 0) return { error: null, players: [] as Player[] };
+    const { data: playerRows, error: playerErr } = await client
+      .from("players")
+      .select(
+        "id, cohort_id, slug, name, idea, current_level, status, score_project, score_engagement, onboarded_at",
+      )
+      .in("cohort_id", cohortIds)
+      .order("name", { ascending: true });
+    if (playerErr) return { error: playerErr, players: [] as Player[] };
+    const mapped = ((playerRows ?? []) as PlayerRow[]).map(mapPlayer);
+    return { error: null, players: mapped };
   }
-  const cohortIds = (cohortRows ?? []).map((r) => (r as { id: string }).id);
-  if (cohortIds.length === 0) return { eventId, publishedAt, rows: [] };
 
-  const { data: playerRows, error: playerErr } = await supabase
-    .from("players")
-    .select(
-      "id, cohort_id, slug, name, idea, current_level, status, score_project, score_engagement, onboarded_at",
-    )
-    .in("cohort_id", cohortIds)
-    .order("name", { ascending: true });
-  if (playerErr) {
-    console.error("[results] players query failed", playerErr);
-    return { eventId, publishedAt, rows: [] };
+  let players: Player[] = [];
+  let usedFallback = false;
+  if (serviceClient) {
+    const r = await fetchCohortsAndPlayers(serviceClient);
+    if (r.error) {
+      console.error("[results] service-role query failed, falling back to RLS", r.error);
+      usedFallback = true;
+    } else {
+      players = r.players;
+    }
   }
-  const players = ((playerRows ?? []) as PlayerRow[]).map(mapPlayer);
+  if (serviceClient === null || usedFallback) {
+    const r = await fetchCohortsAndPlayers(rlsClient);
+    if (r.error) {
+      console.error("[results] cohorts query failed", r.error);
+      return { eventId, publishedAt, rows: [] };
+    }
+    players = r.players;
+  }
   if (players.length === 0) return { eventId, publishedAt, rows: [] };
 
-  // 3. Pitch scores for this event.
-  const { data: scoreRows, error: scoreErr } = await supabase
-    .from("pitch_scores")
-    .select("player_id, total_score")
-    .eq("event_id", eventId);
-  if (scoreErr) {
-    console.error("[results] pitch_scores query failed", scoreErr);
-    return { eventId, publishedAt, rows: [] };
+  // 3. Pitch scores for this event. Same fallback strategy as above.
+  async function fetchPitchScores(client: NonNullable<typeof rlsClient>) {
+    return client.from("pitch_scores").select("player_id, total_score").eq("event_id", eventId);
+  }
+
+  let scoreRowsResolved: PitchScoreLite[] = [];
+  if (serviceClient && !usedFallback) {
+    const { data, error } = await fetchPitchScores(serviceClient);
+    if (error) {
+      const { data: rlsData, error: rlsErr } = await fetchPitchScores(rlsClient);
+      if (rlsErr) {
+        console.error("[results] pitch_scores query failed", rlsErr);
+        return { eventId, publishedAt, rows: [] };
+      }
+      scoreRowsResolved = (rlsData ?? []) as PitchScoreLite[];
+    } else {
+      scoreRowsResolved = (data ?? []) as PitchScoreLite[];
+    }
+  } else {
+    const { data, error } = await fetchPitchScores(rlsClient);
+    if (error) {
+      console.error("[results] pitch_scores query failed", error);
+      return { eventId, publishedAt, rows: [] };
+    }
+    scoreRowsResolved = (data ?? []) as PitchScoreLite[];
   }
 
   // 4. Aggregate pitch scores per player (mean + count).
   const sumByPlayer = new Map<string, number>();
   const countByPlayer = new Map<string, number>();
-  for (const r of (scoreRows ?? []) as PitchScoreLite[]) {
+  for (const r of scoreRowsResolved) {
     const total = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
     if (Number.isNaN(total)) continue;
     sumByPlayer.set(r.player_id, (sumByPlayer.get(r.player_id) ?? 0) + total);
