@@ -2,8 +2,17 @@
 // Visual states (done/current/locked) mirror the wireframe in
 // .planning/design-v2/project/player-screens.jsx (ChargingBar nodes).
 // Style ownership: classes live in app/globals.css under .eic-track__node.
+//
+// Quick 260510-j2j (T3-B2): locked nodes render an amber warn-only tooltip
+// (R2 — never red/danger) and stay focus-able / keyboard-discoverable
+// (R3 — no hardcoded blocking; `disabled` removed from the DOM element).
+// The no-op locked-click is enforced by the parent (journey-track.tsx)
+// via `onClick={() => state !== "locked" && onLevelClick?.(id)}`.
 import type { CSSProperties } from "react";
+import { dictionaries } from "@/lib/i18n";
 import type { LevelState } from "@/lib/journey-progression";
+
+const t = dictionaries.fr;
 
 export type JourneyLevelNodeProps = {
   levelId: string;
@@ -17,6 +26,7 @@ export type JourneyLevelNodeProps = {
 };
 
 export function JourneyLevelNode({
+  levelId,
   number,
   state,
   topPct,
@@ -34,12 +44,15 @@ export function JourneyLevelNode({
   const className = `eic-track__node ${stateClass}`;
   const style: CSSProperties = { top: `${topPct}%` };
   const label = state === "done" ? "✓" : number;
+  const isLocked = state === "locked";
+  const tooltipId = `eic-track-tooltip-${levelId}`;
   return (
     <button
       aria-current={state === "current" ? "step" : undefined}
+      aria-describedby={isLocked ? tooltipId : undefined}
+      aria-disabled={isLocked ? "true" : undefined}
       aria-label={ariaLabel}
       className={className}
-      disabled={state === "locked"}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -48,6 +61,16 @@ export function JourneyLevelNode({
     >
       {label}
       {state === "current" ? <span aria-hidden="true" className="eic-track__node-pulse" /> : null}
+      {isLocked ? (
+        <span
+          aria-hidden="false"
+          className="eic-track__node-tooltip"
+          id={tooltipId}
+          role="tooltip"
+        >
+          {t.journey_v2_locked_hint_amber}
+        </span>
+      ) : null}
     </button>
   );
 }
