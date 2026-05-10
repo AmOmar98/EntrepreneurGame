@@ -4,7 +4,7 @@ milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
 last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-jm8: A5 Pixel mascotte 3 triggers Player (T3-IMPROVEMENTS)
+last_activity: 2026-05-10 — Completed quick task 260510-k1f: B1 Cohort Pulse Bar anonymisée /journey (T3-IMPROVEMENTS, R1)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -138,6 +138,7 @@ _None_
 | 260510-iee | T3 quick wins A1 (auto-save 8s + pastille) + A4 (compteur Y/N champs) | 2026-05-10 | cf28807 | [260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c](./quick/260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c/) |
 | 260510-j2j | B2 banner L3 → tooltip ambre warn-only (R2/R3) | 2026-05-10 | 4733406 | [260510-j2j-b2-retirer-banner-rouge-l3-et-remplacer-](./quick/260510-j2j-b2-retirer-banner-rouge-l3-et-remplacer-/) |
 | 260510-jm8 | A5 Pixel mascotte 3 triggers Player (a) 1er livrable (b) stagnation 15min (c) verbatim n°2 (dormant) | 2026-05-10 | a58c00e | [260510-jm8-a5-pixel-mascotte-3-triggers-evenementie](./quick/260510-jm8-a5-pixel-mascotte-3-triggers-evenementie/) |
+| 260510-k1f | B1 Cohort Pulse Bar anonymisée /journey (R1, dual-mode, 6 lignes L0-L5) | 2026-05-10 | 311dd78 | [260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv](./quick/260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv/) |
 
 ### Seeds Planted
 
