@@ -19,12 +19,12 @@ Next.js 15 App Router (React 19, TypeScript, Tailwind via `globals.css`) for the
 
 The app runs in two modes governed by `lib/supabase-status.ts:hasSupabaseEnv()`:
 
-1. **Demo / fallback** — when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are absent, all reads come from the in-memory seed in `lib/data.ts` (and workflow constants in `lib/workflow-data.ts`). The app is fully navigable without a backend.
+1. **Demo / fallback** — when `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are absent, all reads come from the in-memory seed in `lib/seed/` (players, missions, deliverable templates). The app is fully navigable without a backend.
 2. **Supabase-backed** — when env vars are set, `middleware.ts` delegates to `utils/supabase/middleware.ts:updateSession` to refresh auth cookies and gate routes; server actions in `app/actions.ts` write through `utils/supabase/server.ts:createClient` (SSR client from `@supabase/ssr`).
 
-When editing data flow, keep both modes working: type/shape changes in `lib/data.ts` must be reflected in the SQL schema and vice versa.
+When editing data flow, keep both modes working: type/shape changes in `lib/types.ts` must be reflected in the SQL schema and vice versa.
 
-### Domain types (single source of truth: `lib/data.ts`)
+### Domain types (lib/types.ts — single source of truth)
 
 Core enums — `Stage` (L0_diagnostic…L5_alumni), `Checkpoint`, `MaturityPhase`, `DeliverableStatus`, `BonusStatus`, `BonusType`, `AppRole` (`founder | mentor | reviewer | committee_member | eic_admin`), `TeamRole`. The XP model distinguishes confirmed XP, pending XP, prestige XP, validated deliverables, and capped bonus achievements; bonus rules and `calculateBonusClaim` live here too.
 
@@ -141,7 +141,7 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 ## Naming Patterns
 - React components: kebab-case `.tsx` (e.g., `app-shell.tsx`, `proof-workflow.tsx`, `project-card.tsx`, `onboarding-kyc-form.tsx`, `page-header.tsx`)
 - Library / utility modules: kebab-case `.ts` (e.g., `lib/workflow-data.ts`, `lib/supabase-status.ts`)
-- Single-word libs: lowercase (e.g., `lib/data.ts`, `lib/i18n.ts`, `lib/csv.ts`)
+- Single-word libs: lowercase (e.g., `lib/types.ts`, `lib/i18n.ts`, `lib/csv.ts`)
 - App Router files: Next.js conventions (`page.tsx`, `layout.tsx`, `route.ts`, `middleware.ts`)
 - SQL: snake_case (`database/schema.sql`, `database/triggers.sql`, `database/rls.sql`, `database/seed_bootcamp.sql`)
 - Path alias: `@/*` resolves to repo root (see `tsconfig.json:17-19`)
@@ -152,7 +152,7 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - camelCase for locals and module constants (e.g., `bonusRules`, `journeyPhases`, `navItems`, `dictionaries`)
 - Schemas use `<noun>Schema` suffix (e.g., `deliverableSchema`, `bonusSchema`, `kycSchema`, `questSchema`)
 - PascalCase exported types and enums (e.g., `Stage`, `Checkpoint`, `MaturityPhase`, `DeliverableStatus`, `BonusType`, `AppRole`, `TeamRole`, `Locale`, `WorkflowState`)
-- Type-only imports use `type` keyword: `import { type AppRole } from "@/lib/data"` (see `components/app-shell.tsx:5`)
+- Type-only imports use `type` keyword: `import { type AppRole } from "@/lib/types"` (see `lib/types.ts:7`)
 - String-literal unions preferred over `enum` keyword
 - snake_case (`project_id`, `doc_url`, `submitted_at`, `pending_xp`, `base_xp`) — distinct from camelCase TypeScript field names; server actions explicitly map between them in `app/actions.ts:96-108`
 ## Code Style
@@ -184,12 +184,12 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 ## Validation Pattern
 - Use `z.coerce.number()` for `FormData`-sourced numbers (`baseXp`, `quantity`, `xp`) — `FormData` is always strings.
 - Bound numeric inputs (`.min().max()`) to prevent abuse (e.g., `baseXp` 25–150, `quantity` 1–500).
-- Mirror domain enums from `lib/data.ts` literally in `z.enum([...])` lists (e.g., `Checkpoint`, `Stage`, `BonusType`). Keep them in sync with `lib/data.ts`.
+- Mirror domain string-literal unions from `lib/types.ts` literally in `z.enum([...])` lists (e.g., `LevelId`, `SubmissionStatus`, `AppRole`). Keep them in sync with `lib/types.ts`.
 ## Server Action Return Shape
 - Action signature: `(_prevState: WorkflowState, formData: FormData): Promise<WorkflowState>` — designed for `useActionState` (`components/proof-workflow.tsx:18-22`)
 - Initial state on the client: `const initialState: WorkflowState = { ok: false, message: "" };` (`components/proof-workflow.tsx:15`)
 - When success requires opening an email draft, populate `mailto`; the client redirects via `window.location.href = state.mailto` inside a `useEffect` watching the action state (`components/proof-workflow.tsx:25-37`)
-- `mailto` strings are built with `encodeURIComponent` for subject + body (`app/actions.ts:160-173`); prefer the shared `mailtoUrl` / `deliverableMailBody` helpers from `lib/data.ts` when available
+- `mailto` strings are built with `encodeURIComponent` for subject + body (`app/actions.ts`).
 - **Never throw** out of a server action — failures are returned as `{ ok: false, message }`
 - Legacy void-return actions (e.g., `submitDeliverable` at `app/actions.ts:74`) exist for non-interactive callers; new code should always use the `<name>Flow` variants returning `WorkflowState`
 ## Dual-Mode Persistence
@@ -217,8 +217,8 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - Named exports throughout — no `export default` in lib or component files
 - Types exported alongside implementation (`export type WorkflowState`, `export type Locale`)
 - Co-located: schemas live next to the actions that use them in `app/actions.ts`
-- `lib/data.ts` — domain types, enums, seed data, helpers (`mailtoUrl`, `deliverableMailBody`, `calculateBonusClaim`)
-- `lib/workflow-data.ts` — workflow constants
+- `lib/types.ts` — all domain types and string-literal unions (single source of truth for TS shapes)
+- `lib/seed/` — in-memory demo seed data (players, missions, deliverable templates)
 - `lib/i18n.ts` — copy strings
 - `lib/csv.ts` — CSV serialization for export route handlers
 - `lib/supabase-status.ts` — `hasSupabaseEnv()` mode flag
@@ -233,11 +233,11 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 ## Architecture
 
 ## Pattern Overview
-- App Router server-first rendering. Pages are server components that import data directly from `lib/data.ts`; client components are introduced only where interactivity demands (e.g., `components/proof-workflow.tsx`, `components/app-shell.tsx`).
+- App Router server-first rendering. Pages are server components that import typed data from domain modules under `lib/`; client components are introduced only where interactivity demands (e.g., `components/proof-workflow.tsx`, `components/app-shell.tsx`).
 - Single `"use server"` module (`app/actions.ts`) for every mutation — there are no API mutation routes. Read-only endpoints under `app/api/export/` exist solely to stream CSV/EML downloads.
-- Dual-mode data layer guarded by `lib/supabase-status.ts:hasSupabaseEnv()`. Without env vars, the app reads the in-memory seed in `lib/data.ts`; with env vars, server actions write through `utils/supabase/server.ts:createClient` and middleware enforces auth.
+- Dual-mode data layer guarded by `lib/supabase-status.ts:hasSupabaseEnv()`. Without env vars, the app reads in-memory seed data from `lib/seed/`; with env vars, server actions write through `utils/supabase/server.ts:createClient` and middleware enforces auth.
 - Link-based proof flow — the app never accepts uploads. Founders submit `https://` URLs to deliverables / bonus events, which are recorded in Supabase and surfaced via a generated `mailto:` draft to coach + EIC.
-- Domain types and demo data are co-located in `lib/data.ts` (single source of truth). The Postgres schema in `database/schema.sql` mirrors these enums and shapes.
+- Domain types live in `lib/types.ts`; demo seed data lives in `lib/seed/`. The Postgres schema in `database/schema.sql` mirrors these shapes.
 ## Layers
 - Purpose: Refresh Supabase auth cookies and gate non-public routes.
 - Location: `middleware.ts` → `utils/supabase/middleware.ts`
@@ -245,7 +245,7 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - Matcher excludes `_next/static`, images, and favicons.
 - Purpose: Render dashboards per role.
 - Location: `app/<role-area>/page.tsx`
-- Imports: domain helpers from `lib/data.ts`, layout from `components/app-shell.tsx`, server actions from `app/actions.ts` (passed as `action={...}` to `<form>`).
+- Imports: domain types and helpers from `lib/types.ts` and role-specific modules (e.g., `lib/journey.ts`, `lib/mentor.ts`, `lib/admin.ts`), layout from `components/app-shell.tsx`, server actions from `app/actions.ts` (passed as `action={...}` to `<form>`).
 - Examples: `app/page.tsx` (EIC cockpit), `app/journey/page.tsx` (founder map), `app/startup/[slug]/page.tsx` (per-startup detail), `app/coach/page.tsx`, `app/review/page.tsx`, `app/committee/page.tsx`, `app/admin/game/page.tsx`, `app/admin/startups/page.tsx`, `app/ops/page.tsx`, `app/onboarding/page.tsx`, `app/login/page.tsx`, `app/mailto/page.tsx`.
 - Purpose: Persistent sidebar navigation, role-filtered nav items, current-phase indicator.
 - Location: `components/app-shell.tsx` (client component, `usePathname`).
@@ -256,14 +256,14 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - Pattern: Each action validates `FormData` with a Zod schema, optionally calls `createClient()` (no-op when Supabase is absent), performs the insert/update, calls `revalidatePath` on every affected route, and returns either `void` or `WorkflowState = { ok, message, mailto? }`.
 - Workflow variants: actions ending in `Flow` (e.g., `submitDeliverableFlow`, `claimBonusEventFlow`, `saveOnboardingKyc`) are designed for `useActionState` and additionally compute a `mailto:` draft.
 - Purpose: Domain types, enums, demo seed, derived helpers, mailto builders, KPI rollups.
-- Location: `lib/data.ts` (~1285 lines), `lib/workflow-data.ts` (workflow constants), `lib/i18n.ts` (FR/EN copy keys), `lib/csv.ts` (CSV serializer + `csvResponse`), `lib/supabase-status.ts` (env probe).
-- Contains: `Stage`, `Checkpoint`, `MaturityPhase`, `DeliverableStatus`, `BonusStatus`, `BonusType`, `AppRole`, `TeamRole`, `Startup`, `Deliverable`, `BonusEvent`, `Profile`, `bonusRules`, `calculateBonusClaim`, `journeyPhases`, `navItems`, `dashboardMetrics`, `xpSummary`, `mailtoUrl`, `deliverableMailBody`, `committeeDossierRows`.
+- Location: domain layer split across ~22 modules under `lib/`: `lib/types.ts` (all TS domain types), `lib/score.ts` (scoring), `lib/journey.ts` (player journey + deliverable status), `lib/journey-progression.ts` (level progression), `lib/mentor.ts` (mentor evaluation), `lib/admin.ts` + `lib/admin-*.ts` (game master views), `lib/jury.ts` (pitch scoring), `lib/results.ts` (ranking), `lib/hack-status.ts` (live mode), `lib/announcements.ts`, `lib/team-activity.ts`, `lib/seed/` (in-memory demo seed). Shared utilities: `lib/i18n.ts` (copy keys), `lib/csv.ts` (CSV serializer + `csvResponse`), `lib/supabase-status.ts` (env probe).
+- Contains: `LevelId`, `AppRole`, `TeamRole`, `Profile`, `Player`, `Mission`, `DeliverableTemplate`, `Submission`, `Evaluation`, `PitchScore` (all in `lib/types.ts`); role-specific aggregates and helpers in their respective domain modules.
 - Purpose: Issue cookie-aware Supabase clients in middleware and server contexts.
 - Location: `utils/supabase/server.ts` (server components / actions), `utils/supabase/middleware.ts` (edge auth refresh).
 - Both short-circuit when `hasSupabaseEnv()` is false. `createClient()` returns `null` in demo mode — every action checks `if (supabase) { ... }` before writing.
 - Purpose: Stream CSV / EML attachments for cohort, review queue, KPI snapshot, committee dossiers, and committee email exports.
 - Location: `app/api/export/cohort.csv/route.ts`, `app/api/export/review-queue.csv/route.ts`, `app/api/export/kpi-snapshot.csv/route.ts`, `app/api/export/committee/[committeeId]/route.ts`, `app/api/export/committee/[committeeId].csv/route.ts`, `app/api/export/eml/[committeeId]/route.ts`.
-- Pattern: `GET` handlers pull rows from `lib/data.ts` helpers and return `csvResponse(filename, toCsv(rows))` from `lib/csv.ts`.
+- Pattern: `GET` handlers pull rows via `lib/admin-export.ts` helpers and return `csvResponse(filename, toCsv(rows))` from `lib/csv.ts`.
 - Purpose: Persistent store, RLS policies, XP triggers.
 - Location: `database/schema.sql` (enums, tables, generated columns), `database/triggers.sql` (XP ledger, `updated_at` propagation, stage transitions), `database/rls.sql` (`has_role`, `is_staff` helpers + per-table policies), `database/seed_bootcamp.sql` (optional pilot data).
 - Apply order: `schema.sql` → `triggers.sql` → `rls.sql`. Triggers maintain `projects.total_xp` and `xp_ledger`; bypassing them risks aggregate drift.
@@ -278,14 +278,13 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - Pattern: `const supabase = await createClient(); if (supabase) { ... }`.
 - Helpers: `hasSupabaseEnv()` in `lib/supabase-status.ts`.
 - Purpose: Drive XP gates and route logic across UI and DB.
-- TS source: `lib/data.ts` (`Stage`, `Checkpoint`, `MaturityPhase`, `BonusType`).
-- SQL mirror: `database/schema.sql` (`project_stage`, `checkpoint_band`, `maturity_phase`, `bonus_type`).
+- TS source: `lib/types.ts` (`LevelId`, `SubmissionStatus`, `AppRole`, `TeamRole`).
+- SQL mirror: `database/schema.sql` (corresponding Postgres enums and columns).
 - When changing one side, update both — Zod schemas in `app/actions.ts` also enumerate these literals.
 - Purpose: Per-bonus-type XP per unit, caps, and target checkpoint.
-- Location: `lib/data.ts` (`bonusRules`, `calculateBonusClaim`).
-- Used by: `app/actions.ts:claimBonusEvent(Flow)` to compute `claimed_xp` and target `checkpoint`.
+- Note: bonus XP rules (`bonusRules`, `calculateBonusClaim`) were removed during v0.2 — scoring now flows through `lib/score.ts`.
 - Purpose: Generate consistent `mailto:` URLs (FR copy) for proof, bonus, reminders, committee dossiers.
-- Location: `lib/data.ts` (`mailtoUrl`, `deliverableMailBody`, `reviewReminderBody`).
+- Location: `app/actions.ts` — `mailto:` draft strings are built inline using `encodeURIComponent`.
 ## Entry Points
 - Location: `middleware.ts` → `utils/supabase/middleware.ts:updateSession`
 - Triggers: every non-static request matched by the middleware config.
