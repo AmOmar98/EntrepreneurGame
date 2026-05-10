@@ -138,11 +138,21 @@ export function JourneyDrawer({
 
         <div className="eic-drawer__body">
           {cards.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--wf-ink-soft)", margin: 0 }}>
-              {state === "locked"
-                ? t.journey_v2_drawer_locked
-                : t.journey_no_deliverables}
-            </p>
+            // Quick 260510-j2j (T3-B2): locked => amber warn-only note (R2),
+            // not the hard-stop t.journey_v2_drawer_locked text.
+            state === "locked" ? (
+              <p
+                className="eic-locked-hint--amber"
+                role="note"
+                style={{ margin: 0 }}
+              >
+                {t.journey_v2_locked_hint_amber}
+              </p>
+            ) : (
+              <p style={{ fontSize: 13, color: "var(--wf-ink-soft)", margin: 0 }}>
+                {t.journey_no_deliverables}
+              </p>
+            )
           ) : (
             <>
               <div className="eic-drawer__head-kicker" style={{ marginBottom: 2 }}>

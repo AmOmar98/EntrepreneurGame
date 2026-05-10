@@ -137,16 +137,26 @@ function DefaultTip() {
 }
 
 function HoveredHint({ label, state }: { label: string; state: LevelState }) {
+  // Quick 260510-j2j (T3-B2): locked => warn-only amber copy (R2),
+  // not the hard-stop t.journey_v2_drawer_locked text.
   const stateText =
     state === "current"
       ? t.journey_status_a_rendre
       : state === "done"
         ? t.journey_status_validated
-        : t.journey_v2_drawer_locked;
+        : t.journey_v2_locked_hint_amber;
   return (
     <div className="eic-journey__tip" style={{ opacity: 1 }}>
       <p className="eic-journey__kicker">{label}</p>
-      <p className="eic-journey__tip-body">{stateText}</p>
+      <p
+        className={
+          state === "locked"
+            ? "eic-journey__tip-body eic-locked-hint--amber"
+            : "eic-journey__tip-body"
+        }
+      >
+        {stateText}
+      </p>
     </div>
   );
 }
