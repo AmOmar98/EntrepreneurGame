@@ -71,7 +71,7 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 ### Constraints
 
-- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. T-5 jours au moment de l'écriture.
+- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. **Deadline freeze interne : mardi 13 mai 2026 04h00** (T-1, dernier moment pour merger un fix B1-B5 + redéployer Vercel + smoke validation). 
 - **Tech stack** : Next.js 15 + React 19 + TypeScript + Supabase + Vercel (figés, héritage codebase).
 - **Équipe** : solo dev (Omar) avec Claude Code en pair. Triple casquette : code + setup pilote + animation workshop le 13. Pas de débogage en live possible.
 - **Volume pilote** : 6-15 Players, 2-4 Mentors, 1 GameMaster — concurrence max ~30 sessions.
@@ -80,6 +80,50 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - **Sécurité** : RLS minimal correct (Player ne voit pas autres Players). Pilot-grade accepté ailleurs. Aucune perte de données tolérable.
 - **Crédibilité partenaires** : aucune mention « démo » apparente, aucun seed (`atlas-soil` etc.) ne doit fuiter en prod. Branding EIC professionnel attendu.
 <!-- GSD:project-end -->
+
+## T-3 Critical Gates (rétro 2026-05-10 — statut au 2026-05-10 soir)
+
+> Voir `RETROSPECTIVE-T3-2026-05-10.md` pour la rétro complète (Worked / Didn't / How-to / Risks). **B1-B4 fixés** ; reste B5 (ops) + 6 gates humains.
+
+- **B1 ✅ FIXÉ** — R1 percée `/results` colmatée. Scores + ranking gatés `isGameMaster`, Player voit annonce qualitative EIC-validated FR. Commits `c740d48` + `16aa0f7` + `5647606`.
+- **B2 ✅ FIXÉ** — Pondération 20/80 active. `lib/results.ts:30` `DEFAULT_PITCH_WEIGHT = 0.8`. Commit `8199fb1` + doc `33707b8`.
+- **B3 ✅ FIXÉ** — Migrations Phase 8 + 9 appliquées en PROD Supabase. RLS announcements vérifié. Commits `d7b3e80` (CLI scaffolding) + `cd8482f` (apply prod).
+- **B4 ✅ FIXÉ** — 7 missions AgreenTech + bonus B + rubric 5×5=25 en PROD. Commits `06624a3` (refactor seed) + `d8ca1cf` (align evaluationSchema) + `28a306d` (apply prod) + `26de6ab` (doc).
+- **B5 🟡 OPS** — `member_emails` à collecter par Fatimaezzahra avant 12/05 23h. Hors code.
+
+**6 gates humains pendants** (cités `8ac2822`) : (1) visual review prod 3 phases v0.2 ; (2) smoke E2E régression v0.1 ; (3) reduced-motion + a11y check ; (4) Lighthouse ; (5) cleanup ; (6) RLS check post-grants service_role (`7bcf666`).
+
+**Ne pas re-fixer B1-B4 sans vérifier le SHA cité d'abord** — risque de double-fix / régression.
+
+## Pre-edit guards (zones sensibles)
+
+Avant tout edit dans `app/journey/`, `app/onboarding/`, `app/mission/`, `app/jury/`, `app/results/`, `components/results-*`, `components/submission-*`, `lib/score.ts`, `lib/results.ts`, `lib/seed/`, `database/`, ou `lib/types.ts` :
+
+1. **Spawn `eic-pedagogical-advisor`** (cf. `.claude/agents/eic-pedagogical-advisor.md`) pour valider l'edit contre les 3 règles cardinales :
+   - **R1** : score/rang invisible côté Player (jury et GameMaster uniquement).
+   - **R2** : validators **warn-only** (`severity: "warn"`), jamais bloquants — `"error"` doit lever review humain.
+   - **R3** : aucun blocage inter-mission codé en dur — pas de `disabled` DOM, pas de `blocks_progression_to` actif. Utiliser `eic-locked-hint--amber` / tooltip ambre.
+2. **Audit grep R1 post-edit** sur composants Player-facing : `grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/results-* components/submission-* --include="*.tsx"`. Aucun match attendu côté Player.
+3. **Dual-mode demo préservé** : ne jamais ajouter de `redirect("/login")` ou `getCurrentUser()` avant le check `hasSupabaseEnv()` / fallback seed. Régression vue dans `app/journey/page.tsx:27-30` v0.2 → cassait 9/12 surfaces. L'auth réelle est gérée par `middleware.ts`, pas par la page.
+
+## Convention orchestrator quick
+
+Toute session `/gsd-quick` produit un dossier `.planning/quick/YYMMDD-XXX-slug/` avec **5 artefacts** : `PLAN.md` / `AUDIT.md` / `ADVISOR-VERDICT.md` (si zone Player-facing) / `SUMMARY.md` (avec SHA des commits) / `deferred-items.md` (même vide). ID = base36 court 3 chars (`j2j`, `iee`, `kpw`...). Préfixe commit = `(slug-retro)` ou `(quick-YYMMDD-XXX)`. Un quick = 1-2 commits atomiques max ; au-delà → c'est une phase.
+
+## Default = ship + push (no defer, no anxiety)
+
+**Policy 2026-05-10** : avant le pilote AgreenTech (13-14 mai), **default = exécuter, commit, push origin** dès qu'un plan est approuvé. Pas de "freeze", pas de "deferring v0.3", pas de "cutoff anxiety". Si du temps reste, on l'utilise pour livrer — c'est le contrat.
+
+**Règles** :
+1. **Pas de defer "par précaution"** — si une review revient `OK` ou `WARN with notes`, on incorpore les notes et on exécute. `BLOCK` = on adresse le block, pas on reporte.
+2. **Push remote systématique** — chaque commit atomique push immédiat sur `origin main` après vérif `typecheck/lint/build`. Pas de batching local "au cas où".
+3. **Tag avant phase risquée** — créer `v0.X.Y-pre-<phase>` localement + push tag avant la première édition, pour rollback distant.
+4. **Rollback granulaire** — commits atomiques (1 sub-task = 1 commit). `git revert <sha>` chirurgical possible.
+5. **Smoke après chaque wave** — `npm run typecheck && npm run lint && npm run build` minimum. Smoke E2E swarm-harness sur surfaces critiques.
+
+**Hotfix protocol** (post-pilote 14/05 soir) reste : commit hotfix + push + smoke prod Vercel + monitoring 30min.
+
+**Décision EIC manager** : la fenêtre 10/05 → 12/05 23h00 doit être maximisée pour livrer la qualité visuelle + cardinaux (R1/R2/R3) — pas pour conserver. Le pilote sera meilleur avec 13 refinements design appliqués qu'avec un repo "stable mais incomplet".
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
 ## Technology Stack
