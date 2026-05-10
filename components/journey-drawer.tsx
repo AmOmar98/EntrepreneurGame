@@ -137,6 +137,18 @@ export function JourneyDrawer({
         ) : null}
 
         <div className="eic-drawer__body">
+          {/* Phase 11 / C3 — R3 fix: locked levels open the drawer in
+              read-only mode with an amber lookahead banner. No XP mutation,
+              no progression triggered. */}
+          {state === "locked" && cards.length > 0 ? (
+            <p
+              className="eic-locked-hint--amber"
+              role="note"
+              style={{ margin: 0 }}
+            >
+              {t.journey_v2_locked_hint_amber}
+            </p>
+          ) : null}
           {cards.length === 0 ? (
             // Quick 260510-j2j (T3-B2): locked => amber warn-only note (R2),
             // not the hard-stop t.journey_v2_drawer_locked text.

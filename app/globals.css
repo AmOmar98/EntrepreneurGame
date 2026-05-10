@@ -1709,8 +1709,12 @@ tr:last-child td {
   z-index: 5;
 }
 .eic-track__node.is-locked {
-  cursor: not-allowed;
+  /* Phase 11 / C3 — R3 fix: locked is clickable (drawer opens read-only).
+     Replace not-allowed cursor with pointer + light desaturation
+     so the affordance matches the click behavior. No opacity drop. */
+  cursor: pointer;
   border-style: dashed;
+  filter: saturate(0.7);
 }
 .eic-track__node-pulse {
   position: absolute;

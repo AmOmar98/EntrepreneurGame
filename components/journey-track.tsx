@@ -115,7 +115,10 @@ export function JourneyTrack({
             levelId={id}
             nodeDelayMs={nodeDelayMs}
             number={number}
-            onClick={() => state !== "locked" && onLevelClick?.(id)}
+            // Phase 11 / C3 — R3 fix: locked levels are CLICKABLE.
+            // Drawer renders a read-only locked variant with amber hint banner.
+            // No XP mutation, no progression, no server action triggered.
+            onClick={() => onLevelClick?.(id)}
             onMouseEnter={() => onLevelHover?.(id)}
             onMouseLeave={() => onLevelHover?.(null)}
             state={state}
