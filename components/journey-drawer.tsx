@@ -6,7 +6,7 @@
 //
 // PLR-04: panel with missions/livrables, code Mx.y, title, status pill,
 //         reward XP, contextual action button.
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { JourneyDeliverableCard } from "@/components/journey-deliverable-card";
 import { getShortLevelLabel, getLevelNumber, type LevelState } from "@/lib/journey-progression";
 import { dictionaries } from "@/lib/i18n";
@@ -55,6 +55,16 @@ export function JourneyDrawer({
     };
   }, []);
 
+  // A11y: save trigger element, autoFocus drawer, restore focus on unmount.
+  const drawerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    drawerRef.current?.focus();
+    return () => {
+      previouslyFocused?.focus?.();
+    };
+  }, []);
+
   const handleBackdrop = useCallback(() => onClose(), [onClose]);
 
   const number = getLevelNumber(levelId);
@@ -91,7 +101,9 @@ export function JourneyDrawer({
         aria-labelledby="eic-drawer-title"
         aria-modal="true"
         className="eic-drawer"
+        ref={drawerRef}
         role="dialog"
+        tabIndex={-1}
       >
         <header className="eic-drawer__header">
           <span aria-hidden="true" className={iconClass}>

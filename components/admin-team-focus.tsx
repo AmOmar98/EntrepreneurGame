@@ -5,7 +5,7 @@
 // activity sidebar.
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { AdminLiveTeam, GameFlowEntry } from "@/lib/admin-live";
 import { dictionaries } from "@/lib/i18n";
 
@@ -27,6 +27,16 @@ export function AdminTeamFocus({ team, rank, activity, onClose }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // A11y: save trigger element, autoFocus modal, restore focus on unmount.
+  const focusRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    focusRef.current?.focus();
+    return () => {
+      previouslyFocused?.focus?.();
+    };
+  }, []);
 
   const stateClass =
     team.state === "active"
@@ -58,6 +68,8 @@ export function AdminTeamFocus({ team, rank, activity, onClose }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      ref={focusRef}
+      tabIndex={-1}
     >
       <div className="eic-admin-focus">
         <span
