@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminStatusBanner } from "@/components/admin-status-banner";
 import { AppShell } from "@/components/app-shell";
+import { getAdminLiveSnapshot } from "@/lib/admin-live";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
+import { computeHackStatus } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getCohortOverview, getGlobalCounters, type CohortRow } from "@/lib/admin";
@@ -17,12 +20,22 @@ export default async function AdminPage() {
     redirect(pathForRole(role));
   }
 
-  const [rows, counters] = hasSupabaseEnv()
-    ? await Promise.all([getCohortOverview(), getGlobalCounters()])
+  const [rows, counters, snapshot] = hasSupabaseEnv()
+    ? await Promise.all([
+        getCohortOverview(),
+        getGlobalCounters(),
+        getAdminLiveSnapshot(),
+      ])
     : [
         [] as CohortRow[],
         { totalSubmissions: 0, pendingReview: 0, validated: 0, totalDeliverableSlots: 0 },
+        { teams: [], gameFlow: [], recentValidatedEvents: [] },
       ];
+
+  const hackStatus = computeHackStatus(
+    snapshot.teams.map((team) => ({ state: team.state })),
+    snapshot.recentValidatedEvents,
+  );
 
   return (
     <AppShell role={role ?? "game_master"} variant="staff">
@@ -71,6 +84,8 @@ export default async function AdminPage() {
             </a>
           </div>
         </header>
+
+        <AdminStatusBanner result={hackStatus} />
 
         {!hasSupabaseEnv() && (
           <div
