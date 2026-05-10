@@ -21,10 +21,12 @@ import { seedPlayers } from "@/lib/seed";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type { LevelId, SubmissionStatus } from "@/lib/types";
 
-// Pilot scope: 6 visible levels. L6_traction / L7_alumni are post-bootcamp
-// (not part of the Hack-Days 2 jours), so the cohort pulse omits them.
+// Pilot scope: 5 visible deliverable levels (L1..L5). L0_diagnostic is the
+// onboarding / KYC stepper and has no deliverable template in the hackdays
+// seed nor the demo seed, so it would always read 0/N and mislead the cohort
+// pulse (smoke 2026-05-10 "Diagnostic 0/1" finding). L6_traction / L7_alumni
+// are post-bootcamp and also omitted.
 const PULSE_LEVELS: LevelId[] = [
-  "L0_diagnostic",
   "L1_problem",
   "L2_solution",
   "L3_market",
