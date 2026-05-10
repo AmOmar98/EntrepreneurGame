@@ -12,6 +12,8 @@ source: C:\Users\omara\.claude\plans\glimmering-sauteeing-wilkinson.md
 **Mode:** Imported from external plan via `/gsd-import --from`
 **Source bundle design** : `https://api.anthropic.com/v1/design/h/I7NlTUTyicbeewAq3zcWOg` (identique au bundle `PG-1aljQekQKK5m01U-9Yw` après diff). Extraction dans `.planning/design-v2/` (déjà présent).
 
+**Patch 2026-05-10** (quick session [`260510-l3a`](../../quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/)) : 0.2 + 0.7 marqués ✅ DONE post-quicks `260510-kpw` + `260510-j2j` ; 0.3 absorbe A2/B3/B4 data-side T3-IMPROVEMENTS.md ; ajout 0.10 (C3 ordre randomisé pitch) ; déclaration hors scope B5/C1/C2/C4 (cf. bloc `<scope>` ci-dessous).
+
 <domain>
 ## Phase Boundary
 
@@ -80,6 +82,19 @@ Spawn `.claude/agents/eic-pedagogical-advisor.md` AVANT toute édition des zones
 - **Phase 7** — Smoke E2E + commits
 
 Détail complet : voir `10-01-PLAN.md`.
+
+## Hors scope (traité par /gsd-quick séparé ou v0.3)
+
+Confirmé patch 2026-05-10 (quick session `260510-l3a`) — éléments T3-IMPROVEMENTS.md NE seront PAS traités dans Phase 10 :
+
+- **B5** — 2 classements internes Excellence + Trajectoire (formule `Score_traj = Score_final - Score_présélection × 5`, filtre Trajectoire = équipes Idée + Premier Prototype) → ref `T3-IMPROVEMENTS.md` ligne 62. Quick séparé post-pilote.
+- **C1** — Notation jury différée + révisable (brouillons pendant pitch, réajustement ±10pts post-session) → ref `T3-IMPROVEMENTS.md` ligne 68. Quick séparé OU v0.3.
+- **C2** — Décomposition obligatoire 5 critères × /20 + affichage σ jury en temps réel → ref `T3-IMPROVEMENTS.md` ligne 69. Quick séparé OU v0.3.
+- **C4** — Lettre retour personnalisée signée jury (template 3 champs `[force]/[risque]/[next step]` + export PDF) → ref `T3-IMPROVEMENTS.md` ligne 71 + section G template lignes 257-280. Quick séparé post-pilote (canal officiel feedback chiffré, peut être manuel au pilote).
+
+**Décision** : ces 4 items sont reportés pour préserver la priorité absolue Phase 10 (B1-B4 + 5 sections design absentes). Ils n'impactent pas le go-live AgreenTech 13/05.
+
+**Sous-tâche AJOUTÉE en Phase 0 (post-patch)** : `0.10 — C3 ordre randomisé pitch + équipes ancres milieu` (cf. `10-01-PLAN.md` Phase 0). Couplée à `0.3` (même seed event).
 
 </scope>
 
