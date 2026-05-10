@@ -7,8 +7,11 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { JourneyClient } from "@/components/journey-client";
+import { PlayerAnnouncementStrip } from "@/components/player-announcement-strip";
+import { getAnnouncementsForPlayer } from "@/lib/announcements";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
+import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJourneyData } from "@/lib/journey";
 import {
   getLevelStates,
@@ -86,8 +89,14 @@ export default async function JourneyPage() {
 
   const totalEarnedXp = getTotalEarnedXp(data.missions);
 
+  // Phase 9 / GMR-09 — surface live GM announcements for this Player.
+  const announcements = hasSupabaseEnv()
+    ? await getAnnouncementsForPlayer(user.id, 5)
+    : [];
+
   return (
     <AppShell role="player" variant="player">
+      <PlayerAnnouncementStrip announcements={announcements} />
       <JourneyClient
         currentLevel={data.player.currentLevel}
         hero={hero}
