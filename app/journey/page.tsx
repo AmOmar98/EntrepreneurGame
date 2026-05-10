@@ -113,6 +113,14 @@ export default async function JourneyPage() {
       ? await getAnnouncementsForPlayer(user.id, 5)
       : [];
 
+  // T3X-EXPANSION wave 3 / plan 12-10 — Bonus rail entry types (D-02 / D-03).
+  // Static list of optional bonus claim routes. R3 : optionnel, pas de blocage.
+  const bonusEntries: { type: "bonus_verbatims_terrain" | "bonus_dev_plan" | "bonus_prototype_draft"; label: string }[] = [
+    { type: "bonus_verbatims_terrain", label: t.bonus_card_verbatims_terrain },
+    { type: "bonus_dev_plan", label: t.bonus_card_dev_plan },
+    { type: "bonus_prototype_draft", label: t.bonus_card_prototype_draft },
+  ];
+
   return (
     <AppShell role="player" variant="player">
       <PlayerAnnouncementStrip announcements={announcements} />
@@ -125,6 +133,46 @@ export default async function JourneyPage() {
         objectivesByLevel={{}}
         totalEarnedXp={totalEarnedXp}
       />
+      {/* T3X-EXPANSION wave 3 / plan 12-10 — Bonus rail (D-02 / D-03). R3 : optionnel. */}
+      <section style={{ padding: "16px 32px", maxWidth: 960, margin: "0 auto" }}>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+          {t.bonus_section_title}
+        </h2>
+        <p style={{ margin: "4px 0 16px", fontSize: 13, color: "#475569" }}>
+          {t.bonus_section_subtitle}
+        </p>
+        <ul
+          style={{
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {bonusEntries.map((entry) => (
+            <li key={entry.type}>
+              <a
+                href={`/journey/bonus/${entry.type}`}
+                style={{
+                  display: "block",
+                  padding: 12,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 8,
+                  textDecoration: "none",
+                  color: "#0f172a",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                {entry.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
     </AppShell>
   );
 }

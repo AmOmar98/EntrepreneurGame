@@ -14,12 +14,14 @@ import {
   MentorCommentsList,
   type MentorCommentEntry,
 } from "@/components/mentor-comments-list";
+import { MoscowKanban } from "@/components/moscow-kanban";
 import { RevisionPanel } from "@/components/revision-panel";
 import { SubmissionForm } from "@/components/submission-form";
 import { SubmissionReadonly } from "@/components/submission-readonly";
 import { SubmissionTicket } from "@/components/submission-ticket";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
+import { getMoscowCardsForPlayerDeliverable } from "@/lib/moscow";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type {
   RubricCriterion,
@@ -34,11 +36,18 @@ const t = dictionaries.fr;
 
 type DeliverableTemplateRow = {
   id: string;
+  slug: string;
   title: string;
   description: string;
   rubric: RubricCriterion[] | null;
   max_score: number;
 };
+
+// T3X-EXPANSION wave 3 / plan 12-10 — MoSCoW Kanban surfacing slug.
+// When the deliverable template matches this slug, surface <MoscowKanban>
+// IN ADDITION to the existing SubmissionForm/Ticket flow (R3 : ProofWorkflow
+// fallback preserved, never replaces).
+const MOSCOW_DELIVERABLE_SLUG = "fiche-produit-plan-dev-v1";
 
 type SubmissionRow = {
   id: string;
@@ -141,7 +150,7 @@ export default async function DeliverableDetailPage({
   // Fetch the deliverable template by id.
   const { data: tplRow } = await supabase
     .from("deliverable_templates")
-    .select("id, title, description, rubric, max_score")
+    .select("id, slug, title, description, rubric, max_score")
     .eq("id", id)
     .maybeSingle();
   if (!tplRow) {
@@ -149,6 +158,14 @@ export default async function DeliverableDetailPage({
   }
   const tpl = tplRow as DeliverableTemplateRow;
   const rubric = Array.isArray(tpl.rubric) ? tpl.rubric : [];
+
+  // T3X-EXPANSION wave 3 / plan 12-10 — surface MoscowKanban conditionally
+  // for the dev-plan deliverable. ProofWorkflow / SubmissionForm fallback
+  // remains accessible below (R3 : never block).
+  const isMoscowDeliverable = tpl.slug === MOSCOW_DELIVERABLE_SLUG;
+  const moscowCards = isMoscowDeliverable
+    ? await getMoscowCardsForPlayerDeliverable(playerId, tpl.id)
+    : null;
 
   // Fetch latest submission for this (player, template). RLS naturally returns
   // empty rows for any foreign player_id, so any "wrong owner" scenario simply
@@ -314,6 +331,24 @@ export default async function DeliverableDetailPage({
                 </li>
               ))}
             </ul>
+          </section>
+        ) : null}
+
+        {/* T3X-EXPANSION wave 3 / plan 12-10 — MoSCoW Kanban surfacing. */}
+        {/* Conditional on template.slug ; ProofWorkflow fallback below preserves R3. */}
+        {isMoscowDeliverable && moscowCards !== null ? (
+          <section
+            style={{
+              marginTop: 24,
+              border: "1px solid #e2e8f0",
+              borderRadius: 8,
+              background: "#ffffff",
+            }}
+          >
+            <MoscowKanban
+              deliverableTemplateId={tpl.id}
+              initialCards={moscowCards}
+            />
           </section>
         ) : null}
 
