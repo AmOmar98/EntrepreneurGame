@@ -150,7 +150,7 @@ _None_
 | 260510-l3a | Patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 DONE, paths fix, A2/B3/B4 absorption, 0.10 C3 ajouté, B5/C1/C2/C4 hors scope) | 2026-05-10 | 79f0e36 | [260510-l3a-patch-phase-10-plan-roadmap-post-quick-s](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/) |
 | 260510-l68 | **B4 RÉTRO** — refonte seed_event_hackdays.sql AgreenTech 2026 (6 missions + 9 livrables relabelés, rubric 5×5=25 uniforme, idempotent slugs préservés, +1 patch evaluationSchema .max(25)) | 2026-05-10 | d8ca1cf | [260510-l68-b4retro-seed-agreentech-7-missions-l1-l2](./quick/260510-l68-b4retro-seed-agreentech-7-missions-l1-l2/) |
 | 260510-lu5 | **B3 RÉTRO** — migrations Phase 8+9 appliquées en PROD Supabase via supabase CLI (npx, toolchain wired, supabase/migrations/ + config.toml committés, 4 entries aligned local↔remote) | 2026-05-10 | d7b3e80 | [260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr](./quick/260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr/) |
-| 260510-rxa | Patch BLOCK dim 8 PLAN-CHECK phase 12 — insertion Plan 12-04 `apply-migrations-gate` (Wave 1.5 blocking, depends_on [12-02, 12-03]) entre creation des fichiers SQL et consommation TS — verdict READY-WITH-NOTES → READY | 2026-05-10 | _pending_ | [260510-rxa-patcher-block-dim-8-schema-apply-gate-ph](./quick/260510-rxa-patcher-block-dim-8-schema-apply-gate-ph/) |
+| 260510-rxa | Patch BLOCK dim 8 PLAN-CHECK phase 12 — insertion Plan 12-04 `apply-migrations-gate` (Wave 1.5 blocking, depends_on [12-02, 12-03]) entre creation des fichiers SQL et consommation TS — verdict READY-WITH-NOTES → READY | 2026-05-10 | 8f03c68 | [260510-rxa-patcher-block-dim-8-schema-apply-gate-ph](./quick/260510-rxa-patcher-block-dim-8-schema-apply-gate-ph/) |
 
 ### Seeds Planted
 
