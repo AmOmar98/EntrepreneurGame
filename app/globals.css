@@ -6300,3 +6300,16 @@ tr:last-child td {
   margin: 0;
 }
 
+/* Phase 13 / G3 — mobile 390px topbar overflow fix.
+   À 390px, le topbar TopbarLite débordait de ~22px à cause de la
+   double pill (info + amber) + brand-sub + nav + logout. Sur petits
+   écrans on cache les pills et la tagline secondaire, et on resserre
+   le padding du topbar. R1/R2/R3 non concernés (purement visuel). */
+@media (max-width: 420px) {
+  .eic-topbar__brand-sub { display: none; }
+  .eic-topbar__pill--info,
+  .eic-topbar__pill--amber { display: none; }
+  .eic-topbar { padding-inline: 8px; gap: 4px; }
+}
+
+
