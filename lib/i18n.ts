@@ -515,6 +515,10 @@ export const dictionaries = {
     pixel_mascot_collapse: "Replier Pixel",
     pixel_mascot_expand: "Déplier Pixel",
     pixel_mascot_aria: "Mascotte Pixel · état du hack",
+    // ---- Pixel mascot — Player triggers (T3 A5 / quick 260510-jm8) -----------
+    pixel_player_first_delivery_quote: "Première hypothèse posée.",
+    pixel_player_stagnation_quote: "Une astuce t'attend à droite ◊",
+    pixel_player_verbatim_count_quote: "Encore un et L3 prend de la profondeur.",
     // ---- Results replay mode (Phase 9 — GMR-05) -------------------------------
     results_replay_hero_kicker: "Verdict final · Hack-Days 2026",
     results_replay_hero_winner_prefix: "L'équipe",
@@ -836,6 +840,10 @@ export const dictionaries = {
     results_already_published: "Republish (already published)",
     results_demo_disabled: "Demo mode: connect to Supabase to view results.",
     results_empty: "No PitchScore recorded yet.",
+    // ---- Pixel mascot — Player triggers (T3 A5 / quick 260510-jm8) -----------
+    pixel_player_first_delivery_quote: "First hypothesis logged.",
+    pixel_player_stagnation_quote: "A tip is waiting on your right.",
+    pixel_player_verbatim_count_quote: "One more and L3 gains depth.",
   },
 } as const;
 

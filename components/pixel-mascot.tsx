@@ -184,7 +184,7 @@ function shortStatus(mood: HackStatus, result: HackStatusResult): string {
 
 // ---- SVG mascot (ported from .planning/design-v2/project/pixel-mascot.jsx) ---
 
-function PixelAvatar({
+export function PixelAvatar({
   mood,
   size,
 }: {
