@@ -201,6 +201,10 @@ export function MoscowKanban({
 
   async function handleEdit(card: MoscowCardType) {
     // Minimal inline-edit : prompts successifs. Dialog custom out of scope T-3.
+    // WR-06 (Phase 12 review) — known limitation : window.prompt/confirm break
+    // in iframes, fail a11y audits, screenshot poorly. Acceptable for the
+    // 13-14 May AgreenTech pilot (Chrome desktop demo path validated).
+    // v0.3 backlog : replace 3-prompt sequence with Radix Dialog + inline form.
     const newFeature = window.prompt(t.moscow_card_feature_label, card.feature);
     if (newFeature === null) return;
     const newPourquoi = window.prompt(t.moscow_card_pourquoi_label, card.pourquoi) ?? "";
