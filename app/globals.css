@@ -1585,6 +1585,18 @@ tr:last-child td {
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: height var(--transition-slow), bottom var(--transition-slow), top var(--transition-slow);
 }
+.eic-track__fill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  width: calc(100% + 10px);
+  height: 10px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(76, 175, 80, 0.6), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 .eic-track__crown {
   position: absolute;
   left: 50%;
