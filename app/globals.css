@@ -4512,6 +4512,9 @@ tr:last-child td {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .eic-admin-focus__backdrop { animation: none; }
+}
 .eic-admin-focus {
   position: relative;
   width: min(100%, 1080px);
