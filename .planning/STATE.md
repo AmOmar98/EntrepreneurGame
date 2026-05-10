@@ -4,7 +4,7 @@ milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
 last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-heu: Audit R1 (score invisible côté Player) + 1 patch
+last_activity: 2026-05-10 — Completed quick task 260510-hzv: Update CLAUDE.md sync lib/ refactor v0.2 (17 edits)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -134,6 +134,7 @@ _None_
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260510-heu | Audit R1 (score invisible côté Player) + 1 patch | 2026-05-10 | 1291f94 | [260510-heu-audit-r1-score-invisible-cote-player-et-](./quick/260510-heu-audit-r1-score-invisible-cote-player-et-/) |
+| 260510-hzv | Update CLAUDE.md — sync lib/ refactor v0.2 (17 edits) | 2026-05-10 | bedf685 | [260510-hzv-update-claude-md-sync-lib-refactor-v02](./quick/260510-hzv-update-claude-md-sync-lib-refactor-v02/) |
 
 ---
 
