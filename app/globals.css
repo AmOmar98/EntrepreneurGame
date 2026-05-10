@@ -2969,6 +2969,145 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   Phase 10 / Section 10 — Pitch prep H-2 (eic-pitchprep)
+   ========================================================================== */
+.eic-pitchprep {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background: var(--home-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--home-border);
+  box-shadow: var(--shadow-card);
+}
+.eic-pitchprep__header { display: flex; flex-direction: column; gap: 8px; }
+.eic-pitchprep__kicker {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eic-blue);
+  margin: 0;
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.eic-pitchprep__subkicker {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--home-muted);
+  text-transform: none;
+}
+.eic-pitchprep__title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-pitchprep__lead {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--home-muted-strong);
+  margin: 0;
+}
+.eic-pitchprep__countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding: 16px 20px;
+  background: var(--wf-paper);
+  border-left: 3px solid var(--eic-blue);
+  border-radius: var(--radius-md);
+}
+.eic-pitchprep__countdown-prefix {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--home-muted);
+}
+.eic-pitchprep__countdown-value {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(32px, 5vw, 48px);
+  color: var(--eic-blue);
+  font-variant-numeric: tabular-nums;
+}
+.eic-pitchprep__section { display: flex; flex-direction: column; gap: 10px; }
+.eic-pitchprep__section-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 20px;
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-pitchprep__checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.eic-pitchprep__check-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--wf-paper);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--home-ink);
+}
+.eic-pitchprep__check-item input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--eic-green);
+}
+.eic-pitchprep__order {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--eic-blue);
+  margin: 0;
+}
+.eic-pitchprep__order-meta {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--home-muted-strong);
+  margin: 0;
+}
+.eic-pitchprep__order-explainer,
+.eic-pitchprep__order-pending {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--home-muted);
+  margin: 0;
+}
+.eic-pitchprep__brief-intro {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--home-muted-strong);
+}
+.eic-pitchprep__brief,
+.eic-pitchprep__reminders {
+  margin: 0;
+  padding-left: 22px;
+  font-family: var(--font-body);
+  color: var(--home-ink);
+  display: grid;
+  gap: 6px;
+}
+.eic-pitchprep__brief li::marker { color: var(--eic-green); }
+.eic-pitchprep__reminders li::marker { color: var(--eic-blue); font-weight: 700; }
+
+/* ==========================================================================
    Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
    Pedagogical revision view: mentor quote + pass/miss checklists +
    green "no XP loss" banner + V2 submission form + collapsible V1.
