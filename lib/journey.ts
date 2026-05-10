@@ -247,13 +247,21 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
 
   const missionIds = displayMissions.map((m) => m.id);
 
-  // Fetch deliverable templates linked to today's missions.
+  // Fetch deliverable templates linked to today's missions. Phase 9 / GMR-06:
+  // filter out templates with is_active=false so the GameMaster can hide them
+  // from the Player parcours without deleting them. The column has default
+  // true (DDL in database/migrations/09-gamemaster-live.sql), so this stays
+  // backward compatible even when the migration has not been applied yet —
+  // is_active is simply absent from the returned rows in that case, treated
+  // as `true` server-side.
   const { data: tplRows } = await supabase
     .from("deliverable_templates")
-    .select("id, mission_id, slug, title, description, rubric, max_score, ord")
+    .select("id, mission_id, slug, title, description, rubric, max_score, ord, is_active")
     .in("mission_id", missionIds)
     .order("ord", { ascending: true });
-  const templates = ((tplRows ?? []) as DeliverableTemplateRow[]).map(mapDeliverableTemplate);
+  const templates = ((tplRows ?? []) as (DeliverableTemplateRow & { is_active?: boolean | null })[])
+    .filter((row) => row.is_active === undefined || row.is_active === null || row.is_active === true)
+    .map(mapDeliverableTemplate);
 
   // Fetch this player's submissions for these templates.
   const tplIds = templates.map((t) => t.id);

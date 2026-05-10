@@ -1136,3 +1136,190 @@ export async function publishResultsFlow(
   revalidatePath("/results");
   return { ok: true, message: "Resultats publies." };
 }
+
+// ============================================================================
+// Phase 9 — GameMaster live mode (GMR-06, GMR-09)
+// ============================================================================
+
+// ---- GMR-06 — toggle deliverable_templates.is_active -----------------------
+
+const toggleDeliverableSchema = z.object({
+  templateId: z.string().uuid(),
+  nextActive: z.coerce.boolean(),
+});
+
+export async function toggleDeliverableActiveFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawNext = formData.get("nextActive");
+  const parsed = toggleDeliverableSchema.safeParse({
+    templateId: formData.get("templateId"),
+    nextActive: rawNext === "true" || rawNext === "1" || rawNext === "on",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Role gate (defense-in-depth alongside RLS).
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  const { error: updErr } = await supabase
+    .from("deliverable_templates")
+    .update({ is_active: parsed.data.nextActive })
+    .eq("id", parsed.data.templateId);
+  if (updErr) {
+    return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/admin/deliverables");
+  revalidatePath("/journey");
+  return {
+    ok: true,
+    message: parsed.data.nextActive ? "Livrable active." : "Livrable masque.",
+  };
+}
+
+// ---- GMR-09 — create announcement ------------------------------------------
+
+const announcementSchema = z
+  .object({
+    kind: z.enum(["info", "urgence", "celebration", "appel"]),
+    targetKind: z.enum(["all", "level", "teams", "mentors"]),
+    targetIds: z.array(z.string()).default([]),
+    body: z.string().min(1).max(2000),
+    title: z.string().max(200).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.targetKind === "level" || data.targetKind === "teams") {
+      if (!data.targetIds || data.targetIds.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Selectionnez au moins une cible.",
+          path: ["targetIds"],
+        });
+      }
+    }
+  });
+
+export async function createAnnouncementFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  // targetIds may arrive as multiple form values for the same name. We collect
+  // both `targetIds` (multi-select) and a CSV-encoded fallback `targetIdsCsv`.
+  let targetIds: string[] = formData.getAll("targetIds").map(String).filter(Boolean);
+  if (targetIds.length === 0) {
+    const csv = formData.get("targetIdsCsv");
+    if (typeof csv === "string" && csv.length > 0) {
+      targetIds = csv
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+  }
+
+  const rawBody = formData.get("body");
+  const rawTitle = formData.get("title");
+  const parsed = announcementSchema.safeParse({
+    kind: formData.get("kind"),
+    targetKind: formData.get("targetKind"),
+    targetIds,
+    body: typeof rawBody === "string" ? rawBody.trim() : rawBody,
+    title:
+      typeof rawTitle === "string" && rawTitle.trim().length > 0 ? rawTitle.trim() : undefined,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Role gate (defense-in-depth alongside RLS).
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // Resolve current event (latest by starts_at — same heuristic as elsewhere).
+  const { data: eventRow, error: eventErr } = await supabase
+    .from("events")
+    .select("id")
+    .order("starts_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (eventErr) {
+    return { ok: false, message: eventErr.message };
+  }
+  if (!eventRow) {
+    return { ok: false, message: "Aucun event configure." };
+  }
+  const eventId = (eventRow as { id: string }).id;
+
+  const { error: insErr } = await supabase.from("announcements").insert({
+    event_id: eventId,
+    kind: parsed.data.kind,
+    target_kind: parsed.data.targetKind,
+    target_ids:
+      parsed.data.targetKind === "all" || parsed.data.targetKind === "mentors"
+        ? []
+        : parsed.data.targetIds,
+    body: parsed.data.body,
+    title: parsed.data.title ?? null,
+    created_by_user_id: user.id,
+  });
+  if (insErr) {
+    return { ok: false, message: insErr.message };
+  }
+
+  revalidatePath("/admin/announce");
+  revalidatePath("/journey");
+  return { ok: true, message: "Annonce diffusee." };
+}
