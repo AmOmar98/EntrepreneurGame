@@ -26,23 +26,31 @@ import type { LevelId } from "@/lib/types";
 const t = dictionaries.fr;
 
 export default async function JourneyPage() {
-  const user = await getCurrentUser();
-  if (!user) {
+  // Phase 11 / C2 — Dual-mode demo guard fix. Auth gating is delegated to
+  // middleware.ts in Supabase mode ; in demo mode (no Supabase env), we
+  // skip getCurrentUser entirely and let the seed fallback render.
+  // Ref: CLAUDE.md Pre-edit guards #3 + memory feedback_dual_mode_demo_guard.md.
+  const user = hasSupabaseEnv() ? await getCurrentUser() : null;
+  if (hasSupabaseEnv() && !user) {
     redirect("/login");
   }
 
-  const role = await getCurrentRole();
+  const role = hasSupabaseEnv() ? await getCurrentRole() : null;
   if (role && role !== "player") {
     redirect(pathForRole(role));
   }
 
-  const data = await getJourneyData(user.id);
+  // In demo mode user is null ; getJourneyData short-circuits to EMPTY when
+  // createClient() returns null, so the userId arg is never read in that path.
+  const data = await getJourneyData(user?.id ?? "");
 
   // Quick 260510-k1f / B1 - cohort pulse (anonymised, R1).
   // Computed even when data.empty so a non-onboarded Player still sees the
   // collective dynamic (motivation pre-onboarding). Helper returns safe
   // entries (count=0/total=0) on any error or unresolved cohort.
-  const cohortPulse = await getCohortPulse(user.id);
+  // Phase 11 / C2 — getCohortPulse short-circuits to demo seed when supabase
+  // unavailable, so empty userId in demo mode is safe.
+  const cohortPulse = await getCohortPulse(user?.id ?? "");
 
   if (data.empty || !data.player) {
     return (
@@ -99,9 +107,11 @@ export default async function JourneyPage() {
   const totalEarnedXp = getTotalEarnedXp(data.missions);
 
   // Phase 9 / GMR-09 — surface live GM announcements for this Player.
-  const announcements = hasSupabaseEnv()
-    ? await getAnnouncementsForPlayer(user.id, 5)
-    : [];
+  // C2: only fetch when authenticated (user defined). Demo mode skips this.
+  const announcements =
+    hasSupabaseEnv() && user
+      ? await getAnnouncementsForPlayer(user.id, 5)
+      : [];
 
   return (
     <AppShell role="player" variant="player">
