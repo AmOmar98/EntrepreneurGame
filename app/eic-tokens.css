@@ -64,6 +64,32 @@
   --space-16: 64px;
   --space-24: 96px;
 
+  /* ---- Mascot moods (Phase 10 / 1.1 — refactor pixel-mascot.tsx palette) ---- */
+  --mood-serein-fill:     #F8FBF6;
+  --mood-serein-ring:     #2E7D32;
+  --mood-serein-halo:     rgba(46, 125, 50, 0.20);
+  --mood-serein-bg:       #E7F2E5;
+  --mood-concentre-fill:  #F4F7FB;
+  --mood-concentre-ring:  #1B3A5C;
+  --mood-concentre-halo:  rgba(27, 58, 92, 0.18);
+  --mood-concentre-bg:    #E5EBF4;
+  --mood-inquiet-fill:    #FCF4F2;
+  --mood-inquiet-ring:    #C44536;
+  --mood-inquiet-halo:    rgba(196, 69, 54, 0.22);
+  --mood-inquiet-bg:      #FBEBE8;
+  --mood-euphorique-fill: #FFF9EE;
+  --mood-euphorique-ring: #D97706;
+  --mood-euphorique-halo: rgba(217, 119, 6, 0.28);
+  --mood-euphorique-bg:   #FCF1DE;
+  --mood-loading-fill:    #F5F7FA;
+  --mood-loading-ring:    #6B7280;
+  --mood-loading-halo:    rgba(107, 114, 128, 0.18);
+  --mood-loading-bg:      #ECEEF2;
+  --mood-error-fill:      #FCEDEA;
+  --mood-error-ring:      #B0252A;
+  --mood-error-halo:      rgba(176, 37, 42, 0.22);
+  --mood-error-bg:        #F7DAD6;
+
   /* ---- Wireframe layer (from wf-base.css) ---- */
   --wf-paper:        #FBF8F2;
   --wf-paper-deep:   #F2EDE2;

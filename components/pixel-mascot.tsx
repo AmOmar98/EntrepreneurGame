@@ -2,6 +2,10 @@
 // Phase 9 / GMR-07 — Pixel mascot SVG (4 moods reflecting GMR-08 hack status).
 // Floating bottom-right widget visible only in admin live mode. Click to
 // collapse to a discrete pill; click pill to expand the card again.
+//
+// Phase 10 / 1.1 + 1.3 — palette refactored to consume var(--mood-*) tokens
+// from app/eic-tokens.css; PixelAvatar widened to accept "loading" | "error"
+// moods (consumed by Section 13 system states — SysLoading/SysError).
 
 import Link from "next/link";
 import { useState } from "react";
@@ -10,39 +14,53 @@ import { dictionaries } from "@/lib/i18n";
 
 const t = dictionaries.fr;
 
+// Phase 10 / 1.3 : widen mood beyond HackStatus for system states.
+export type PixelMood = HackStatus | "loading" | "error";
+
 type Props = {
   result: HackStatusResult;
   // Optional override (e.g. design QA / Storybook).
   forceMood?: HackStatus;
 };
 
-const MOOD_TO_PALETTE: Record<
-  HackStatus,
-  { fill: string; ring: string; halo: string; bg: string }
-> = {
+type MoodPalette = { fill: string; ring: string; halo: string; bg: string };
+
+const MOOD_TO_PALETTE: Record<PixelMood, MoodPalette> = {
   serein: {
-    fill: "#F8FBF6",
-    ring: "#2E7D32",
-    halo: "rgba(46, 125, 50, 0.20)",
-    bg: "#E7F2E5",
+    fill: "var(--mood-serein-fill)",
+    ring: "var(--mood-serein-ring)",
+    halo: "var(--mood-serein-halo)",
+    bg: "var(--mood-serein-bg)",
   },
   concentre: {
-    fill: "#F4F7FB",
-    ring: "#1B3A5C",
-    halo: "rgba(27, 58, 92, 0.18)",
-    bg: "#E5EBF4",
+    fill: "var(--mood-concentre-fill)",
+    ring: "var(--mood-concentre-ring)",
+    halo: "var(--mood-concentre-halo)",
+    bg: "var(--mood-concentre-bg)",
   },
   inquiet: {
-    fill: "#FCF4F2",
-    ring: "#C44536",
-    halo: "rgba(196, 69, 54, 0.22)",
-    bg: "#FBEBE8",
+    fill: "var(--mood-inquiet-fill)",
+    ring: "var(--mood-inquiet-ring)",
+    halo: "var(--mood-inquiet-halo)",
+    bg: "var(--mood-inquiet-bg)",
   },
   euphorique: {
-    fill: "#FFF9EE",
-    ring: "#D97706",
-    halo: "rgba(217, 119, 6, 0.28)",
-    bg: "#FCF1DE",
+    fill: "var(--mood-euphorique-fill)",
+    ring: "var(--mood-euphorique-ring)",
+    halo: "var(--mood-euphorique-halo)",
+    bg: "var(--mood-euphorique-bg)",
+  },
+  loading: {
+    fill: "var(--mood-loading-fill)",
+    ring: "var(--mood-loading-ring)",
+    halo: "var(--mood-loading-halo)",
+    bg: "var(--mood-loading-bg)",
+  },
+  error: {
+    fill: "var(--mood-error-fill)",
+    ring: "var(--mood-error-ring)",
+    halo: "var(--mood-error-halo)",
+    bg: "var(--mood-error-bg)",
   },
 };
 
@@ -188,26 +206,34 @@ export function PixelAvatar({
   mood,
   size,
 }: {
-  mood: HackStatus;
+  mood: PixelMood;
   size: number;
 }) {
   const palette = MOOD_TO_PALETTE[mood];
-  const eyeShape: "dot" | "arc" | "tilted" | "sparkle" =
+  const eyeShape: "dot" | "arc" | "tilted" | "sparkle" | "loading" | "error" =
     mood === "concentre"
       ? "dot"
       : mood === "serein"
         ? "arc"
         : mood === "inquiet"
           ? "tilted"
-          : "sparkle";
-  const mouth: "smile" | "flat" | "wave" | "open" =
+          : mood === "euphorique"
+            ? "sparkle"
+            : mood === "loading"
+              ? "loading"
+              : "error";
+  const mouth: "smile" | "flat" | "wave" | "open" | "ellipsis" =
     mood === "serein"
       ? "smile"
       : mood === "concentre"
         ? "flat"
         : mood === "inquiet"
           ? "wave"
-          : "open";
+          : mood === "euphorique"
+            ? "open"
+            : mood === "loading"
+              ? "ellipsis"
+              : "wave";
 
   return (
     <span
@@ -308,6 +334,44 @@ export function PixelAvatar({
             <line x1="44" y1="42" x2="52" y2="42" />
           </g>
         )}
+        {eyeShape === "loading" && (
+          <>
+            {/* Closed-ish eyes : breathing */}
+            <path
+              d="M28 42 Q32 44 36 42"
+              stroke={palette.ring}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+            <path
+              d="M44 42 Q48 44 52 42"
+              stroke={palette.ring}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </>
+        )}
+        {eyeShape === "error" && (
+          <>
+            {/* Sad eyes : down arcs */}
+            <path
+              d="M28 44 Q32 48 36 44"
+              stroke={palette.ring}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+            <path
+              d="M44 44 Q48 48 52 44"
+              stroke={palette.ring}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </>
+        )}
         {/* Mouth */}
         {mouth === "smile" && (
           <path
@@ -340,6 +404,13 @@ export function PixelAvatar({
         )}
         {mouth === "open" && (
           <ellipse cx="40" cy="54" rx="4" ry="3" fill={palette.ring} />
+        )}
+        {mouth === "ellipsis" && (
+          <g fill={palette.ring}>
+            <circle cx="36" cy="54" r="1.4" />
+            <circle cx="40" cy="54" r="1.4" />
+            <circle cx="44" cy="54" r="1.4" />
+          </g>
         )}
         {/* Nose */}
         <circle cx="40" cy="48" r="1.6" fill={palette.ring} opacity="0.6" />

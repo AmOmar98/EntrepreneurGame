@@ -520,6 +520,10 @@ export const dictionaries = {
     pixel_mascot_collapse: "Replier Pixel",
     pixel_mascot_expand: "Déplier Pixel",
     pixel_mascot_aria: "Mascotte Pixel · état du hack",
+    pixel_mascot_loading_label: "Pixel · respire",
+    pixel_mascot_loading_quote: "Je rassemble tes éléments. Patience…",
+    pixel_mascot_error_label: "Pixel · triste",
+    pixel_mascot_error_quote: "Service indisponible. La régie est notifiée.",
     // ---- Pixel mascot — Player triggers (T3 A5 / quick 260510-jm8) -----------
     pixel_player_first_delivery_quote: "Première hypothèse posée.",
     pixel_player_stagnation_quote: "Une astuce t'attend à droite ◊",

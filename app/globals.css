@@ -2607,6 +2607,46 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   Phase 10 / 1.2 — Toasts (eic-toast)
+   Reused by /admin live mode + Section 13 system states.
+   ========================================================================== */
+.eic-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 60;
+  min-width: 280px;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 12px 18px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--home-surface, #fff);
+  color: var(--home-ink, #14243D);
+  border: 1px solid var(--home-border, #D8D0C2);
+  box-shadow: var(--shadow-card, 0 18px 45px rgba(17, 30, 48, 0.12));
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: eic-toast-slide-in 220ms ease-out both;
+}
+.eic-toast--info    { border-left: 4px solid var(--eic-blue, #1B3A5C); }
+.eic-toast--success { border-left: 4px solid var(--eic-green, #2E7D32); }
+.eic-toast--warn    { border-left: 4px solid #B47A14; }
+.eic-toast--error   { border-left: 4px solid #B0252A; }
+
+@keyframes eic-toast-slide-in {
+  from { opacity: 0; transform: translate(-50%, 14px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eic-toast { animation: none; }
+}
+
+/* ==========================================================================
    Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
    Pedagogical revision view: mentor quote + pass/miss checklists +
    green "no XP loss" banner + V2 submission form + collapsible V1.
