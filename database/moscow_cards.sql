@@ -106,6 +106,35 @@ create policy "moscow_cards_player_delete" on public.moscow_cards
 grant select, insert, update, delete on public.moscow_cards to authenticated;
 grant select, insert, update, delete on public.moscow_cards to service_role;
 
+-- -----------------------------------------------------------------------------
+-- KNOWN LIMITATION (WR-03 — Phase 12 review) — N+1 reorder, no transaction
+-- -----------------------------------------------------------------------------
+-- `reorderMoscowCardsFlow` (app/actions.ts) issues one UPDATE per card in
+-- a loop (up to 200 cards). If the Nth update fails (RLS denial, network
+-- hiccup), the first N-1 are committed and the Kanban is in a half-reordered
+-- state. The action returns { ok: false, message } and the client falls back
+-- to router.refresh() to re-fetch the canonical state from the DB — so the
+-- user sees the partial commit but is not blocked.
+--
+-- Pilot risk : 6-15 teams reordering simultaneously on 13-14 May. Realistic
+-- but rare data-consistency window. Accepted as known limitation for T-3.
+--
+-- v0.3 hardening (post-pilot) : wrap the batch in a Postgres RPC that takes
+-- a JSON array and updates atomically inside a transaction. Sketch :
+--
+--   create or replace function public.moscow_cards_reorder(items jsonb)
+--   returns void language plpgsql security invoker as $$
+--   begin
+--     update public.moscow_cards mc
+--        set bucket = (i->>'bucket')::public.moscow_bucket,
+--            ord    = (i->>'ord')::smallint
+--       from jsonb_array_elements(items) as i
+--      where mc.id = (i->>'id')::uuid;
+--   end $$;
+--
+-- Then call via supabase.rpc("moscow_cards_reorder", { items }) in one shot.
+-- -----------------------------------------------------------------------------
+
 -- =============================================================================
 -- End of 20260510170100_moscow_cards.sql
 -- =============================================================================
