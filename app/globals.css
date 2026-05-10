@@ -1660,6 +1660,57 @@ tr:last-child td {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
+/* === Locked-level tooltip (R2/R3 — warn-only ambre) === */
+.eic-track__node-tooltip {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--wf-amber-tint);
+  color: var(--wf-amber);
+  border: 1px solid #DCC394;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+  max-width: 240px;
+  white-space: normal;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 6;
+}
+.eic-track__node:hover .eic-track__node-tooltip,
+.eic-track__node:focus-visible .eic-track__node-tooltip,
+.eic-track__node:focus .eic-track__node-tooltip {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-track__node-tooltip { transition: none; }
+}
+/* Mobile: tooltip remonte au-dessus pour ne pas sortir du viewport */
+@media (max-width: 720px) {
+  .eic-track__node-tooltip {
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+  }
+}
+/* Variante drawer/hint inline (pas absolute) — réutilisable depuis HoveredHint + drawer body */
+.eic-locked-hint--amber {
+  background: var(--wf-amber-tint);
+  color: var(--wf-amber);
+  border: 1px solid #DCC394;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
 /* === Hero next-step === */
 .eic-hero {
   display: flex;
