@@ -64,3 +64,45 @@ Apply alongside or shortly after the migration; then remove the redundant audien
 _Reviewed: 2026-05-10_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: deep (cross-file, server actions + SQL + page wiring)_
+
+---
+
+## Audits supplémentaires (ralph-loop continuation 2026-05-10)
+
+Au-delà du code review focused initial (REV-CRIT/HIGH au-dessus), 12 audits
+techniques additionnels ont été conduits sur les phases v0.2 livrées :
+
+| # | Audit | Verdict | Commit |
+|---|-------|---------|--------|
+| 1 | Code review focused | 0 CRITICAL, 2 HIGH fixed | `8352ffc` |
+| 2 | Smoke E2E auto Chrome DevTools (12 surfaces) | 3 rendues / 9 auth-gated, 0 errors | `bcb7162` |
+| 3 | No-Realtime grep (`supabase.channel`, `.subscribe(`, `WebSocket`, `EventSource`) | Clean strict — 0 occurrences | — |
+| 4 | i18n hardcoded strings dans 28 composants v0.2 | 1 fixed (jury-pitch-grid) | `e2c31f0` |
+| 5 | Reduced-motion guards sur 7 animations CSS | 1 fixed (`eic-focus-fade`) | `9b613db` |
+| 6 | TODOs annotation cohérence | 3 renamed (Phase 8 → v0.3) | `dfe15d3` |
+| 7 | Console.* en code prod (client + server actions) | Clean (lib/* tests inline + namespaced error logging intentionnels) | — |
+| 8 | Inline `style={{...}}` ad hoc | 1 fixed, ~80% dynamiques OK | `50559ff` |
+| 9 | A11y modal focus management (autoFocus + restore) | 2 fixed (journey-drawer + admin-team-focus) | `39accc0` |
+| 10 | Security server actions (Zod + auth + role gate) | Clean — 5/5 actions conformes pattern | — |
+| 11 | Tap targets ≥44px sur touch devices | 3 fixed via `@media (pointer: coarse)` | `02fe09d` |
+| 12 | Responsive breakpoints (1099px cohérence Phase 6+7) | 1 documented (legacy v0.1 1100 vs Phase 6+ 1099) | `13dc9be` |
+| 13 | Visual review smoke screenshots (login + onboarding) | Conformité branding EIC ✓ | — |
+
+**Verdict global** : implementation v0.2 (Phases 7+8+9) est **techniquement clean**.
+- 0 CRITICAL findings
+- 2 HIGH findings fixed
+- 8 audits aboutissent à des fixes mineurs déjà committés
+- 4 audits aboutissent à un verdict "clean"
+- Tests typecheck/lint/build clean après chaque commit
+- v0.1 préservé (régression-free via tag `v0.1-pilot-ready`)
+
+**Restent gates Omar humains** (hors-scope autonomous run) :
+1. Apply `database/migrations/08-mentor-comments.sql` sur Supabase prod
+2. Apply `database/migrations/09-gamemaster-live.sql` sur Supabase prod
+3. Visual review prod URL (preview Vercel) des 3 phases v0.2
+4. Smoke E2E régression v0.1 sur prod URL avec vraies sessions des 3 rôles
+5. Performance check LCP/CLS sur Lighthouse
+6. Cleanup post-pilote : `validate constraint evaluations_expected_action_required_for_request_v2`
+
+**Total commits ralph-loop session** : 37 commits feat/db/docs/chore/test/fix
+depuis Phase 6 closeout (`58345c5..HEAD`).
