@@ -4961,3 +4961,68 @@ tr:last-child td {
   .eic-pixel-mascot__pill-dot { animation: none; }
 }
 
+/* === Cohort Pulse (Quick 260510-k1f / B1) ============================= */
+/* Barre fine, anonyme, en haut de /journey. R1 : aucun signal individuel. */
+.eic-cohort-pulse {
+  max-width: 720px;
+  margin: 0 auto 20px auto;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--eic-surface, rgba(255, 255, 255, 0.6));
+  border: 1px solid var(--eic-border, rgba(0, 0, 0, 0.08));
+}
+.eic-cohort-pulse__kicker {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--eic-muted, #6b7280);
+  margin: 0 0 8px 0;
+}
+.eic-cohort-pulse__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.eic-cohort-pulse__row {
+  display: grid;
+  grid-template-columns: 1fr 100px 56px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+@media (max-width: 540px) {
+  .eic-cohort-pulse__row {
+    grid-template-columns: 1fr 60px 48px;
+    font-size: 12px;
+    gap: 8px;
+  }
+}
+.eic-cohort-pulse__label { color: var(--eic-fg, #1f2937); }
+.eic-cohort-pulse__bar {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--eic-track, rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+}
+.eic-cohort-pulse__bar-fill {
+  height: 100%;
+  background: var(--eic-blue, #1e6eef);
+  transition: width 320ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-cohort-pulse__bar-fill { transition: none; }
+}
+.eic-cohort-pulse__count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--eic-muted, #6b7280);
+}
+.eic-cohort-pulse__empty {
+  font-size: 13px;
+  color: var(--eic-muted, #6b7280);
+  margin: 0;
+}
+

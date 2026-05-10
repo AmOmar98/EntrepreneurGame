@@ -172,6 +172,11 @@ export const dictionaries = {
     journey_v2_no_next_step: "Vous etes a jour. Aucune etape en attente.",
     journey_v2_no_next_step_subtitle: "Suivez la progression de votre equipe ou cliquez sur un niveau pour revoir vos livrables.",
     journey_v2_no_next_step_cta: "Voir le parcours",
+    // ---- Cohort Pulse (Quick 260510-k1f / B1) - anonymised, R1 ----------------
+    cohort_pulse_aria: "Pouls de la cohorte",
+    cohort_pulse_kicker: "POULS DE LA COHORTE",
+    cohort_pulse_label_template: "equipes ont soumis",
+    cohort_pulse_empty: "Pas encore de soumission dans la cohorte.",
     submission_title: "Soumettre le livrable",
     submission_description: "Description",
     submission_rubric: "Criteres d'evaluation",
@@ -656,6 +661,11 @@ export const dictionaries = {
     journey_v2_no_next_step: "You're all caught up. No pending step.",
     journey_v2_no_next_step_subtitle: "Track your team's progress or click a level to revisit your deliverables.",
     journey_v2_no_next_step_cta: "View journey",
+    // ---- Cohort Pulse (Quick 260510-k1f / B1) - anonymised, R1 ----------------
+    cohort_pulse_aria: "Cohort pulse",
+    cohort_pulse_kicker: "COHORT PULSE",
+    cohort_pulse_label_template: "teams submitted",
+    cohort_pulse_empty: "No submission in the cohort yet.",
     submission_title: "Submit deliverable",
     submission_description: "Description",
     submission_rubric: "Scoring rubric",

@@ -70,7 +70,6 @@ function getCohortPulseDemo(): CohortPulseEntry[] {
 
 export async function getCohortPulse(
   userId: string | null,
-  _now: Date = new Date(),
 ): Promise<CohortPulseEntry[]> {
   // Demo mode (no Supabase env) -> aggregate over seed.
   if (!hasSupabaseEnv()) {
