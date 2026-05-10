@@ -318,6 +318,33 @@ Plans:
 
 **Phase 10 status** : 📥 Imported via `/gsd-import --from C:\Users\omara\.claude\plans\glimmering-sauteeing-wilkinson.md` (2026-05-10). En attente exécution. Spawn `eic-pedagogical-advisor` AVANT toute édition des zones sensibles (cf. CONTEXT.md `<decisions>`).
 
+---
+
+## Phase 11: Design Audit Refinements (13 items, 4 waves)
+
+**Quand** : 2026-05-10 → 2026-05-12 23h00 (T-1, avant cutoff merge `main` pré-pilote AgreenTech)
+**Goal:** combler les 13 écarts identifiés entre le bundle design Anthropic v2 (`.planning/design-v2/`) et l'implémentation actuelle, sans casser R1/R2/R3 ni le freeze pré-pilote. Source : `.planning/ui-reviews/AUDIT-DESIGN-V2-VS-IMPL-2026-05-10.md`.
+**Depends on:** Phase 6 (tokens), Phase 7 (journey-track + submission-ticket), Phase 9 (admin-radar), Phase 10 (system frames)
+**UI hint** : oui
+
+**Refinements couverts** : 13 items en 4 waves (A=CSS-only, B=animation/scroll, C=logic/UX advisor-required, D=cardinal-comment)
+
+**Success Criteria** :
+1. Wave A (4 items A1-A4) : shimmer cap, mount animation, node stagger, topbar pills. Diff visuel matches `player-screens.jsx:118-191`. Aucune régression aria-tree.
+2. Wave B (5 items B1-B5) : smooth-scroll hero, mobile scroll-snap, IntersectionObserver `/results`, GM radar dashed lines, hero compact mobile. Reduced-motion guards sur tous les nouveaux keyframes.
+3. Wave C (3 items C1-C3) : public landing 3 doors, dual-mode demo guard fix `/journey`, locked-level click softening R3. Spawn `eic-pedagogical-advisor` AVANT chaque item ; verdict `OK`/`WARN` requis pour proceed, `BLOCK` → defer.
+4. Wave D (1 item D1) : commentaire protectif R1 sur `journey-client.tsx:122` totalXp display.
+5. `npm run typecheck && npm run lint && npm run build` clean après chaque commit atomique (13 commits attendus).
+6. Smoke E2E régression : demo mode (`/landing` → `/login` → `/journey` seed → `/results`) + prod-like (full Player journey + submit deliverable + ticket render) + mobile 390px + grep R1 audit clean.
+7. 3 sous-agents reviewers (`eic-pedagogical-advisor` + `gsd-ui-checker` + `codex:rescue`) ont rendu un verdict avant toute édition. Tout `BLOCK` documenté dans `deferred-items.md`.
+
+**Plans:** 1 plan orchestrator (4 waves)
+
+Plans:
+- [ ] 11-01-PLAN.md — Design Audit Refinements 13 items (Wave A CSS / Wave B animation / Wave C logic-advisor / Wave D cardinal comment)
+
+**Phase 11 status** : 📥 Created 2026-05-10. PLAN.md prêt, en attente review parallèle 3 sous-agents (`eic-pedagogical-advisor` + `gsd-ui-checker` + `codex:rescue`) puis green-light operator. **NB risque T-1** : exécution avant cutoff 12/05 23h, surveiller advisor verdicts strictement.
+
 **Patch 2026-05-10** (quick [`260510-l3a`](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/)) :
 - Sub-tâches `10.0.2` (B1 percée R1 /results) et `10.0.7` (R3 tooltip ambre journey) marquées ✅ **DONE** post-quicks `260510-kpw` (commits `c740d48` + `16aa0f7`) et `260510-j2j` (commits `8f46892` + `25f830e` + `4733406` + `d49ad1b`).
 - Path `eic-tokens.css` corrigé en `app/globals.css` (le fichier séparé n'existe pas — tokens dans `globals.css`).

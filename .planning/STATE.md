@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
-last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-lu5: B3 RÉTRO — migrations Phase 8+9 appliquées EN PROD via supabase CLI (toolchain wired, 4 entries aligned)
+last_updated: "2026-05-10T18:45:00.000Z"
+last_activity: 2026-05-10 — Phase 11 (Design Audit Refinements) created from bundle Anthropic v2 audit. PLAN.md ready, awaiting parallel review by 3 reviewers (eic-pedagogical-advisor + gsd-ui-checker + codex:rescue) before execution before 12/05 23h cutoff.
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
-  total_plans: 8
+  total_plans: 9
   completed_plans: 8
-  percent: 100
+  percent: 89
 ---
 
 # Project State
@@ -46,6 +46,8 @@ Source de vérité design : `.planning/design-v2/` (bundle Claude Design export�
 | 7 | Joueur : barre charge L0-L7 + drawer + onboarding + ticket SOUMIS | implementation complete (8/8 PLR — 7 commits — VERIFICATION human_needed) |
 | 8 | Mentor : commentaires async sur lien + composer V2 | implementation complete (6/6 MNT — 7 commits — VERIFICATION human_needed) |
 | 9 | GameMaster + jury + replay + Pixel mascotte | implementation complete (9/9 GMR — 12 commits — VERIFICATION human_needed) |
+| 10 | T-3 Critical Gates + Design v2 Tail Sections | **in_progress** — B1-B4 fixés via quicks 260510-* ; B5 ops Omar ; sub-tâches design tail (sections 10/11/12/13/14) partiellement livrées via Phase 10 plan ; sections restantes à exécuter |
+| 11 | Design Audit Refinements (13 items, 4 waves) | created 2026-05-10 — PLAN.md awaiting 3 reviewers + operator green-light |
 
 ## Next Action — Pilot Operator Gates (Omar)
 
