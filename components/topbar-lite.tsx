@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { signOut } from "@/app/actions";
+import { LogoutButton } from "@/components/logout-button";
 import { EICLogo } from "@/components/ui";
 import { SideMenuTrigger } from "@/components/menu/SideMenu";
 import { dictionaries } from "@/lib/i18n";
@@ -45,11 +45,9 @@ export function TopbarLite({
         ))}
       </nav>
       <SideMenuTrigger />
-      <form action={signOut} className="eic-topbar__logout-form">
-        <button className="eic-topbar__logout" type="submit">
-          {logoutLabel}
-        </button>
-      </form>
+      <div className="eic-topbar__logout-form">
+        <LogoutButton className="eic-topbar__logout">{logoutLabel}</LogoutButton>
+      </div>
     </header>
   );
 }

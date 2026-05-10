@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "@/app/actions";
+import { LogoutButton } from "@/components/logout-button";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { TopbarLite } from "@/components/topbar-lite";
 import { dictionaries } from "@/lib/i18n";
@@ -95,11 +95,11 @@ function StaffShell({
             );
           })}
         </nav>
-        <form action={signOut} className="eic-staff-sidebar__logout">
-          <button className="eic-staff-sidebar__logout-btn" type="submit">
+        <div className="eic-staff-sidebar__logout">
+          <LogoutButton className="eic-staff-sidebar__logout-btn">
             {t.nav_logout}
-          </button>
-        </form>
+          </LogoutButton>
+        </div>
       </aside>
       <main className="main">{children}</main>
     </div>
