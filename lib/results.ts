@@ -1,7 +1,9 @@
 // Phase 5 / Plan 02 - Results data layer (JURY-03).
 // Server-side queries for /results: combined ranking based on the average
-// PitchScore (mean over jurors) and players.score_project, weighted 50/50 by
-// default. Dual-mode (DATA-03): demo mode (no Supabase env) returns empty.
+// PitchScore (mean over jurors) and players.score_project, weighted 20/80
+// (project/pitch) by default — AgreenTech 2026 décision EIC manager 2026-05-10
+// (rétro T-3 / B2 critical gate, cf. T3-IMPROVEMENTS.md ligne 11). Dual-mode
+// (DATA-03): demo mode (no Supabase env) returns empty.
 //
 // Post-publish visibility (Finding 1, smoke 2026-05-09): once
 // events.results_published_at is set, the ranking must be visible to ALL
@@ -27,7 +29,7 @@ export type RankingRow = {
   combined: number; // pitchWeight * pitchAvg + (1 - pitchWeight) * scoreProject
 };
 
-export const DEFAULT_PITCH_WEIGHT = 0.5;
+export const DEFAULT_PITCH_WEIGHT = 0.8;
 
 // ============================================================================
 // Row mappers (snake_case -> camelCase)
