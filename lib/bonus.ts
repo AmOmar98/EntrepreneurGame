@@ -69,6 +69,35 @@ export async function getBonusEventsForPlayer(playerId: string): Promise<BonusEv
 }
 
 /**
+ * Fetch all bonus_events with status='submitted' for the Mentor pending queue.
+ * Joins player slug + name for surfacing in /mentor list.
+ * Returns [] in demo mode or on error. RLS gates Mentor/GM via bonus_events_select.
+ */
+export async function getPendingBonusEventsForMentor(): Promise<
+  Array<BonusEvent & { playerSlug: string | null; playerName: string | null }>
+> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("bonus_events")
+    .select("*, players:project_id(slug, name)")
+    .eq("status", "submitted")
+    .order("claimed_at", { ascending: true });
+  if (error) return [];
+  return (data ?? []).map((raw) => {
+    const r = raw as BonusEventRow & {
+      players?: { slug: string | null; name: string | null } | null;
+    };
+    return {
+      ...mapRow(r),
+      playerSlug: r.players?.slug ?? null,
+      playerName: r.players?.name ?? null,
+    };
+  });
+}
+
+/**
  * Fetch a single bonus_event by id (Mentor/GM review page).
  * RLS bonus_events_select gates : Mentor + GM see all rows.
  */

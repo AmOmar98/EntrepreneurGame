@@ -1481,7 +1481,7 @@ export async function reviewBonusEventFlow(
     .select("id");
   if (updErr) return { ok: false, message: updErr.message };
   if (!updRows || updRows.length === 0) {
-    return { ok: false, message: "Bonus deja review ou inexistant." };
+    return { ok: false, message: "Bonus deja evalue ou inexistant." };
   }
 
   revalidatePath("/mentor");

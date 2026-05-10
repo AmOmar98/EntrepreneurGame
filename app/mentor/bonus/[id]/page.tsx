@@ -96,7 +96,7 @@ export default async function MentorBonusReviewPage({
           <MentorBonusReviewForm bonusEventId={bonus.id} />
         ) : (
           <p style={{ marginTop: 24, fontSize: 14, color: "#475569" }}>
-            Bonus deja review. Feedback : {bonus.feedback || "(aucun)"}
+            Bonus deja evalue. Feedback : {bonus.feedback || "(aucun)"}
           </p>
         )}
       </main>
