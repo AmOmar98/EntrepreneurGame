@@ -164,3 +164,97 @@ export type PitchScore = {
   c5: number;
   totalScore: number;
 };
+
+// ============================================================================
+// Bonus events (T3X-EXPANSION wave 2 — D-02 / D-03)
+// Mirror supabase/migrations/20260510170000_bonus_events_recreate.sql
+// R1 preserved : multiplierFactor stocke en TS, JAMAIS rendu Player en chiffre
+// (UI presents qualitative "Boost actif" badge — cf. Plan 08).
+// ============================================================================
+
+export type BonusType =
+  | "bonus_verbatims_terrain"
+  | "bonus_dev_plan"
+  | "bonus_prototype_draft";
+
+export type BonusStatus = "draft" | "submitted" | "validated" | "rejected";
+
+export type MultiplierScope = "next_deliverable" | "rest_of_event";
+
+export type BonusEvent = {
+  id: string;
+  projectId: string;
+  type: BonusType;
+  title: string;
+  description: string;
+  docUrl: string | null;
+  status: BonusStatus;
+  multiplierFactor: number; // [1.00..3.00] — R1: never display as number to Player
+  multiplierScope: MultiplierScope;
+  multiplierConsumedAt: string | null; // timestamptz when applied (next_deliverable scope)
+  claimedAt: string;
+  claimedBy: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  feedback: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Reference defaults for each BonusType — D-03 mechanism.
+ * Server action claimBonusEventFlow (Plan 06) consults this map to set the
+ * initial multiplier_factor and scope when a Player submits a claim.
+ *
+ * The values can be overridden per-claim by GameMaster via app/admin UI
+ * (out-of-scope for this phase — runtime mutation through reviewBonusEventFlow
+ * still respects the CHECK constraint [1.00..3.00] in DB).
+ */
+export const BONUS_DEFAULTS: Record<
+  BonusType,
+  { multiplierFactor: number; scope: MultiplierScope; titleFr: string }
+> = {
+  bonus_verbatims_terrain: {
+    multiplierFactor: 1.5,
+    scope: "next_deliverable",
+    titleFr: "3 verbatims terrain agriculteurs",
+  },
+  bonus_dev_plan: {
+    multiplierFactor: 1.5,
+    scope: "next_deliverable",
+    titleFr: "Plan de developpement (roadmap technique)",
+  },
+  bonus_prototype_draft: {
+    multiplierFactor: 2.0,
+    scope: "next_deliverable",
+    titleFr: "Prototype draft (croquis / wireframe / photo)",
+  },
+};
+
+/**
+ * Global cap on multiplier_factor — D-03 anti-stacking abuse.
+ * lib/score.ts Plan 07 uses Math.min(BONUS_MULTIPLIER_CAP, applicableFactor)
+ * to enforce.
+ */
+export const BONUS_MULTIPLIER_CAP = 3.0;
+
+// ============================================================================
+// MoSCoW Kanban cards (T3X-EXPANSION wave 2 — D-04)
+// Mirror supabase/migrations/20260510170100_moscow_cards.sql
+// ============================================================================
+
+export type MoscowBucket = "must" | "should" | "could" | "wont";
+
+export type MoscowCard = {
+  id: string;
+  projectId: string;
+  deliverableTemplateId: string;
+  bucket: MoscowBucket;
+  ord: number;
+  feature: string;
+  pourquoi: string;
+  contrainte: string;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
