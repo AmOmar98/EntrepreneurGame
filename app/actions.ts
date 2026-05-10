@@ -9,6 +9,12 @@ import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { pathForRole } from "@/lib/auth";
 import type { AppRole } from "@/lib/types";
 import {
+  BONUS_DEFAULTS,
+  BONUS_MULTIPLIER_CAP,
+  type BonusType,
+  type MoscowBucket,
+} from "@/lib/types";
+import {
   parseCsv,
   dedupeCsvRows,
   slugifyTeam,
@@ -1322,4 +1328,432 @@ export async function createAnnouncementFlow(
   revalidatePath("/admin/announce");
   revalidatePath("/journey");
   return { ok: true, message: "Annonce diffusee." };
+}
+
+// ============================================================================
+// Bonus events (T3X-EXPANSION wave 2 / plan 06 — D-02 / D-03)
+// Player submit URL preuve -> INSERT bonus_events status='submitted'
+// Mentor review -> UPDATE status='validated'|'rejected' + reviewed_by/at + feedback
+// R1 preserved : multiplier_factor stocke en DB / TS, JAMAIS dans WorkflowState.message
+// R2 preserved : zod safeParse + return {ok:false, message}, no throw
+// R3 preserved : aucun blocage cross-mission via cette action
+// ============================================================================
+
+const bonusClaimSchema = z.object({
+  type: z.enum(["bonus_verbatims_terrain", "bonus_dev_plan", "bonus_prototype_draft"]),
+  title: z.string().min(3).max(200),
+  description: z.string().max(2000).optional(),
+  docUrl: httpsUrl,
+});
+
+export async function claimBonusEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawDescription = formData.get("description");
+  const parsed = bonusClaimSchema.safeParse({
+    type: formData.get("type"),
+    title: formData.get("title"),
+    description:
+      typeof rawDescription === "string" && rawDescription.length > 0 ? rawDescription : undefined,
+    docUrl: formData.get("docUrl"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: membership } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) {
+    return { ok: false, message: "Aucun Player rattache a votre compte." };
+  }
+  const playerId = (membership as { player_id: string }).player_id;
+
+  // R3 : pas de check "deja claime" hard. On autorise re-claim apres rejet.
+  // Mais on bloque double "submitted" en attente review (UX clarity, pas pedagogical block).
+  const { data: pending } = await supabase
+    .from("bonus_events")
+    .select("id, status")
+    .eq("project_id", playerId)
+    .eq("type", parsed.data.type)
+    .eq("status", "submitted")
+    .maybeSingle();
+  if (pending) {
+    return { ok: false, message: "Bonus deja soumis, en attente de validation Mentor." };
+  }
+
+  const defaults = BONUS_DEFAULTS[parsed.data.type as BonusType];
+  // Cap multiplier_factor a BONUS_MULTIPLIER_CAP (defense-in-depth, le DDL CHECK l'enforce aussi)
+  const multiplierFactor = Math.min(defaults.multiplierFactor, BONUS_MULTIPLIER_CAP);
+
+  const { error: insErr } = await supabase.from("bonus_events").insert({
+    project_id: playerId,
+    type: parsed.data.type,
+    title: parsed.data.title,
+    description: parsed.data.description ?? "",
+    doc_url: parsed.data.docUrl,
+    status: "submitted",
+    multiplier_factor: multiplierFactor,
+    multiplier_scope: defaults.scope,
+    claimed_by: user.id,
+    claimed_at: new Date().toISOString(),
+  });
+  if (insErr) return { ok: false, message: insErr.message };
+
+  revalidatePath("/journey");
+  revalidatePath(`/journey/bonus/${parsed.data.type}`);
+  revalidatePath("/mentor");
+  return { ok: true, message: "Bonus soumis. Le Mentor va le valider." };
+}
+
+const bonusReviewSchema = z.object({
+  bonusEventId: z.string().uuid(),
+  decision: z.enum(["validated", "rejected"]),
+  feedback: z.string().min(0).max(2000),
+});
+
+export async function reviewBonusEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawFeedback = formData.get("feedback");
+  const parsed = bonusReviewSchema.safeParse({
+    bonusEventId: formData.get("bonusEventId"),
+    decision: formData.get("decision"),
+    feedback: typeof rawFeedback === "string" ? rawFeedback : "",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  // RLS bonus_events_mentor_update gate via is_mentor() — defense-in-depth applicative aussi
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "mentor" && role !== "game_master") {
+    return { ok: false, message: "Action reservee aux Mentors." };
+  }
+
+  const { error: updErr } = await supabase
+    .from("bonus_events")
+    .update({
+      status: parsed.data.decision,
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+      feedback: parsed.data.feedback,
+    })
+    .eq("id", parsed.data.bonusEventId);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath("/mentor");
+  revalidatePath(`/mentor/bonus/${parsed.data.bonusEventId}`);
+  revalidatePath("/journey");
+  return {
+    ok: true,
+    message:
+      parsed.data.decision === "validated"
+        ? "Bonus valide. Le Player verra son badge Boost."
+        : "Bonus rejete avec feedback.",
+  };
+}
+
+// ============================================================================
+// MoSCoW Kanban (T3X-EXPANSION wave 2 / plan 06 — D-04)
+// Player CRUD ses cartes + reorder DnD batch + submit deliverable
+// R3 preserve : pas de validation hard >= 2 MUST / >= 1 WONT (warn-only via rubric)
+// ============================================================================
+
+const moscowBucketEnum = z.enum(["must", "should", "could", "wont"]);
+
+const moscowCreateSchema = z.object({
+  deliverableTemplateId: z.string().uuid(),
+  bucket: moscowBucketEnum,
+  ord: z.coerce.number().int().min(0).max(999).default(0),
+  feature: z.string().min(1).max(200),
+  pourquoi: z.string().max(500).default(""),
+  contrainte: z.string().max(200).default(""),
+});
+
+export async function createMoscowCardFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawOrd = formData.get("ord");
+  const rawPourquoi = formData.get("pourquoi");
+  const rawContrainte = formData.get("contrainte");
+  const parsed = moscowCreateSchema.safeParse({
+    deliverableTemplateId: formData.get("deliverableTemplateId"),
+    bucket: formData.get("bucket"),
+    ord: typeof rawOrd === "string" && rawOrd.length > 0 ? rawOrd : 0,
+    feature: formData.get("feature"),
+    pourquoi: typeof rawPourquoi === "string" ? rawPourquoi : "",
+    contrainte: typeof rawContrainte === "string" ? rawContrainte : "",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: membership } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) return { ok: false, message: "Aucun Player rattache." };
+  const playerId = (membership as { player_id: string }).player_id;
+
+  const { error: insErr } = await supabase.from("moscow_cards").insert({
+    project_id: playerId,
+    deliverable_template_id: parsed.data.deliverableTemplateId,
+    bucket: parsed.data.bucket,
+    ord: parsed.data.ord,
+    feature: parsed.data.feature,
+    pourquoi: parsed.data.pourquoi,
+    contrainte: parsed.data.contrainte,
+    created_by: user.id,
+  });
+  if (insErr) return { ok: false, message: insErr.message };
+
+  revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
+  revalidatePath("/journey");
+  return { ok: true, message: "Carte ajoutee." };
+}
+
+const moscowUpdateSchema = z.object({
+  cardId: z.string().uuid(),
+  bucket: moscowBucketEnum,
+  ord: z.coerce.number().int().min(0).max(999),
+  feature: z.string().min(1).max(200),
+  pourquoi: z.string().max(500).default(""),
+  contrainte: z.string().max(200).default(""),
+});
+
+export async function updateMoscowCardFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawOrd = formData.get("ord");
+  const rawPourquoi = formData.get("pourquoi");
+  const rawContrainte = formData.get("contrainte");
+  const parsed = moscowUpdateSchema.safeParse({
+    cardId: formData.get("cardId"),
+    bucket: formData.get("bucket"),
+    ord: typeof rawOrd === "string" && rawOrd.length > 0 ? rawOrd : 0,
+    feature: formData.get("feature"),
+    pourquoi: typeof rawPourquoi === "string" ? rawPourquoi : "",
+    contrainte: typeof rawContrainte === "string" ? rawContrainte : "",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { error: updErr } = await supabase
+    .from("moscow_cards")
+    .update({
+      bucket: parsed.data.bucket,
+      ord: parsed.data.ord,
+      feature: parsed.data.feature,
+      pourquoi: parsed.data.pourquoi,
+      contrainte: parsed.data.contrainte,
+    })
+    .eq("id", parsed.data.cardId);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath("/journey");
+  return { ok: true, message: "Carte mise a jour." };
+}
+
+const moscowDeleteSchema = z.object({
+  cardId: z.string().uuid(),
+});
+
+export async function deleteMoscowCardFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = moscowDeleteSchema.safeParse({ cardId: formData.get("cardId") });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "ID invalide" };
+  }
+
+  const { error: delErr } = await supabase
+    .from("moscow_cards")
+    .delete()
+    .eq("id", parsed.data.cardId);
+  if (delErr) return { ok: false, message: delErr.message };
+
+  revalidatePath("/journey");
+  return { ok: true, message: "Carte supprimee." };
+}
+
+const moscowReorderItemSchema = z.object({
+  id: z.string().uuid(),
+  bucket: moscowBucketEnum,
+  ord: z.coerce.number().int().min(0).max(999),
+});
+
+const moscowReorderSchema = z.object({
+  deliverableTemplateId: z.string().uuid(),
+  items: z.array(moscowReorderItemSchema).min(1).max(200),
+});
+
+export async function reorderMoscowCardsFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawItems = formData.get("items");
+  let items: unknown;
+  try {
+    items = typeof rawItems === "string" ? JSON.parse(rawItems) : null;
+  } catch {
+    return { ok: false, message: "Items JSON invalide." };
+  }
+
+  const parsed = moscowReorderSchema.safeParse({
+    deliverableTemplateId: formData.get("deliverableTemplateId"),
+    items,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  // Batch UPDATE via boucle (Supabase JS lib n'a pas de bulk update conditionnel propre)
+  for (const it of parsed.data.items) {
+    const { error: updErr } = await supabase
+      .from("moscow_cards")
+      .update({ bucket: it.bucket, ord: it.ord })
+      .eq("id", it.id);
+    if (updErr) return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
+  revalidatePath("/journey");
+  return { ok: true, message: "Ordre Kanban sauvegarde." };
+}
+
+const moscowSubmitSchema = z.object({
+  deliverableTemplateId: z.string().uuid(),
+});
+
+export async function submitMoscowDeliverableFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = moscowSubmitSchema.safeParse({
+    deliverableTemplateId: formData.get("deliverableTemplateId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: membership } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) return { ok: false, message: "Aucun Player rattache." };
+  const playerId = (membership as { player_id: string }).player_id;
+
+  // R3 warn-only : count >=2 MUST + >=1 WONT pour message d'avertissement (NOT blocage)
+  const { data: cards } = await supabase
+    .from("moscow_cards")
+    .select("bucket")
+    .eq("project_id", playerId)
+    .eq("deliverable_template_id", parsed.data.deliverableTemplateId);
+  const counts: Record<MoscowBucket, number> = { must: 0, should: 0, could: 0, wont: 0 };
+  for (const c of (cards ?? []) as { bucket: MoscowBucket }[]) {
+    counts[c.bucket]++;
+  }
+
+  // Build snapshot URL (Plan 10 implements the route SSR viewer)
+  const snapshotUrl = `https://entrepreneur-game-six.vercel.app/journey/deliverable/${parsed.data.deliverableTemplateId}/moscow-snapshot?p=${playerId}`;
+
+  // INSERT submission row kind='proof_url' directement (reuse submitDeliverable logic inline)
+  const { error: insErr } = await supabase.from("submissions").insert({
+    player_id: playerId,
+    deliverable_template_id: parsed.data.deliverableTemplateId,
+    version: 1,
+    kind: "proof_url",
+    proof_url: snapshotUrl,
+    status: "submitted_v1",
+    submitted_by: user.id,
+  });
+  if (insErr) {
+    // Si deja submitted_v1 (unique constraint), ne pas bloquer durement
+    if ((insErr as { code?: string }).code === "23505") {
+      return {
+        ok: false,
+        message: "Soumission V1 deja existante. Editez vos cartes puis attendez le feedback Mentor.",
+      };
+    }
+    return { ok: false, message: insErr.message };
+  }
+
+  revalidatePath("/journey");
+  revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
+  revalidatePath("/mentor");
+
+  // R2/R3 : warn-only message si recommandations non remplies
+  const warns: string[] = [];
+  if (counts.must < 2) warns.push("recommandation : >=2 cartes MUST");
+  if (counts.wont < 1) warns.push("recommandation : >=1 carte WONT (anti scope-creep)");
+  const warningSuffix = warns.length > 0 ? ` (${warns.join(" ; ")})` : "";
+
+  return {
+    ok: true,
+    message: `Kanban MoSCoW soumis V1.${warningSuffix} Le Mentor va le valider.`,
+  };
 }
