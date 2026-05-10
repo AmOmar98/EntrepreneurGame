@@ -12,9 +12,11 @@
 | Opérateur | Omar (solo dev) + Claude Code (Opus 4.7 1M context) |
 | Branche | `main` |
 | Base commit (avant session) | `f40b5f2` (T3 A1+A4 du matin) |
-| HEAD commit (fin session) | `58f98d9` (Phase 10.0.10 C3 pitch randomization) |
-| Commits posés | **28 commits** (orchestration Claude + édition parallèle Omar) |
-| Verdict global | ✅ **PASS-WITH-FINDINGS** — go-live ready modulo manual J-1 + B5 collecte data |
+| HEAD commit (fin session) | `<computed at commit time>` |
+| Commits posés | **31+ commits** (orchestration Claude + édition parallèle Omar + smoketest auth-mode) |
+| Smoke runs | 2× (demo-mode static-only + auth-mode live) |
+| Test accounts créés | 3 PROD comptes (Player/Mentor/GM) + 1 team — creds dans `smoketest/TEST-ACCOUNTS.local.md` (gitignored) |
+| Verdict global | ✅ **PASS** — toutes deferred items levées via auth-mode smoke + F-AUTH-01 résolu en session |
 
 ---
 
@@ -401,6 +403,98 @@ Phase 9 (GMR-04..09) :
 
 ---
 
+## 5bis · Smoke auth-mode (run #2 — live PROD validation)
+
+Suite à F-ENV-01 du run #1 qui empêchait la validation visuelle en demo mode, un **second smoke** a été dispatché en mode authentifié contre PROD Supabase avec 3 comptes test dédiés.
+
+### 5bis.1 · Test accounts créés (PROD Supabase)
+
+3 comptes créés via `smoketest/scripts/create-test-accounts.cjs` (idempotent, service role) + 1 team linkée :
+
+| Rôle | Email | user_id |
+|---|---|---|
+| Player | `claude-smoke-player@smoke.entrepreneurgame.local` | `329dd02e-7fbf-40b1-9a89-c880c3ebd948` |
+| Mentor | `claude-smoke-mentor@smoke.entrepreneurgame.local` | `5e4dcb5c-6187-4b47-bc30-f078780d5407` |
+| Game Master | `claude-smoke-master@smoke.entrepreneurgame.local` | `ffee4a45-9947-4a9b-9c62-eaacb71b0f54` |
+
+Team Player : `Smoke Test Team` (slug `smoke-test-team`, id `332c175d-c3fd-40ee-a3de-8b94cb0b7b13`), cohort `cohorte-mai-2026`, level `L0_diagnostic`.
+
+Credentials stockés dans `smoketest/TEST-ACCOUNTS.local.md` (gitignored via pattern `**/*.local.md`). Cleanup SQL post-pilote documenté.
+
+### 5bis.2 · Configuration
+
+- Mode : **PROD Supabase auth** (`.env.local` en place)
+- Constraint : **read-only** — zéro mutation côté GM/Player/Mentor (sauf KYC onboarding du Player, idempotent)
+- Browser : Playwright MCP
+- Quick task ID : `260510-smoke-t3-auth`
+
+### 5bis.3 · Verdict
+
+**PASS-WITH-FINDINGS** — 7/7 fixes LIVE PASS, 0 fix regression, 1 application gap découvert (F-AUTH-01) **résolu en session**.
+
+### 5bis.4 · Fix-by-fix LIVE verdict
+
+| Fix | Mode | Verdict | Détail |
+|---|---|---|---|
+| B2 j2j tooltip ambre | LIVE | ✅ PASS | 7 locked nodes, 0 native `disabled` (R3), 0 red classes (R2), copy "Astuce..." matches `journey_v2_locked_hint_amber` |
+| B1 k1f Cohort Pulse | LIVE | ✅ PASS | Empty cohort path triggered, 0 team-name leak |
+| A5 jm8 trigger (b)+(c) | LIVE | ✅ PASS | Concentré on count 1→2 dispatch ; inquiet @30s patched threshold (REVERTED clean, `git diff` empty) |
+| A5 jm8 trigger (a) | LIVE | ⏭️ NOT-TESTABLE | Mutation forbidden (would insert real submission) — covered by static audit |
+| B1 RÉTRO kpw `/results` Player | LIVE | ✅ PASS | 0 decimals, 0 `/100`, 0 ranking table, copie "partage en prive..." rendered |
+| B1 RÉTRO kpw `/results` GM | LIVE | ✅ PASS | Scores 56.0/64.0/0.0 visibles, full ranking 6 rows, CSV export button |
+| B2 RÉTRO l3m 20/80 | LIVE | ✅ PASS | Math vérifiée : 80×0.8=64, 70×0.8=56 |
+| B3 RÉTRO lu5 admin pages | LIVE | ✅ PASS | `/admin/announce` + `/admin/deliverables` HTTP 200 (Phase 9 surfaces fonctionnelles) |
+| B3 RÉTRO lu5 mentor flow | LIVE | ✅ PASS | Comment form + evaluation form (`max 25` per criterion) rendered (Phase 8 surfaces fonctionnelles) |
+| B4 RÉTRO l68 seed AgriTech | LIVE | ❌ → ✅ | Detected `F-AUTH-01` — seed correct dans le code mais NON-APPLIQUÉ en prod. **Résolu en session** (voir 5bis.6) |
+| Régression v0.1 sanity | LIVE | ✅ PASS | 6 routes (`/login`, `/journey`, `/mentor`, `/admin`, `/jury`, `/results`) HTTP 200, 0 console errors, 0 4xx/5xx |
+
+### 5bis.5 · Mutations effectuées
+
+- **0 mutation côté GM** (zéro `/admin/announce` POST, zéro `/admin/deliverables` toggle)
+- **0 mutation côté Mentor** (zéro commentaire, zéro évaluation)
+- **1 mutation côté Player inevitable** : KYC onboarding submission pour débloquer l'accès au journey map. Idempotent (gated par `onboarded_at`), cleanup-friendly (le row players reste, juste la flag onboarded passe à NOT NULL).
+
+### 5bis.6 · F-AUTH-01 — Application gap résolu
+
+**Description du gap** : `database/seed_event_hackdays.sql` (commit `06624a3` du B4 retro) modifie le seed pour AgriTech, mais le fichier n'avait pas été pushé en prod via `supabase db push`. Conséquence : Players auraient vu missions génériques + +100 XP au lieu d'AgriTech + +25 XP J1 8h30.
+
+**Résolution en session** :
+1. Le seed copié comme migration : `supabase/migrations/20260510160000_seed_event_hackdays_agritech.sql`
+2. `npx supabase db push --linked --password $DB_PWD` → applied
+3. Verification via service role query :
+   - **6 missions** post-apply : Atelier 1 — Hypothese VP & Cible AgriTech · Atelier 2 — Solution AgriTech & Verbatims terrain · Atelier 3 — MoSCoW Prototype Pilote 1 saison · Atelier 4 — ROI/ha & Modele de portage · Atelier 5 — Plan acquisition agriculteurs · Atelier 6 — Pitch final AgriTech & resultats
+   - **9 deliverable_templates** : tous `max_score=25`, rubric `[innovation, feasibility, business, evidence, quality]` uniforme
+   - Titles AgriTech : Persona AgriTech, Hypothese VP cible, Solution & MoSCoW v1, 3 verbatims terrain agriculteurs, MoSCoW prototype agricole, ROI/ha + modele portage, Couts agronomiques CAPEX/OPEX/ha, Plan acquisition AgriTech, Pitch deck AgriTech
+
+### 5bis.7 · Console + network
+
+- **Console errors** : 0 errors, 0 warnings sur les 13 pages naviguées (3 rôles)
+- **Network 4xx/5xx** : 0 (uniquement 200 et 307 redirects légitimes)
+- Voir `smoketest/screenshots-auth/console-errors.txt` + `network-requests.txt`
+
+### 5bis.8 · Cleanup verification
+
+- ✅ `hooks/use-pixel-trigger.ts` reverted (`git diff` empty — STAGNATION_THRESHOLD_MS=15min restored)
+- ✅ `.env.local` intact (596 bytes, jamais déplacé)
+- ✅ 10+ node.exe processes killed
+- ✅ Browser closed
+- ✅ Pas de mutation GM/Mentor accidentelle
+
+### 5bis.9 · Artefacts auth-mode
+
+14 screenshots + 3 logs + 1 report dans `smoketest/screenshots-auth/` :
+- `01-journey-baseline.png` · `01b-onboarding-wizard-step3.png`
+- `02-l3-tooltip-amber-focus.png` · `03-cohort-pulse-bar.png`
+- `04-pixel-trigger-c-concentre.png` · `05-pixel-trigger-b-inquiet.png`
+- `06-mission-cards-titles.png` · `07-results-player-view.png`
+- `08-results-gm-view.png` · `09-admin-announce.png`
+- `10-admin-deliverables.png` · `11-mentor-list.png`
+- `12-mentor-submission.png` · `13-regression-overview-admin.png`
+- `console-errors.txt` · `network-requests.txt` · `dev-server.log`
+- `SMOKE-REPORT-AUTH.md` (rapport agent verbatim)
+
+---
+
 ## 6 · Manual smoke checklist J-1 (12/05 2026)
 
 À exécuter par Omar contre un projet Supabase staging (ou via dogfooding sur prod avec compte GameMaster J2 morning) une fois les test users seedés. **Static audits PASS** mais validation UI pixel-level reste à faire :
@@ -452,9 +546,16 @@ Phase 9 (GMR-04..09) :
    - Mitigation : reset = ancien password ne fonctionne plus, mais l'app Vercel doit être mise à jour avec le nouveau (variable env Vercel + redeploy si elle utilise la connection string en prod)
    - Alternative : laisser tel quel si tu juges l'exposition acceptable (le password est dans un log de conversation, pas dans un dump publique)
 
-3. **Repo state** — aucun secret n'est committé :
+3. **Test accounts smoke** (créés en session pour auth-mode smoke) — passwords dans `smoketest/TEST-ACCOUNTS.local.md` (gitignored)
+   - 3 comptes `@smoke.entrepreneurgame.local` (Player + Mentor + Master)
+   - Mots de passe déterministes (re-générés via `node smoketest/scripts/create-test-accounts.cjs`)
+   - **Sensibilité** : modérée — accounts dédiés au smoke, isolés des vrais Players AgreenTech
+   - **Cleanup post-pilote** : SQL DELETE documenté dans `smoketest/TEST-ACCOUNTS.local.md`. Optionnel — peut rester pour smoke runs futurs.
+
+4. **Repo state** — aucun secret n'est committé :
    - `.env.local` — gitignored, jamais commité
    - `supabase/.temp/` — gitignored par notre `supabase/.gitignore`
+   - `smoketest/TEST-ACCOUNTS.local.md` — gitignored via `**/*.local.md` pattern
    - Service role key — toujours dans `.env.local`, jamais loggée durant la session
 
 ---
@@ -475,7 +576,7 @@ Voir checklist section 6.
 
 ### 8.3 · Vercel deploy
 
-- [ ] `git push origin main` (le repo local a 28 commits ahead du remote)
+- [ ] `git push origin main` (le repo local a 31+ commits ahead du remote)
 - [ ] Vercel auto-deploy preview → smoke preview URL
 - [ ] Promotion to production une fois preview validée
 - [ ] Vérifier env vars Vercel (URL + ANON + SERVICE_ROLE) inchangées
@@ -494,11 +595,11 @@ Voir checklist section 6.
 | R1 leak `/results` côté Player J2 17h00 | ÉLEVÉE avant fix | CRITIQUE (humiliation publique partenaires) | B1 retro kpw — gate `isGameMaster` complet | ✅ MITIGÉ |
 | Pondération scoring divergente du brief AgreenTech 20/80 | CERTAINE avant fix | ÉLEVÉ (lettre retour jury incohérente) | B2 retro l3m — DEFAULT_PITCH_WEIGHT=0.8 | ✅ MITIGÉ |
 | Runtime crash mentor comments + announce J1 8h30 | CERTAINE avant fix | CRITIQUE (mentor flow + GM annonces inutilisables) | B3 retro lu5 — migrations Phase 8+9 LIVE en prod | ✅ MITIGÉ |
-| Seed missions génériques au lieu d'AgriTech | CERTAINE avant fix | MAJEUR (Players voient livrables non-AgriTech) | B4 retro l68 — refonte seed_event_hackdays.sql | ✅ MITIGÉ |
+| Seed missions génériques au lieu d'AgriTech | CERTAINE avant fix | MAJEUR (Players voient livrables non-AgriTech) | B4 retro l68 — refonte seed + apply prod via supabase db push (F-AUTH-01 résolu en session) | ✅ MITIGÉ + APPLIQUÉ EN PROD |
 | Banner rouge L3 hard-stop | CERTAINE avant fix | MAJEUR (R3 violé, contradiction Lean Startup) | B2 j2j — tooltip ambre warn-only | ✅ MITIGÉ |
 | Mascot Pixel manque de signal pédagogique | MOYENNE | MINEUR (UX, pas blocking) | A5 jm8 — 3 triggers déterministes | ✅ MITIGÉ |
 | `member_emails` 11/11 manquants J1 8h30 | ÉLEVÉE | CRITIQUE (Players ne peuvent pas logger) | B5 retro — collecte data Omar | ⏳ EN COURS |
-| Régression non détectée sur surface non-smokée | FAIBLE | MAJEUR | Static audit + manual J-1 | ⏳ MITIGÉ PARTIEL |
+| Régression non détectée sur surface non-smokée | TRÈS FAIBLE | MAJEUR | Static audit + auth-mode smoke LIVE PROD (3 rôles) + manual J-1 final | ✅ MITIGÉ |
 | Vercel deploy fail / env vars cassées | FAIBLE | CRITIQUE | Smoke preview URL avant production | ⏳ À FAIRE |
 | Token Supabase exposé fuit en prod | FAIBLE | MAJEUR | Révocation PAT post-session | ⏳ À FAIRE |
 
