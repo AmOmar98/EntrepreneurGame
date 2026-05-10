@@ -3,7 +3,10 @@
 // Owns the drawer + hover state and renders the 3-column layout
 // (hero | track | tip). Receives serializable props from the server
 // component (app/journey/page.tsx) and never fetches data itself.
-import { useCallback, useState } from "react";
+//
+// Phase 11 / B1 — smooth-scroll hero into view when next mission changes
+// (effect depends on hero.ctaHref, NOT focus). Reduced-motion guarded.
+import { useCallback, useEffect, useRef, useState } from "react";
 import { JourneyDrawer } from "@/components/journey-drawer";
 import { JourneyHeroNextStep } from "@/components/journey-hero-next-step";
 import { JourneyTrack } from "@/components/journey-track";
@@ -58,6 +61,28 @@ export function JourneyClient({
   const [openLevel, setOpenLevel] = useState<LevelId | null>(null);
   const [hovered, setHovered] = useState<LevelId | null>(null);
 
+  // Phase 11 / B1 — smooth-scroll hero into view when next-mission CTA
+  // changes (e.g. after submitting a deliverable, the next mission
+  // becomes the new "Prochaine étape"). Effect runs on hero.ctaHref
+  // change only, NOT on focus, NOT on first mount.
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const previousCtaRef = useRef<string | null>(null);
+  useEffect(() => {
+    const next = hero?.ctaHref ?? null;
+    const prev = previousCtaRef.current;
+    previousCtaRef.current = next;
+    // Skip on first mount (prev === null) — only scroll on actual transitions.
+    if (prev === null || prev === next || !heroRef.current) return;
+    const motionOk =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    heroRef.current.scrollIntoView({
+      behavior: motionOk ? "smooth" : "auto",
+      block: "center",
+    });
+  }, [hero?.ctaHref]);
+
   // T3-A5 (b) — Stagnation >15min sur /journey (mood inquiet).
   const stagnation = useStagnationTrigger();
   // T3-A5 (c) — Verbatim n°2 saisi (mood concentré). Câblage prêt, DORMANT
@@ -84,7 +109,7 @@ export function JourneyClient({
       <div aria-hidden="true" className="eic-journey__bg" />
       <div className="eic-journey__main">
         <div className="eic-journey__grid">
-          <div className="eic-journey__hero-col">
+          <div className="eic-journey__hero-col" ref={heroRef}>
             {hero ? (
               <JourneyHeroNextStep
                 ctaHref={hero.ctaHref}
