@@ -1,0 +1,14 @@
+# Console log - auth-gated smoke continuation 2026-05-10
+# Routes covered: /login, /journey (player), /admin, /mentor, /jury, /results (staff)
+
+[warn] Image with src "http://localhost:3001/brand/logo-eic.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 687ms
+[info] Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+[warn] Image with src "/brand/logo-eic.svg" was detected as the Largest Contentful Paint (LCP). Please add the "priority" property if this image is above the fold.
+[warn] Image with src "http://localhost:3001/brand/logo-eic.svg" has either width or height modified, but not the other.
+
+# Notes:
+# - No errors logged during login flow, redirects, or staff route navigation
+# - All warnings are LCP/aspect-ratio cosmetic warnings around the EIC logo, already known
+# - No crash, no Supabase auth error in console

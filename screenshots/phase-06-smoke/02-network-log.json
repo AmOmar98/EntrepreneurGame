@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-05-10",
+  "page": "http://localhost:3001/login",
+  "google_fonts_requests": 0,
+  "fonts_googleapis_com": [],
+  "fonts_gstatic_com": [],
+  "woff2_requests": [
+    "http://localhost:3001/_next/static/media/904be59b21bd51cb-s.p.woff2",
+    "http://localhost:3001/_next/static/media/cd2efb30895a52d9-s.p.woff2"
+  ],
+  "all_requests": [
+    {"id": 17, "method": "GET", "url": "http://localhost:3001/login", "status": 200},
+    {"id": 18, "method": "GET", "url": "http://localhost:3001/_next/static/css/app/layout.css?v=1778369380647", "status": 200},
+    {"id": 19, "method": "GET", "url": "http://localhost:3001/_next/static/chunks/webpack.js?v=1778369380647", "status": 200},
+    {"id": 20, "method": "GET", "url": "http://localhost:3001/_next/static/chunks/main-app.js?v=1778369380647", "status": 200},
+    {"id": 21, "method": "GET", "url": "http://localhost:3001/_next/static/chunks/app-pages-internals.js", "status": 200},
+    {"id": 22, "method": "GET", "url": "http://localhost:3001/_next/static/chunks/app/login/page.js", "status": 200},
+    {"id": 23, "method": "GET", "url": "http://localhost:3001/_next/static/media/904be59b21bd51cb-s.p.woff2", "status": 200},
+    {"id": 24, "method": "GET", "url": "http://localhost:3001/_next/static/media/cd2efb30895a52d9-s.p.woff2", "status": 200},
+    {"id": 25, "method": "GET", "url": "http://localhost:3001/brand/partners/tamwilcom.svg", "status": 200},
+    {"id": 26, "method": "GET", "url": "http://localhost:3001/brand/partners/bank-of-africa.svg", "status": 200},
+    {"id": 27, "method": "GET", "url": "http://localhost:3001/brand/partners/innov-invest.svg", "status": 200},
+    {"id": 28, "method": "GET", "url": "http://localhost:3001/brand/partners/bluespace.svg", "status": 200},
+    {"id": 29, "method": "GET", "url": "http://localhost:3001/brand/partners/eic.svg", "status": 200},
+    {"id": 30, "method": "GET", "url": "http://localhost:3001/brand/partners/uemf.svg", "status": 200},
+    {"id": 31, "method": "GET", "url": "http://localhost:3001/brand/logo-eic.svg", "status": 200},
+    {"id": 32, "method": "GET", "url": "http://localhost:3001/_next/static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js", "status": 200}
+  ],
+  "verdict": "PASS - 0 google fonts requests, woff2 served from /_next/static/media/ (next/font self-hosted)"
+}

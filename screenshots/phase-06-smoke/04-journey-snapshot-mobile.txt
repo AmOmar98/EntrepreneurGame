@@ -1,0 +1,11 @@
+# /journey mobile snapshot (390 viewport, actual 500 due to scrollbar)
+- Mobile primary nav: visible
+- Parcours tab: visible with lucide-map-pin icon (svg)
+- Tab bar position: fixed bottom (y=780, h=64)
+- Topbar: visible (display: flex)
+- Mobile tabbar count: 1 tab
+- CSS bp: max-width: 1099px → tabbar display: grid
+- Validated breakpoints:
+  - 1098 inner → tabbar grid (visible) ✓
+  - 1100 inner → tabbar none (hidden) ✓
+  - 1440 inner → tabbar none ✓

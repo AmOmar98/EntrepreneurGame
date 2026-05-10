@@ -1,0 +1,10 @@
+Console log capture - Phase 06 smoke
+Date: 2026-05-10
+Page: http://localhost:3001/login (after empty submit + invalid credentials submit + /journey navigation)
+
+Errors: 0
+Warnings: 0
+Info: 1
+  - "Download the React DevTools for a better development experience: https://react.dev/link/react-devtools" (React standard dev info, not an error)
+
+Verdict: PASS - 0 console errors during smoke flow
