@@ -1726,8 +1726,14 @@ export async function submitMoscowDeliverableFlow(
     counts[c.bucket]++;
   }
 
-  // Build snapshot URL (Plan 10 implements the route SSR viewer)
-  const snapshotUrl = `https://entrepreneur-game-six.vercel.app/journey/deliverable/${parsed.data.deliverableTemplateId}/moscow-snapshot?p=${playerId}`;
+  // Build snapshot URL (Plan 10 implements the route SSR viewer).
+  // WR-02 : prefer NEXT_PUBLIC_SITE_URL env var so preview deployments and
+  // future hostname changes don't point the snapshot to the wrong origin.
+  // Falls back to the prod hostname literal to preserve current behavior
+  // when env is unset.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://entrepreneur-game-six.vercel.app";
+  const snapshotUrl = `${baseUrl}/journey/deliverable/${parsed.data.deliverableTemplateId}/moscow-snapshot?p=${playerId}`;
 
   // INSERT submission row kind='proof_url' directement (reuse submitDeliverable logic inline)
   const { error: insErr } = await supabase.from("submissions").insert({
