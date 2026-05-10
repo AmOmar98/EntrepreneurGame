@@ -1,0 +1,4 @@
+Page: http://localhost:3002/journey
+HTTP: 307 redirect to /login (server-side)
+Reason: getCurrentUser() returns null in demo mode (no Supabase env), page calls redirect("/login")
+Console: no messages on landing /login

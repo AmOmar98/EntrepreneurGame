@@ -1,0 +1,3 @@
+Page: http://localhost:3002/onboarding
+HTTP: 200 OK (rendered)
+Console: no messages

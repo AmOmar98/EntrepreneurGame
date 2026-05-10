@@ -1,0 +1,2 @@
+Page: http://localhost:3002/ (redirects to /login)
+Console: no messages
