@@ -4,7 +4,7 @@ milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
 last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-l3m: B2 RÉTRO — pondération 20/80 AgreenTech (DEFAULT_PITCH_WEIGHT 0.5→0.8)
+last_activity: 2026-05-10 — Completed quick task 260510-l3a: patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 marked DONE, paths fix, A2/B3/B4 absorption in 10.0.3, 0.10 C3 added, B5/C1/C2/C4 hors scope)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -141,6 +141,7 @@ _None_
 | 260510-k1f | B1 Cohort Pulse Bar anonymisée /journey (R1, dual-mode, 6 lignes L0-L5) | 2026-05-10 | 311dd78 | [260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv](./quick/260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv/) |
 | 260510-kpw | **B1 RÉTRO CRITICAL FIX** — R1 leak /results colmaté (gate isGameMaster sur podium scores + ranking table, annonce qualitative Players + EIC-validated FR copy) | 2026-05-10 | 16aa0f7 | [260510-kpw-b1retro-r1-leak-results-gate-isgamemaste](./quick/260510-kpw-b1retro-r1-leak-results-gate-isgamemaste/) |
 | 260510-l3m | **B2 RÉTRO** — pondération 20/80 AgreenTech (DEFAULT_PITCH_WEIGHT 0.5→0.8) — décision EIC manager 10/05 | 2026-05-10 | 8199fb1 | [260510-l3m-b2retro-ponderation-20-80-default-pitch-](./quick/260510-l3m-b2retro-ponderation-20-80-default-pitch-/) |
+| 260510-l3a | Patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 DONE, paths fix, A2/B3/B4 absorption, 0.10 C3 ajouté, B5/C1/C2/C4 hors scope) | 2026-05-10 | 79f0e36 | [260510-l3a-patch-phase-10-plan-roadmap-post-quick-s](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/) |
 
 ### Seeds Planted
 
