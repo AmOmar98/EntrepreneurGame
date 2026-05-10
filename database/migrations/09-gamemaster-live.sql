@@ -68,12 +68,26 @@ create index if not exists announcements_kind_idx
 -- ----------------------------------------------------------------------------
 alter table public.announcements enable row level security;
 
--- Read: every authenticated user can see all rows. Filtering by audience
--- happens in the server-side query (lib/announcements.ts).
+-- Read: audience-aware policy. GM sees all; mentors see all + mentors targeted;
+-- players see only rows whose target matches their team or current level.
+-- Server-side filtering in lib/announcements.ts:filterAnnouncementsForAudience
+-- remains as defense in depth.
 drop policy if exists "announcements_authenticated_select" on public.announcements;
-create policy "announcements_authenticated_select" on public.announcements
+drop policy if exists "announcements_audience_select" on public.announcements;
+create policy "announcements_audience_select" on public.announcements
   for select to authenticated
-  using (auth.uid() is not null);
+  using (
+    public.is_game_master()
+    or (public.is_mentor() and target_kind in ('all','mentors'))
+    or target_kind = 'all'
+    or (target_kind = 'level' and exists (
+        select 1 from public.players p
+        join public.player_members pm on pm.player_id = p.id
+        where pm.user_id = auth.uid() and p.current_level::text = any (target_ids)))
+    or (target_kind = 'teams' and exists (
+        select 1 from public.player_members pm
+        where pm.user_id = auth.uid() and pm.player_id::text = any (target_ids)))
+  );
 
 -- Insert: GM-only. created_by_user_id must match the caller.
 drop policy if exists "announcements_gm_insert" on public.announcements;

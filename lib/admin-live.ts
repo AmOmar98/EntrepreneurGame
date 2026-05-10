@@ -86,7 +86,7 @@ type EvaluationRow = {
 type CommentRow = {
   id: string;
   submission_id: string;
-  user_id: string;
+  author_user_id: string;
   created_at: string;
 };
 
@@ -176,7 +176,7 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
   if (submissionIds.length > 0) {
     const { data: commentRows } = await supabase
       .from("evaluation_comments")
-      .select("id, submission_id, user_id, created_at")
+      .select("id, submission_id, author_user_id, created_at")
       .in("submission_id", submissionIds)
       .order("created_at", { ascending: false })
       .limit(200);
