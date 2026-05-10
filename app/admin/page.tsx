@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminLiveToggle } from "@/components/admin-live-toggle";
+import { AdminLiveView } from "@/components/admin-live-view";
 import { AdminStatusBanner } from "@/components/admin-status-banner";
 import { AppShell } from "@/components/app-shell";
-import { getAdminLiveSnapshot } from "@/lib/admin-live";
+import {
+  getAdminLiveSnapshot,
+  type AdminLiveSnapshot,
+} from "@/lib/admin-live";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { computeHackStatus } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
@@ -11,7 +16,11 @@ import { getCohortOverview, getGlobalCounters, type CohortRow } from "@/lib/admi
 
 const t = dictionaries.fr;
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ live?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -19,6 +28,15 @@ export default async function AdminPage() {
   if (role && role !== "game_master") {
     redirect(pathForRole(role));
   }
+
+  const params = (await searchParams) ?? {};
+  const liveMode = params.live === "1";
+
+  const emptySnapshot: AdminLiveSnapshot = {
+    teams: [],
+    gameFlow: [],
+    recentValidatedEvents: [],
+  };
 
   const [rows, counters, snapshot] = hasSupabaseEnv()
     ? await Promise.all([
@@ -29,7 +47,7 @@ export default async function AdminPage() {
     : [
         [] as CohortRow[],
         { totalSubmissions: 0, pendingReview: 0, validated: 0, totalDeliverableSlots: 0 },
-        { teams: [], gameFlow: [], recentValidatedEvents: [] },
+        emptySnapshot,
       ];
 
   const hackStatus = computeHackStatus(
@@ -55,7 +73,8 @@ export default async function AdminPage() {
             </h1>
             <p style={{ color: "#64748b", fontSize: 14, margin: 0 }}>{t.admin_subtitle}</p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <AdminLiveToggle liveMode={liveMode} />
             <Link
               href="/admin/players/import"
               style={{
@@ -87,44 +106,62 @@ export default async function AdminPage() {
 
         <AdminStatusBanner result={hackStatus} />
 
-        {!hasSupabaseEnv() && (
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: 6,
-              background: "#fef3c7",
-              color: "#78350f",
-              fontSize: 13,
-              marginBottom: 16,
-            }}
-          >
-            {t.admin_demo_disabled}
-          </div>
-        )}
-
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
-          <CounterCard
-            label={t.admin_count_submitted}
-            value={`${counters.totalSubmissions} ${t.admin_count_total_label} ${counters.totalDeliverableSlots}`}
-          />
-          <CounterCard label={t.admin_count_pending} value={String(counters.pendingReview)} />
-          <CounterCard label={t.admin_count_validated} value={String(counters.validated)} />
-        </section>
-
-        {rows.length === 0 ? (
-          <p style={{ color: "#64748b", fontSize: 14 }}>{t.admin_empty_cohort}</p>
+        {liveMode ? (
+          <AdminLiveView snapshot={snapshot} hackStatus={hackStatus} />
         ) : (
-          <CohortTable rows={rows} />
+          <StandardView rows={rows} counters={counters} />
         )}
       </main>
     </AppShell>
+  );
+}
+
+function StandardView({
+  rows,
+  counters,
+}: {
+  rows: CohortRow[];
+  counters: { totalSubmissions: number; pendingReview: number; validated: number; totalDeliverableSlots: number };
+}) {
+  return (
+    <>
+      {!hasSupabaseEnv() && (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 6,
+            background: "#fef3c7",
+            color: "#78350f",
+            fontSize: 13,
+            marginBottom: 16,
+          }}
+        >
+          {t.admin_demo_disabled}
+        </div>
+      )}
+
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <CounterCard
+          label={t.admin_count_submitted}
+          value={`${counters.totalSubmissions} ${t.admin_count_total_label} ${counters.totalDeliverableSlots}`}
+        />
+        <CounterCard label={t.admin_count_pending} value={String(counters.pendingReview)} />
+        <CounterCard label={t.admin_count_validated} value={String(counters.validated)} />
+      </section>
+
+      {rows.length === 0 ? (
+        <p style={{ color: "#64748b", fontSize: 14 }}>{t.admin_empty_cohort}</p>
+      ) : (
+        <CohortTable rows={rows} />
+      )}
+    </>
   );
 }
 
