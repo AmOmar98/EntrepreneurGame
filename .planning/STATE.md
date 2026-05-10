@@ -4,7 +4,7 @@ milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
 last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-hzv: Update CLAUDE.md sync lib/ refactor v0.2 (17 edits)
+last_activity: 2026-05-10 — Completed quick task 260510-iee: T3 quick wins A1 auto-save 8s + A4 compteur Y/N champs (+ SEED-001 v0.3 planted)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -135,7 +135,14 @@ _None_
 |---|-------------|------|--------|-----------|
 | 260510-heu | Audit R1 (score invisible côté Player) + 1 patch | 2026-05-10 | 1291f94 | [260510-heu-audit-r1-score-invisible-cote-player-et-](./quick/260510-heu-audit-r1-score-invisible-cote-player-et-/) |
 | 260510-hzv | Update CLAUDE.md — sync lib/ refactor v0.2 (17 edits) | 2026-05-10 | bedf685 | [260510-hzv-update-claude-md-sync-lib-refactor-v02](./quick/260510-hzv-update-claude-md-sync-lib-refactor-v02/) |
+| 260510-iee | T3 quick wins A1 (auto-save 8s + pastille) + A4 (compteur Y/N champs) | 2026-05-10 | cf28807 | [260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c](./quick/260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c/) |
+
+### Seeds Planted
+
+| ID | Title | Trigger | Date |
+|----|-------|---------|------|
+| [SEED-001](./seeds/SEED-001-schemas-v2-architectural-refacto.md) | Schemas v2 architectural refacto (T3-IMPROVEMENTS section F) | Post-pilote AgreenTech, milestone v0.3 ouverte | 2026-05-10 |
 
 ---
 
-*Last updated: 2026-05-10 — milestone v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9 = 33 commits feat/db/docs/chore depuis v0.1-pilot-ready). 23 v0.2 requirements implémentés (DSY×7 + PLR×8 + MNT×6 + GMR×9 — wait 7+8+6+9=30 mais 7 DSY déjà Phase 6). Pending : apply migrations SQL (08+09), visual review, smoke E2E régression, a11y/reduced-motion check. v0.1 pilot-ready intact via tag `v0.1-pilot-ready` ; rollback distant possible si nécessaire. Quick task 260510-heu (audit R1) completed 2026-05-10 — 1 patch posé sur app/journey/deliverable/[id]/page.tsx pour masquer poids rubric côté Player.*
+*Last updated: 2026-05-10 — milestone v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9 = 33 commits feat/db/docs/chore depuis v0.1-pilot-ready). 23 v0.2 requirements implémentés (DSY×7 + PLR×8 + MNT×6 + GMR×9). Pending : apply migrations SQL (08+09), visual review, smoke E2E régression, a11y/reduced-motion check. v0.1 pilot-ready intact via tag `v0.1-pilot-ready` ; rollback distant possible si nécessaire. Sprint T-3 quick wins 2026-05-10 : audit R1 (260510-heu, 1 patch) + CLAUDE.md sync lib/ refactor (260510-hzv, 17 edits) + T3 A1+A4 (260510-iee, auto-save 8s + compteur Y/N champs) + SEED-001 v0.3 schemas v2 planté.*
