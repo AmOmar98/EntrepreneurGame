@@ -4272,6 +4272,7 @@ tr:last-child td {
 }
 .eic-admin-live-toggle.is-on .eic-admin-live-toggle__indicator { background: #C44536; }
 .eic-admin-live-toggle.is-on .eic-admin-live-toggle__indicator::after { left: 14px; }
+.eic-admin-live-toggle__caption { font-size: 11px; color: var(--home-muted); }
 
 /* ---- GMR-01 + GMR-02 dark live shell ---------------------------------- */
 .eic-admin-live {

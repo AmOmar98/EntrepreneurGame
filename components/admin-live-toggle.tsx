@@ -42,7 +42,7 @@ export function AdminLiveToggle({ liveMode }: Props) {
     >
       <span>{t.admin_live_toggle_label}</span>
       <span className="eic-admin-live-toggle__indicator" aria-hidden="true" />
-      <span style={{ fontSize: 11, color: "var(--home-muted)" }}>{label}</span>
+      <span className="eic-admin-live-toggle__caption">{label}</span>
     </button>
   );
 }
