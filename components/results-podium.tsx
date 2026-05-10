@@ -12,6 +12,7 @@ export type PodiumEntry = {
 
 type Props = {
   entries: PodiumEntry[];
+  isGameMaster: boolean;
 };
 
 const ORDER: (1 | 2 | 3)[] = [2, 1, 3];
@@ -30,7 +31,7 @@ const LABEL: Record<1 | 2 | 3, string> = {
   3: t.results_replay_podium_bronze,
 };
 
-export function ResultsPodium({ entries }: Props) {
+export function ResultsPodium({ entries, isGameMaster }: Props) {
   if (entries.length === 0) return null;
   const byRank = new Map<1 | 2 | 3, PodiumEntry>();
   for (const e of entries.slice(0, 3)) byRank.set(e.rank, e);
@@ -61,9 +62,11 @@ export function ResultsPodium({ entries }: Props) {
           return (
             <div className="eic-results-replay__podium-step" key={rank}>
               <p className="eic-results-replay__podium-team">{entry.teamName}</p>
-              <p className="eic-results-replay__podium-score">
-                {entry.combined.toFixed(1)}
-              </p>
+              {isGameMaster ? (
+                <p className="eic-results-replay__podium-score">
+                  {entry.combined.toFixed(1)}
+                </p>
+              ) : null}
               <div
                 className="eic-results-replay__podium-block"
                 style={{ height: HEIGHTS[rank], background: COLOR[rank] }}

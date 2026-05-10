@@ -540,6 +540,8 @@ export const dictionaries = {
     results_replay_stats_mentors: "Mentors",
     results_replay_stats_jurors: "Jurés",
     results_replay_ranking_title: "Classement complet",
+    results_replay_laureates_intro_player: "TODO-COPY-PENDING-EIC: Voici les laureats du Hack-Days AgreenTech 2026, designes par le jury Tamwilcom, Bank of Africa Academy, Innov Invest et Bluespace.",
+    results_replay_ranking_hidden_player: "TODO-COPY-PENDING-EIC: Le classement detaille des equipes est partage en prive par chaque jure dans une lettre de retour personnalisee. Cette page met a l'honneur les laureats.",
     results_replay_timeline_title: "Moments forts",
     results_replay_exports_label: "Exports",
     results_replay_export_players: "Cohorte (CSV)",

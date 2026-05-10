@@ -75,71 +75,87 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         ) : null}
       </header>
 
-      {podium.length > 0 ? <ResultsPodium entries={podium} /> : null}
+      {podium.length > 0 ? (
+        <ResultsPodium entries={podium} isGameMaster={isGameMaster} />
+      ) : null}
 
       <ResultsStatsStrip stats={stats} />
 
-      <section
-        aria-label={t.results_replay_ranking_title}
-        className="eic-results-replay__ranking"
-      >
-        <h2 className="eic-results-replay__ranking-title">
-          {t.results_replay_ranking_title}
-        </h2>
-        {rows.length === 0 ? (
-          <p className="eic-results-replay__ranking-empty">{t.results_empty}</p>
-        ) : (
-          <table className="eic-results-replay__ranking-table">
-            <thead>
-              <tr>
-                <th scope="col">{t.results_col_rank}</th>
-                <th scope="col">{t.results_col_team}</th>
-                <th scope="col">{t.results_col_pitch}</th>
-                <th scope="col">{t.results_col_project}</th>
-                <th scope="col">{t.results_col_combined}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const isPodium = row.rank <= 3;
-                return (
-                  <tr
-                    className={
-                      isPodium
-                        ? "eic-results-replay__ranking-row eic-results-replay__ranking-row--podium"
-                        : "eic-results-replay__ranking-row"
-                    }
-                    key={row.player.id}
-                  >
-                    <td className="eic-results-replay__ranking-rank">{row.rank}</td>
-                    <td>
-                      <span className="eic-results-replay__ranking-team">
-                        {row.player.name}
-                      </span>
-                      {row.player.idea ? (
-                        <span className="eic-results-replay__ranking-idea">
-                          {row.player.idea}
+      {isGameMaster ? (
+        <section
+          aria-label={t.results_replay_ranking_title}
+          className="eic-results-replay__ranking"
+        >
+          <h2 className="eic-results-replay__ranking-title">
+            {t.results_replay_ranking_title}
+          </h2>
+          {rows.length === 0 ? (
+            <p className="eic-results-replay__ranking-empty">{t.results_empty}</p>
+          ) : (
+            <table className="eic-results-replay__ranking-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t.results_col_rank}</th>
+                  <th scope="col">{t.results_col_team}</th>
+                  <th scope="col">{t.results_col_pitch}</th>
+                  <th scope="col">{t.results_col_project}</th>
+                  <th scope="col">{t.results_col_combined}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const isPodium = row.rank <= 3;
+                  return (
+                    <tr
+                      className={
+                        isPodium
+                          ? "eic-results-replay__ranking-row eic-results-replay__ranking-row--podium"
+                          : "eic-results-replay__ranking-row"
+                      }
+                      key={row.player.id}
+                    >
+                      <td className="eic-results-replay__ranking-rank">{row.rank}</td>
+                      <td>
+                        <span className="eic-results-replay__ranking-team">
+                          {row.player.name}
                         </span>
-                      ) : null}
-                    </td>
-                    <td>
-                      {formatNumber(row.pitchAvg)}
-                      <span className="eic-results-replay__ranking-jurors">
-                        {" "}
-                        ({row.pitchJurorCount})
-                      </span>
-                    </td>
-                    <td>{formatNumber(row.scoreProject)}</td>
-                    <td className="eic-results-replay__ranking-combined">
-                      {formatNumber(row.combined)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
+                        {row.player.idea ? (
+                          <span className="eic-results-replay__ranking-idea">
+                            {row.player.idea}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td>
+                        {formatNumber(row.pitchAvg)}
+                        <span className="eic-results-replay__ranking-jurors">
+                          {" "}
+                          ({row.pitchJurorCount})
+                        </span>
+                      </td>
+                      <td>{formatNumber(row.scoreProject)}</td>
+                      <td className="eic-results-replay__ranking-combined">
+                        {formatNumber(row.combined)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </section>
+      ) : (
+        <section
+          aria-label={t.results_replay_ranking_title}
+          className="eic-results-replay__ranking"
+        >
+          <h2 className="eic-results-replay__ranking-title">
+            {t.results_replay_ranking_title}
+          </h2>
+          <p className="eic-results-replay__ranking-empty">
+            {t.results_replay_ranking_hidden_player}
+          </p>
+        </section>
+      )}
 
       <ResultsTimelineMoments />
 
