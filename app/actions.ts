@@ -1458,7 +1458,10 @@ export async function reviewBonusEventFlow(
     return { ok: false, message: "Action reservee aux Mentors." };
   }
 
-  const { error: updErr } = await supabase
+  // WR-01 : guard against re-review (or two mentors stepping on each other).
+  // Conditional UPDATE on status='submitted' + select returning rows lets us
+  // detect zero-row updates and surface a clear message.
+  const { data: updRows, error: updErr } = await supabase
     .from("bonus_events")
     .update({
       status: parsed.data.decision,
@@ -1466,8 +1469,13 @@ export async function reviewBonusEventFlow(
       reviewed_at: new Date().toISOString(),
       feedback: parsed.data.feedback,
     })
-    .eq("id", parsed.data.bonusEventId);
+    .eq("id", parsed.data.bonusEventId)
+    .eq("status", "submitted")
+    .select("id");
   if (updErr) return { ok: false, message: updErr.message };
+  if (!updRows || updRows.length === 0) {
+    return { ok: false, message: "Bonus deja review ou inexistant." };
+  }
 
   revalidatePath("/mentor");
   revalidatePath(`/mentor/bonus/${parsed.data.bonusEventId}`);
