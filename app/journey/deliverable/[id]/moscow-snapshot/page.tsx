@@ -4,9 +4,11 @@
 // RLS moscow_cards_select gates : Player owner OR Mentor.
 // R1 STRICT : no score/rank/multiplier in render.
 // No AppShell intentionally : this is a proof page, not a navigation surface.
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { getMoscowCardsForPlayerDeliverable } from "@/lib/moscow";
 import { dictionaries } from "@/lib/i18n";
+import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type { MoscowBucket, MoscowCard } from "@/lib/types";
 
 const t = dictionaries.fr;
@@ -30,6 +32,18 @@ export default async function MoscowSnapshotPage({
 
   if (!playerId) {
     notFound();
+  }
+
+  // WR-04 : defense-in-depth auth/role gate matching app/journey/deliverable/[id]/page.tsx.
+  // Dual-mode demo preserved : auth checks ONLY run when Supabase env is set.
+  // RLS moscow_cards_select is the primary gate ; this is belt-and-suspenders.
+  if (hasSupabaseEnv()) {
+    const user = await getCurrentUser();
+    if (!user) redirect("/login");
+    const role = await getCurrentRole();
+    if (role && role !== "player" && role !== "mentor" && role !== "game_master") {
+      redirect(pathForRole(role));
+    }
   }
 
   const cards = await getMoscowCardsForPlayerDeliverable(playerId, deliverableTemplateId);
