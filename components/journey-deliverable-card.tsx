@@ -5,9 +5,12 @@
 // PLR-04: code mission + titre FR + status pill + reward XP + action button
 // PLR-08: "En revue . X min . Mentor" hint for submitted_v1 status
 //
-// TODO Phase 8: replace mocked mentor name "Mentor assigne" with the real
-// mentor assignment derived from evaluations table (or a mentor_assignments
-// join). For Phase 7 we keep the placeholder per Plan 07-01 spec.
+// TODO v0.3: replace mocked mentor name "Mentor assigne" with the real
+// mentor assignment. Phase 8 ships evaluation_comments but does NOT add a
+// mentor_assignments table — assignment derived from latest evaluations.evaluator_id
+// is possible but only AFTER first eval; pre-eval state has no signal.
+// v0.3 should add a dedicated mentor_assignments table or surface evaluator_id
+// as soon as a player+template has any evaluation row.
 import Link from "next/link";
 import { Pill, type PillProps } from "@/components/ui";
 import type { JourneyDeliverable, JourneyMission } from "@/lib/journey";

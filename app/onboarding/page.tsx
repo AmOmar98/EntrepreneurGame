@@ -108,9 +108,9 @@ export default async function OnboardingPage() {
 
   // Best-effort mentor resolution. The schema does not expose a stable
   // mentor->player assignment (PLR-08 placeholder), so we show a generic
-  // mentor block until Phase 8 wires real assignments. Falls back to null
-  // when no profile.full_name is found.
-  // TODO Phase 8: replace with real assigned-mentor lookup.
+  // mentor block. Phase 8 did not add a mentor_assignments table either.
+  // TODO v0.3: replace with real assigned-mentor lookup (mentor_assignments
+  // table, or derive from latest evaluations.evaluator_id once a first eval exists).
   let mentor: { initials: string; name: string } | null = null;
   const { data: mentorRow } = await supabase
     .from("profiles")

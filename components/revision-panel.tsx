@@ -14,8 +14,11 @@
 // Free-form messages without markers fall back to a single block displayed
 // as the mentor's quote.
 //
-// TODO Phase 8: replace this heuristic by a structured `feedback_items`
-// table (or rubric-driven check items) once Mentor flow supports it.
+// TODO v0.3: replace this heuristic (substring match on ✓ / ⚠ / "manque")
+// by a structured feedback_items table or rubric-driven check items.
+// Phase 8 ships evaluation_comments (tagged remarque/a_corriger) which
+// already provides part of this signal — v0.3 should consolidate the
+// passe/manque parsing on top of evaluation_comments rather than feedback_text.
 "use client";
 
 import { useState, type ReactNode } from "react";
