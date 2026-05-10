@@ -2647,6 +2647,185 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   Phase 10 / Section 13 — System states (eic-sys)
+   ========================================================================== */
+.eic-sys {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 48px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--home-surface, #fff);
+  border: 1px solid var(--home-border, #D8D0C2);
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: var(--shadow-card);
+}
+.eic-sys__avatar { animation: eic-sys-breathe 3.6s ease-in-out infinite; }
+.eic-sys__title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(22px, 3vw, 32px);
+  margin: 0;
+  color: var(--home-ink, #14243D);
+}
+.eic-sys__lead {
+  font-family: var(--font-body);
+  color: var(--home-muted-strong, #44556C);
+  margin: 0;
+  max-width: 56ch;
+  line-height: 1.55;
+}
+.eic-sys__steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.eic-sys__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--home-muted, #617084);
+  font-family: var(--font-body);
+}
+.eic-sys__step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--home-border-strong, #B7AE9D);
+}
+.eic-sys__step--active .eic-sys__step-dot {
+  background: var(--mood-loading-ring);
+  animation: eic-sys-pulse 1.4s ease-in-out infinite;
+}
+.eic-sys__step--active .eic-sys__step-label {
+  color: var(--home-ink);
+  font-weight: 600;
+}
+.eic-sys__quote {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--home-muted-strong);
+  margin: 0;
+}
+.eic-sys__countdown {
+  font-family: var(--font-body);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.eic-sys__countdown-prefix {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--home-muted);
+}
+.eic-sys__countdown-value {
+  font-size: clamp(28px, 4vw, 40px);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--eic-blue);
+}
+.eic-sys__divider {
+  width: 64px;
+  height: 1px;
+  background: var(--home-border);
+  margin: 8px 0;
+}
+.eic-sys__actions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  width: 100%;
+}
+.eic-sys__action {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.eic-sys__action-desc {
+  font-size: 13px;
+  color: var(--home-muted);
+  margin: 0;
+}
+.eic-sys__code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  background: var(--mood-error-bg);
+  color: var(--mood-error-ring);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 9999px);
+}
+.eic-sys--offline {
+  background: var(--eic-blue);
+  color: #EEF3FB;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.eic-sys--offline .eic-sys__title,
+.eic-sys--offline .eic-sys__lead { color: #F1F5FB; }
+.eic-sys__cols {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 520px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.eic-sys__cols ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
+.eic-sys__col h3 {
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.eic-sys__pending {
+  width: 100%;
+  max-width: 520px;
+  text-align: left;
+  font-family: var(--font-body);
+}
+.eic-sys__pending h3 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  color: #C8D5E5;
+}
+.eic-sys__pending ul { list-style: disc; padding-left: 20px; margin: 0; }
+
+@keyframes eic-sys-breathe {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.04); }
+}
+@keyframes eic-sys-pulse {
+  0%,100% { opacity: 0.45; transform: scale(1); }
+  50%     { opacity: 1;    transform: scale(1.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-sys__avatar, .eic-sys__step--active .eic-sys__step-dot { animation: none; }
+}
+@media (max-width: 720px) {
+  .eic-sys__cols { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
    Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
    Pedagogical revision view: mentor quote + pass/miss checklists +
    green "no XP loss" banner + V2 submission form + collapsible V1.
