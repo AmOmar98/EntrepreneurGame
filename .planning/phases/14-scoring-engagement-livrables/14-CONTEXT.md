@@ -3,16 +3,17 @@ name: Phase 14 — Context (Scoring d'engagement livrables : paliers 100/25/50)
 phase: 14
 slug: scoring-engagement-livrables
 gathered: 2026-05-10
-status: draft-context (à enrichir via /gsd-discuss-phase 14)
-source: décision live owner (Omar) 2026-05-10 post-rétro T-3 — ajout d'une couche d'engagement au scoring livrables
+unlocked: 2026-05-11
+status: unlocked-pre-pilote (exécution autorisée avant 13/05 — décision owner 2026-05-11)
+source: décision live owner (Omar) 2026-05-10 post-rétro T-3 — ajout d'une couche d'engagement au scoring livrables ; délock pré-pilote owner 2026-05-11
 ---
 
 # Phase 14 : Scoring d'engagement livrables — Context
 
-**Date** : 2026-05-10 (post-rétro T-3)
-**Statut** : DRAFT CONTEXT — pas de plan technique. À discuter via `/gsd-discuss-phase 14` avant tout code.
-**Cible** : post-pilote AgreenTech (13-14 mai 2026) sauf décision contraire en discuss.
-**Source** : conversation owner ↔ Claude Code 2026-05-10 — owner valide la pondération 80/20 actuelle, demande l'ajout d'un **deuxième axe de scoring** côté engagement.
+**Date** : 2026-05-10 (post-rétro T-3) — **délock owner 2026-05-11** (exécution pré-pilote autorisée)
+**Statut** : UNLOCKED — `/gsd-discuss-phase 14` puis `/gsd-plan-phase 14` puis `/gsd-execute-phase 14` à enchaîner. Cardinaux R1/R2/R3 strictement préservés.
+**Cible** : **pré-pilote AgreenTech (avant 2026-05-12 23h00 cutoff main)**. Owner accepte le risque T-2/T-1 documenté §3 Q4.
+**Source** : conversation owner ↔ Claude Code 2026-05-10 — owner valide la pondération 80/20 actuelle, demande l'ajout d'un **deuxième axe de scoring** côté engagement. Confirmation délock 2026-05-11.
 
 > Ce CONTEXT.md capte uniquement **l'intention pédagogique** et les **règles de scoring**. Le mapping vers `lib/score.ts`, `database/triggers.sql`, `players.score_engagement`, visibilité UI, etc. sera tranché en `/gsd-discuss-phase 14` puis `/gsd-plan-phase 14`.
 
@@ -79,11 +80,11 @@ La pondération `combined = 0.8 × pitch + 0.2 × project` est lockée (décisio
 - `players.score_engagement` existe déjà (colonne `numeric(6,2)` dans `database/schema.sql`) mais n'est alimentée par aucun trigger.
 - Option naturelle : créer trigger `recalc_player_engagement(p_player_id)` sur `submissions` (insert) + `evaluations` (insert/update verdict).
 
-### Q4 — Avant ou après le pilote 13-14 mai ?
-- **Pré-pilote (T-2/T-1)** : risque de régression sur surfaces critiques (lib/score.ts, triggers DB, dashboard Player). Très peu de marge de smoke.
-- **Post-pilote (v0.3)** : safer, mais le pilote 13-14 ne bénéficiera pas de cette gamification supplémentaire.
+### Q4 — Avant ou après le pilote 13-14 mai ? — TRANCHÉ 2026-05-11
+- **Pré-pilote (T-2/T-1)** ✅ **CHOISI PAR OWNER 2026-05-11** : risque régression assumé. Mitigation : (a) commits atomiques 1 sub-task = 1 commit, (b) `npm run typecheck && npm run lint && npm run build` clean avant chaque commit, (c) `eic-pedagogical-advisor` obligatoire avant tout edit zone sensible, (d) audit grep R1 post-edit clean, (e) rollback distant possible via tag `v0.2.2-pre-ralph-13` posé avant exécution, (f) smoke régression demo mode après dernier commit Phase 14.
+- ~~Post-pilote (v0.3)~~ : option écartée. Le pilote bénéficie de la gamification engagement.
 
-**Recommandation par défaut** : **post-pilote**, sauf si owner veut prendre le risque T-1 (à arbitrer en discuss).
+**Décision finale owner 2026-05-11** : **pré-pilote**, exécution autorisée avant cutoff `2026-05-12 23h00`.
 
 ### Q5 — Réversibilité (cf 2.3)
 Que se passe-t-il si un livrable validé est **re-évalué** plus tard avec `reject` (cas rare mais possible) ? Perd-il les +50 ? Garde-t-il +100 et +25 ?
@@ -119,4 +120,4 @@ Grep R1 obligatoire post-edit côté Player-facing : aucun match attendu pour `s
 
 ---
 
-*Last updated: 2026-05-10 — CONTEXT initial, à enrichir via `/gsd-discuss-phase 14` puis `/gsd-plan-phase 14`. Aucun code écrit pour cette phase à date.*
+*Last updated: 2026-05-11 — Phase 14 **délockée pré-pilote** par owner. Q4 tranchée (pré-pilote, risque assumé avec mitigations a-f). Discuss/plan/execute à enchaîner avant cutoff `2026-05-12 23h00`. Source de vérité statut : `.planning/STATE.md` + `.planning/ROADMAP.md` §Phase 14.*
