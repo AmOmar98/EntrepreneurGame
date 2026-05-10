@@ -4,10 +4,13 @@
 // readonly mode (no client-side state to keep in sync).
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitDeliverable, type WorkflowState } from "@/app/actions";
 import { dictionaries } from "@/lib/i18n";
+import { AutoSaveBadge } from "@/components/auto-save-badge";
+import { FieldCompletionCounter } from "@/components/field-completion-counter";
+import { useAutoSave } from "@/hooks/use-auto-save";
 
 const t = dictionaries.fr;
 
@@ -25,18 +28,29 @@ export function SubmissionForm({
   const [kind, setKind] = useState<"proof_url" | "proof_text">("proof_url");
   const submitLabel = version === 2 ? t.submission_v2_submit : t.submission_submit;
 
+  // A1 — Auto-save: ref wired to <form> so the hook can read FormData.
+  const formRef = useRef<HTMLFormElement>(null);
+  const { lastSavedAt, clear } = useAutoSave(formRef, {
+    key: `eg_draft_${deliverableTemplateId}`,
+  });
+
   useEffect(() => {
     if (state.ok) {
+      // A1 — Purge draft from localStorage before refreshing the route.
+      clear();
       router.refresh();
     }
-  }, [state.ok, router]);
+  }, [state.ok, clear, router]);
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}
     >
       <input type="hidden" name="deliverableTemplateId" value={deliverableTemplateId} />
+      {/* A4 — Field completion counter: header of form, above the proof-kind fieldset. */}
+      <FieldCompletionCounter formRef={formRef} />
 
       <fieldset
         style={{
@@ -128,6 +142,9 @@ export function SubmissionForm({
       >
         {pending ? t.submission_submitting : submitLabel}
       </button>
+
+      {/* A1 — Auto-save badge: footer of form, after submit button, before state message. */}
+      <AutoSaveBadge lastSavedAt={lastSavedAt} />
 
       {state.message ? (
         <p

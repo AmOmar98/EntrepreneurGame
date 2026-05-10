@@ -834,6 +834,49 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   T3 Quick wins — A1 Auto-save badge + A4 Field completion counter
+   (260510-iee — wording validated by eic-pedagogical-advisor)
+   ========================================================================== */
+
+/* A1 — Auto-save badge (footer of <SubmissionForm>, below submit button) */
+.eic-autosave-badge {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+/* A4 — Field completion counter (header of <SubmissionForm>, above fieldset) */
+.eic-field-counter {
+  font-size: 13px;
+  color: #475569;
+  margin: 0 0 4px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.4;
+}
+
+/* Check icon: inline element keyed by React for animation replay on transition */
+.eic-field-counter__check {
+  display: inline-block;
+  color: #15803d;
+  animation: eic-check-pop 380ms ease-out;
+  font-style: normal;
+}
+
+@keyframes eic-check-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eic-field-counter__check { animation: none; }
+}
+
+/* ==========================================================================
    EIC Design v2 — Glass utilities + Aurora helper (DSY-03)
    Used by /login (Phase 6) and journey hero / drawer (Phase 7).
    Fallback: opaque backgrounds when backdrop-filter unsupported (Android Chrome <90).
