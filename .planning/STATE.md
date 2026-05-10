@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
-last_updated: "2026-05-10T18:45:00.000Z"
-last_activity: 2026-05-10 — Phase 11 (Design Audit Refinements) created from bundle Anthropic v2 audit. PLAN.md ready, awaiting parallel review by 3 reviewers (eic-pedagogical-advisor + gsd-ui-checker + codex:rescue) before execution before 12/05 23h cutoff.
+last_updated: "2026-05-10T19:10:00.000Z"
+last_activity: 2026-05-10 — Quick 260510-rxa : patch BLOCK dim 8 PLAN-CHECK phase 12 (insertion Plan 12-04 `apply-migrations-gate` Wave 1.5 blocking). Verdict global passe READY-WITH-NOTES → READY. Phase 12 prete pour `/gsd-execute-phase 12` (sequence W0 → W1 → W1.5 gate Omar → W2+).
 progress:
   total_phases: 5
   completed_phases: 4
@@ -84,6 +84,10 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 - **Polices Google Fonts** : Baskervville + Montserrat self-hosted via `next/font/google`. À monitorer LCP après refonte.
 - **Mascotte Pixel SVG** : nouveau composant, risque visuel. À builder en isolé d'abord (page de dev) avant de l'intégrer au dashboard GM.
 
+## Roadmap Evolution
+
+- Phase 12 added: quick-260510-t3x
+
 ## Decisions
 
 - 2026-05-09 : milestone v0.2 démarrée avant clôture formelle de v0.1 (artefacts `.planning/phases/01-*` à `05-*` préservés). v0.1 sera archivée via `/gsd-complete-milestone` après le pilote du 13-14 mai.
@@ -146,6 +150,7 @@ _None_
 | 260510-l3a | Patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 DONE, paths fix, A2/B3/B4 absorption, 0.10 C3 ajouté, B5/C1/C2/C4 hors scope) | 2026-05-10 | 79f0e36 | [260510-l3a-patch-phase-10-plan-roadmap-post-quick-s](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/) |
 | 260510-l68 | **B4 RÉTRO** — refonte seed_event_hackdays.sql AgreenTech 2026 (6 missions + 9 livrables relabelés, rubric 5×5=25 uniforme, idempotent slugs préservés, +1 patch evaluationSchema .max(25)) | 2026-05-10 | d8ca1cf | [260510-l68-b4retro-seed-agreentech-7-missions-l1-l2](./quick/260510-l68-b4retro-seed-agreentech-7-missions-l1-l2/) |
 | 260510-lu5 | **B3 RÉTRO** — migrations Phase 8+9 appliquées en PROD Supabase via supabase CLI (npx, toolchain wired, supabase/migrations/ + config.toml committés, 4 entries aligned local↔remote) | 2026-05-10 | d7b3e80 | [260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr](./quick/260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr/) |
+| 260510-rxa | Patch BLOCK dim 8 PLAN-CHECK phase 12 — insertion Plan 12-04 `apply-migrations-gate` (Wave 1.5 blocking, depends_on [12-02, 12-03]) entre creation des fichiers SQL et consommation TS — verdict READY-WITH-NOTES → READY | 2026-05-10 | _pending_ | [260510-rxa-patcher-block-dim-8-schema-apply-gate-ph](./quick/260510-rxa-patcher-block-dim-8-schema-apply-gate-ph/) |
 
 ### Seeds Planted
 
