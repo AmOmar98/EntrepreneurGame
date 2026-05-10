@@ -1,12 +1,12 @@
 "use client";
-// Phase 9 / GMR-01 + GMR-02 + GMR-03 — Admin live view orchestrator.
-// Owns the team-focus modal state and renders the radar + game flow.
-// (GMR-07 Pixel mascot lands in a follow-up commit and slots in here.)
+// Phase 9 / GMR-01 + GMR-02 + GMR-03 + GMR-07 — Admin live view orchestrator.
+// Owns the team-focus modal state and renders Pixel mascot + radar + game flow.
 
 import { useMemo, useState } from "react";
 import { AdminGameFlow } from "@/components/admin-game-flow";
 import { AdminRadar } from "@/components/admin-radar";
 import { AdminTeamFocus } from "@/components/admin-team-focus";
+import { PixelMascot } from "@/components/pixel-mascot";
 import type { AdminLiveSnapshot } from "@/lib/admin-live";
 import type { HackStatusResult } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
@@ -15,15 +15,10 @@ const t = dictionaries.fr;
 
 type Props = {
   snapshot: AdminLiveSnapshot;
-  // hackStatus is accepted now for API stability — Pixel mascot will read it
-  // in a follow-up commit.
   hackStatus: HackStatusResult;
 };
 
 export function AdminLiveView({ snapshot, hackStatus }: Props) {
-  // Reserved for the Pixel mascot integration (next commit) — keeps the
-  // dashboard contract stable so /admin/page.tsx wiring does not change.
-  void hackStatus;
   const [focusedTeamId, setFocusedTeamId] = useState<string | null>(null);
 
   // Compute a stable rank lookup (descending scoreProject — same ordering as snapshot.teams).
@@ -72,6 +67,8 @@ export function AdminLiveView({ snapshot, hackStatus }: Props) {
           onClose={() => setFocusedTeamId(null)}
         />
       ) : null}
+
+      <PixelMascot result={hackStatus} />
     </div>
   );
 }
