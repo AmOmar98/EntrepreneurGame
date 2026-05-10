@@ -47,7 +47,7 @@ Source de vérité design : `.planning/design-v2/` (bundle Claude Design export�
 | 8 | Mentor : commentaires async sur lien + composer V2 | implementation complete (6/6 MNT — 7 commits — VERIFICATION human_needed) |
 | 9 | GameMaster + jury + replay + Pixel mascotte | implementation complete (9/9 GMR — 12 commits — VERIFICATION human_needed) |
 | 10 | T-3 Critical Gates + Design v2 Tail Sections | **in_progress** — B1-B4 fixés via quicks 260510-* ; B5 ops Omar ; sub-tâches design tail (sections 10/11/12/13/14) partiellement livrées via Phase 10 plan ; sections restantes à exécuter |
-| 11 | Design Audit Refinements (13 items, 4 waves) | created 2026-05-10 — PLAN.md awaiting 3 reviewers + operator green-light |
+| 11 | Design Audit Refinements (13 items, 4 waves) | **complete 2026-05-10** — 13/13 items shipped (15 commits atomiques pushed origin main). Build/typecheck clean, R1 audit clean. Tag `v0.2.1-pre-phase11` posé pour rollback. SUMMARY.md livré. |
 
 ## Next Action — Pilot Operator Gates (Omar)
 
