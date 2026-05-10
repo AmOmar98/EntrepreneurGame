@@ -150,7 +150,7 @@ Plans:
 
 ---
 
-## v0.2 EIC Design v2 Refresh — Phases 6-9
+## ✅ **v0.2 EIC Design v2 Refresh** — Phases 6-9 (implementation complete pending human verification)
 
 **Cadrage v0.2** : refonte visuelle + UX selon le bundle Claude Design `.planning/design-v2/`. La fonctionnalité v0.1 reste intacte. Mode qualité sans deadline : chaque phase commit atomique → fallback v0.1 garanti à tout moment via `git reset --hard v0.1-pilot-ready`.
 
@@ -185,10 +185,12 @@ Plans:
 **Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 06-01-PLAN.md — Tokens EIC + next/font/google + glass/aurora utilities (DSY-01, DSY-02, DSY-03)
-- [ ] 06-02-PLAN.md — 5 primitives partagées Button/Pill/LevelBadge/ProgressBar/EICLogo (DSY-04)
-- [ ] 06-03-PLAN.md — AppShell variant player/staff + TopbarLite + MobileTabBar + sidebar restyle (DSY-05)
-- [ ] 06-04-PLAN.md — Login refondu EIC + PartnerBanner typographique + build sanity + SMOKE-PHASE-06.md (DSY-06, DSY-07)
+- [x] 06-01-PLAN.md — Tokens EIC + next/font/google + glass/aurora utilities (DSY-01, DSY-02, DSY-03)
+- [x] 06-02-PLAN.md — 5 primitives partagées Button/Pill/LevelBadge/ProgressBar/EICLogo (DSY-04)
+- [x] 06-03-PLAN.md — AppShell variant player/staff + TopbarLite + MobileTabBar + sidebar restyle (DSY-05)
+- [x] 06-04-PLAN.md — Login refondu EIC + PartnerBanner typographique + build sanity + SMOKE-PHASE-06.md (DSY-06, DSY-07)
+
+**Phase 6 status** : ✅ Complete (2026-05-10). 7/7 DSY requirements livrés. SMOKE 7/7 passed. Voir `.planning/phases/06-*/06-PHASE-SUMMARY.md`.
 
 ---
 
@@ -208,7 +210,15 @@ Plans:
 5. Player après verdict `revision` du Mentor voit `/journey/deliverable/[id]` avec : message mentor en haut, checklist « Ce qui passe ✓ / Ce qui manque ⚠ », bandeau vert pédagogique « Votre V1 est conservé. Le V2 affine, il ne remplace pas votre démarche initiale. », CTA « Soumettre un nouveau lien ».
 6. Player après V1 (avant verdict) voit dans le drawer la card livrable en état « En revue » avec timestamp + nom mentor assigné (ex: « Sami K. · soumis il y a 8 min ») — évite le silence muet entre V1 et feedback.
 
-**Plans:** TBD
+**Plans:** 4/4 plans complete
+
+Plans:
+- [x] 07-01-PLAN.md — JourneyTrack + DeliverableDrawer + HeroNextStep (PLR-01, PLR-02, PLR-03, PLR-04, PLR-08) [atomic PLR-03+PLR-04]
+- [x] 07-02 (inline) — Onboarding 3 étapes éditoriales welcome/team/rules (PLR-05)
+- [x] 07-03 (inline) — Submission ticket post-V1 cream + sunburst rays + stamp rotated (PLR-06)
+- [x] 07-04 (inline) — Revision V2 panel pédagogique + cleanup unused v0.1 components (PLR-07)
+
+**Phase 7 status** : ✅ Complete (2026-05-10) — implementation. 8/8 PLR requirements livrés en 7 commits atomiques. VERIFICATION status : `human_needed` (visual review attendu). Voir `.planning/phases/07-*/07-VERIFICATION.md`.
 
 ---
 
@@ -227,7 +237,18 @@ Plans:
 4. Mentor avec verdict=`revision` est obligé de remplir un champ « Action attendue » (texte libre court, ex: « refaire le BMC en intégrant le feedback ») persisté dans `evaluations.feedback_text` ou colonne dédiée — la soumission échoue côté server action si le champ est vide en cas de verdict=`revision`.
 5. Mentor après soumission d'une évaluation voit un toast/banner de confirmation « Score envoyé · +X XP attribués à [équipe] · Player notifié » qui empêche la double-soumission par incertitude.
 
-**Plans:** TBD
+**Plans:** Implementation complete (atomic — 6 commits)
+
+Plans:
+- [x] DDL migration — `database/migrations/08-mentor-comments.sql` (evaluation_comments table + expected_action column + RLS)
+- [x] mentor-link-card + link-type detection helper (MNT-01)
+- [x] mentor-submission-history (MNT-02)
+- [x] mentor-comments-list + composer + addEvaluationCommentFlow action (MNT-03)
+- [x] evaluation refactor with required expected_action on revision verdict (MNT-04)
+- [x] confirmation banner with form lock post-submit (MNT-05)
+- [x] zero Realtime confirmed via grep (MNT-06)
+
+**Phase 8 status** : ✅ Complete (2026-05-10) — implementation. 6/6 MNT requirements livrés. **Migration SQL à appliquer manuellement par Omar avant test E2E.** VERIFICATION status : `human_needed`. Voir `.planning/phases/08-*/08-VERIFICATION.md`.
 
 ---
 
@@ -249,7 +270,22 @@ Plans:
 7. Mascotte Pixel SVG (blob doux + oreilles + yeux) floating bottom-right sur `/admin` mode live, 4 humeurs (serein/concentré/inquiet/euphorique) reflet du bandeau status (GMR-08), repliable en pill au clic.
 8. GameMaster peut composer des annonces live sur `/admin/announce` (4 types info/urgence/célébration/appel, ciblage toutes/par niveau/équipes choisies/mentors, persistance DB via table `announcements`, lecture côté Player via reload, pas de Realtime).
 
-**Plans:** TBD
+**Plans:** Implementation complete (split en 2 agents — 12 commits)
+
+Plans (Agent 9A — admin tools + jury théâtre + results replay) :
+- [x] DDL migration — `database/migrations/09-gamemaster-live.sql` (deliverable_templates.is_active + announcements table + RLS)
+- [x] /admin/deliverables toggle is_active + filter in lib/journey.ts (GMR-06)
+- [x] /admin/announce composer 4 kinds × 4 targets + Player strip on /journey (GMR-09)
+- [x] /jury pitch theater mode `?theater=1` + timer 5min + passage queue (GMR-04)
+- [x] /results replay mode (podium SVG + 5 stats strip + hardcoded timeline moments) (GMR-05)
+
+Plans (Agent 9B — admin live mode + radar + Pixel) :
+- [x] team-activity + hack-status + admin-radar lib helpers
+- [x] admin status banner 4 states (serein/concentré/inquiet/euphorique) (GMR-08) — committed BEFORE GMR-07 per ROADMAP DoD
+- [x] admin live mode toggle `?live=1` + radar SVG + game flow + team focus (GMR-01+GMR-02 atomic + GMR-03)
+- [x] Pixel mascot SVG with 4 moods reflecting status (GMR-07)
+
+**Phase 9 status** : ✅ Complete (2026-05-10) — implementation. 9/9 GMR requirements livrés. **Migration SQL `09-gamemaster-live.sql` à appliquer manuellement par Omar avant test E2E.** VERIFICATION status : `human_needed`. Voir `.planning/phases/09-*/09-VERIFICATION.md`.
 
 ---
 
@@ -311,6 +347,8 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
 ✓ **30/30 v0.2 requirements mappés** — coverage 100%, aucun orphan, aucun duplicate.
 
+✓ **30/30 v0.2 requirements implémentés** (2026-05-10) — Phase 6 (DSY×7) + Phase 7 (PLR×8) + Phase 8 (MNT×6) + Phase 9 (GMR×9). 33 commits feat/db/docs/chore. Build typecheck/lint/build clean. VERIFICATIONs Phase 7+8+9 status `human_needed` — visual review + apply migrations SQL + smoke E2E à faire par Omar.
+
 ---
 
-*Last updated: 2026-05-09 — v0.2 EIC Design v2 Refresh appended (Phases 6-9). v0.1 pilot-ready (Phases 1-5) préservé intégralement. Source design v0.2 : `.planning/design-v2/`.*
+*Last updated: 2026-05-10 — v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé intégralement via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : apply migrations SQL Phase 8+9 + visual review + smoke E2E régression v0.1.*
