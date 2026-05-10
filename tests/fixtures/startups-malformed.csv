@@ -1,7 +1,0 @@
-team_name,project_name,project_pitch,leader_email,member_emails
-Test Valid,Projet Valid,Pitch valide,leader.valid@example.com,member1@example.com
-,Projet Empty,Pitch sans team,leader.empty@example.com,
-Test Invalid Email,Projet X,Pitch X,not-an-email,
-Test Bad Member,Projet Y,Pitch Y,leader.y@example.com,bad-email-no-at;ok@example.com
-Test Quoted,"Projet, avec virgule","Pitch, avec virgule, escaped",leader.quoted@example.com,
-Test Dup Leader,Projet Dup,Pitch dup,leader.valid@example.com,

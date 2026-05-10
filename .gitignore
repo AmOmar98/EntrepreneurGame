@@ -14,8 +14,9 @@ smoketest/TEST-ACCOUNTS.local.md
 smoketest/*.local.*
 **/*.local.md
 
-# Cohort credentials — contains PROD passwords + personal emails + phones (RGPD)
+# Cohort credentials & roster — contain PROD passwords + personal emails + phones (RGPD)
 cohorte-agreentech-creds.csv
+cohorte-agreentech.csv
 cohorte-*-creds.csv
 
 # Playwright MCP local console logs (debug artefacts)
