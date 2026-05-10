@@ -70,6 +70,9 @@ export function JourneyHeroNextStep({
           {meta.due ? <span>{`${t.journey_v2_due} ${meta.due}`}</span> : null}
         </div>
       ) : null}
+      <Link className="eic-hero__help" href="/journey/help">
+        {t.help_stuck_trigger}
+      </Link>
     </section>
   );
 }

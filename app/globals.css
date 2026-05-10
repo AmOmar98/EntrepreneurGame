@@ -2826,6 +2826,149 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   Phase 10 / Section 11 — Coup de pouce (eic-stuck)
+   ========================================================================== */
+.eic-hero__help {
+  align-self: flex-start;
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--eic-blue);
+  text-decoration: underline;
+  text-decoration-color: rgba(27, 58, 92, 0.35);
+  text-underline-offset: 4px;
+}
+.eic-hero__help:hover { color: var(--eic-blue-light); }
+
+.eic-stuck {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background: var(--home-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--home-border);
+  box-shadow: var(--shadow-card);
+}
+.eic-stuck__header { display: flex; flex-direction: column; gap: 8px; }
+.eic-stuck__kicker {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eic-green);
+  margin: 0;
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.eic-stuck__subkicker {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--home-muted);
+  text-transform: none;
+}
+.eic-stuck__title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+  color: var(--home-ink);
+  margin: 0;
+}
+.eic-stuck__lead {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--home-muted-strong);
+  line-height: 1.55;
+  margin: 0;
+}
+.eic-stuck__section-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 20px;
+  margin: 0 0 12px;
+  color: var(--home-ink);
+}
+.eic-stuck__timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.eic-stuck__timeline-item {
+  display: grid;
+  grid-template-columns: 12px auto 1fr;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--home-ink);
+  padding: 8px 12px;
+  background: var(--wf-paper);
+  border: 1px dashed var(--wf-line);
+  border-radius: var(--radius-sm);
+}
+.eic-stuck__timeline-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--eic-blue);
+}
+.eic-stuck__timeline-date { color: var(--home-muted); font-size: 13px; }
+.eic-stuck__timeline-empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--home-muted);
+  margin: 0;
+}
+.eic-stuck__doors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.eic-stuck__door {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--home-border);
+  background: var(--home-surface);
+}
+.eic-stuck__door h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-stuck__door p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--home-muted-strong);
+  margin: 0;
+  line-height: 1.5;
+}
+.eic-stuck__door--hint   { border-left: 3px solid var(--eic-green); }
+.eic-stuck__door--mentor { border-left: 3px solid var(--eic-blue); }
+.eic-stuck__door--pause  { border-left: 3px solid #B47A14; }
+.eic-stuck__social {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--home-muted-strong);
+  margin: 0;
+  text-align: center;
+  padding: 12px;
+  background: var(--wf-paper);
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
    Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
    Pedagogical revision view: mentor quote + pass/miss checklists +
    green "no XP loss" banner + V2 submission form + collapsible V1.
