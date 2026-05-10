@@ -1,6 +1,7 @@
 -- =============================================================================
 -- seed_event_hackdays.sql
 -- Phase 2 / Plan 04 — Event seed for Hack-Days Fes-Meknes Mai 2026 (EVENT-01).
+-- Refondu B4 RETRO 2026-05-10 — AgreenTech 2026 (T3-IMPROVEMENTS section A/B).
 --
 -- Apply order (cf database/README.md):
 --   schema.sql -> triggers.sql -> rls.sql -> seed_event_hackdays.sql
@@ -12,8 +13,8 @@
 --   1. Levels reference data (L0..L7).
 --   2. 1 Event   : 'hack-days-fes-meknes-mai-2026'.
 --   3. 1 Cohort  : 'cohorte-mai-2026'.
---   4. 6 Missions aligned on the 13-14 mai 2026 program (timezone Maroc UTC+1).
---   5. 9 DeliverableTemplates with rubric JSONB (4-5 weighted criteria, sum=100).
+--   4. 6 Missions AgreenTech 2026 alignees sur le programme 13-14 mai 2026 (TZ Maroc UTC+1).
+--   5. 9 DeliverableTemplates with rubric JSONB (5 criteres AgriTech, sum=25).
 --
 -- This file is the ONLY seed allowed in production. seed_bootcamp.sql is legacy
 -- demo and MUST NOT be applied on Supabase prod (BRAND-05 / DATA-03).
@@ -62,18 +63,18 @@ on conflict (event_id, slug) do update
   set name = excluded.name;
 
 -- -----------------------------------------------------------------------------
--- 4. Missions — 6 ateliers/pitch sur 13-14 mai 2026
---    Mapping ateliers -> niveaux (cf 02-04-PLAN.md) :
---      M1 (L1, 13/05 09:00) Atelier Probleme
---      M2 (L2, 13/05 11:00) Atelier Solution
---      M3 (L3, 13/05 14:00) Atelier Marche
---      M4 (L4, 13/05 16:00) Atelier Business Model
---      M5 (L4, 14/05 09:00) Atelier Strategie commerciale
---      M6 (L5, 14/05 14:00) Pitch final + resultats
+-- 4. Missions — 6 ateliers/pitch sur 13-14 mai 2026 (AgreenTech 2026)
+--    Mapping ateliers -> niveaux (refondu B4 RETRO 2026-05-10) :
+--      M1 (L1, 13/05 09:00) Atelier Hypothese VP & Cible AgriTech
+--      M2 (L2, 13/05 11:00) Atelier Solution AgriTech & Verbatims terrain
+--      M3 (L3, 13/05 14:00) Atelier MoSCoW Prototype Pilote 1 saison
+--      M4 (L4, 13/05 16:00) Atelier ROI/ha & Modele de portage
+--      M5 (L4, 14/05 09:00) Atelier Plan acquisition agriculteurs
+--      M6 (L5, 14/05 14:00) Atelier Pitch final AgriTech & resultats
 -- -----------------------------------------------------------------------------
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L1_problem'::public.level_id, 1, 'atelier'::public.mission_kind,
-       'Atelier 1 — Probleme & Personae',
+       'Atelier 1 — Hypothese VP & Cible AgriTech',
        '2026-05-13 09:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -83,7 +84,7 @@ on conflict (event_id, level_id, ord) do update
 
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L2_solution'::public.level_id, 2, 'atelier'::public.mission_kind,
-       'Atelier 2 — Solution & Fiche Produit',
+       'Atelier 2 — Solution AgriTech & Verbatims terrain',
        '2026-05-13 11:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -93,7 +94,7 @@ on conflict (event_id, level_id, ord) do update
 
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L3_market'::public.level_id, 3, 'atelier'::public.mission_kind,
-       'Atelier 3 — Etude de marche',
+       'Atelier 3 — MoSCoW Prototype Pilote 1 saison',
        '2026-05-13 14:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -103,7 +104,7 @@ on conflict (event_id, level_id, ord) do update
 
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L4_business_model'::public.level_id, 4, 'atelier'::public.mission_kind,
-       'Atelier 4 — Business Model & Couts',
+       'Atelier 4 — ROI/ha & Modele de portage',
        '2026-05-13 16:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -113,7 +114,7 @@ on conflict (event_id, level_id, ord) do update
 
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L4_business_model'::public.level_id, 5, 'atelier'::public.mission_kind,
-       'Atelier 5 — Strategie commerciale (prix, canaux)',
+       'Atelier 5 — Plan acquisition agriculteurs',
        '2026-05-14 09:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -123,7 +124,7 @@ on conflict (event_id, level_id, ord) do update
 
 insert into public.missions (event_id, level_id, ord, kind, title, scheduled_at)
 select e.id, 'L5_pitch'::public.level_id, 6, 'pitch'::public.mission_kind,
-       'Atelier 6 — Pitch final & resultats',
+       'Atelier 6 — Pitch final AgriTech & resultats',
        '2026-05-14 14:00:00+01'::timestamptz
 from public.events e where e.slug = 'hack-days-fes-meknes-mai-2026'
 on conflict (event_id, level_id, ord) do update
@@ -132,22 +133,30 @@ on conflict (event_id, level_id, ord) do update
       scheduled_at = excluded.scheduled_at;
 
 -- -----------------------------------------------------------------------------
--- 5. DeliverableTemplates — 9 livrables (rubric 4 criteres x 25 = 100)
+-- 5. DeliverableTemplates — 9 livrables (rubric 5 criteres x 5 = 25 AgreenTech 2026)
+--    Rubric uniforme appliquee aux 9 livrables (5 criteres x 5 pts):
+--      - innovation   : Innovation / pertinence probleme AgriTech
+--      - feasibility  : Faisabilite technique et agronomique
+--      - business     : Modele economique (ROI agriculteur, viabilite)
+--      - evidence     : Preuves terrain (verbatims, donnees, sources) [signal anti-fabrication]
+--      - quality      : Qualite d'execution et clarte
+--    Slugs preserves (Option 1 idempotency) — ON CONFLICT (mission_id, slug) DO UPDATE.
 -- -----------------------------------------------------------------------------
 
--- 5.1 — Mission 1 (L1) : Personae
+-- 5.1 — Mission 1 (L1) : Persona AgriTech
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'personae-v1',
-       'Fiche Personae',
-       'Decrire 1 a 2 personae cibles (profil, contexte, jobs-to-be-done, douleurs, gains attendus).',
+       'Persona AgriTech',
+       'Decrire 1 persona agriculteur cible (filiere, zone, taille, revenu, canaux d''info, douleur observee terrain).',
        '[
-          {"key":"clarity","label":"Clarte de la description","max":25},
-          {"key":"specificity","label":"Specificite (segment precis)","max":25},
-          {"key":"evidence","label":"Preuves / interviews","max":25},
-          {"key":"actionable","label":"Actionnable (utilisable pour design)","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -160,19 +169,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.2 — Mission 1 (L1) : Enonce du probleme
+-- 5.2 — Mission 1 (L1) : Hypothese VP cible
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'probleme-v1',
-       'Enonce du probleme',
-       'Formuler le probleme central a resoudre, son contexte et son impact.',
+       'Hypothese VP cible',
+       'Formuler l''hypothese VP au format Lean : Pour {cible}, qui {besoin}, notre offre {offre} contrairement a {differenciation}.',
        '[
-          {"key":"clarity","label":"Clarte de l''enonce","max":25},
-          {"key":"impact","label":"Impact (qui souffre, combien)","max":25},
-          {"key":"evidence","label":"Preuves terrain","max":25},
-          {"key":"scope","label":"Perimetre delimite","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 2
+       25, 2
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -185,19 +195,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.3 — Mission 2 (L2) : Esquisse de solution
+-- 5.3 — Mission 2 (L2) : Solution & MoSCoW v1
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'esquisse-solution-v1',
-       'Esquisse de solution',
-       'Decrire la solution proposee, sa proposition de valeur et son fonctionnement de haut niveau.',
+       'Solution & MoSCoW v1',
+       'Decrire la solution AgriTech (PoC, fonctionnement, technos cles) + ebauche MoSCoW Must/Should/Could/Won''t.',
        '[
-          {"key":"fit","label":"Adequation probleme/solution","max":25},
-          {"key":"feasibility","label":"Faisabilite technique","max":25},
-          {"key":"differentiation","label":"Differenciation","max":25},
-          {"key":"clarity","label":"Clarte de l''explication","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -210,19 +221,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.4 — Mission 2 (L2) : Fiche Produit + Plan de Dev
+-- 5.4 — Mission 2 (L2) : 3 verbatims terrain agriculteurs
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'fiche-produit-plan-dev-v1',
-       'Fiche Produit & Plan de developpement',
-       'Specifier les fonctionnalites cles du produit V1 et le plan de developpement (jalons, dependances).',
+       '3 verbatims terrain agriculteurs',
+       '3 citations textuelles d''agriculteurs (nom, age, exploitation, contexte, citation entre guillemets, date, canal — tel/presentiel/WhatsApp).',
        '[
-          {"key":"completeness","label":"Completude des fonctionnalites cles","max":25},
-          {"key":"prioritization","label":"Priorisation MVP","max":25},
-          {"key":"plan","label":"Plan de dev realiste","max":25},
-          {"key":"risks","label":"Identification des risques","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 2
+       25, 2
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -235,19 +247,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.5 — Mission 3 (L3) : Etude de marche
+-- 5.5 — Mission 3 (L3) : MoSCoW prototype agricole
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'etude-marche-v1',
-       'Etude de marche',
-       'Quantifier le marche (TAM/SAM/SOM), cartographier la concurrence et identifier les tendances cles.',
+       'MoSCoW prototype agricole',
+       'Prioriser MUST/SHOULD/COULD/WON''T pour le prototype pilote 1 saison. Chaque MUST/SHOULD leve une contrainte terrain (energie, maintenance, litteratie, connectivite, cout/ha, climat, ONSSA/ORMVA).',
        '[
-          {"key":"sizing","label":"Taille du marche (TAM/SAM/SOM)","max":25},
-          {"key":"competition","label":"Cartographie concurrentielle","max":25},
-          {"key":"trends","label":"Tendances et signaux","max":25},
-          {"key":"sources","label":"Qualite des sources","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -260,19 +273,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.6 — Mission 4 (L4) : Business Model Canvas
+-- 5.6 — Mission 4 (L4) : ROI/ha + modele portage
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'bmc-v1',
-       'Business Model Canvas',
-       'Renseigner les 9 blocs du Business Model Canvas (clients, valeur, canaux, revenus, couts, ressources...).',
+       'ROI/ha + modele portage',
+       'Calculer ROI/ha agriculteur + choisir modele de portage (achat direct, leasing cooperative, service a l''hectare, abonnement).',
        '[
-          {"key":"completeness","label":"Completude des 9 blocs","max":25},
-          {"key":"coherence","label":"Coherence inter-blocs","max":25},
-          {"key":"viability","label":"Viabilite economique","max":25},
-          {"key":"clarity","label":"Clarte du canvas","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -285,19 +299,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.7 — Mission 4 (L4) : Couts & previsions de ventes
+-- 5.7 — Mission 4 (L4) : Couts agronomiques CAPEX/OPEX/ha
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'couts-previsions-v1',
-       'Couts & previsions de ventes',
-       'Estimer les couts (fixes, variables) et construire des previsions de ventes a 12 mois avec hypotheses.',
+       'Couts agronomiques CAPEX/OPEX/ha',
+       'Estimer CAPEX/ha installation initiale + OPEX/ha annuel + coherence avec persona (revenu x 30% max OPEX).',
        '[
-          {"key":"costs","label":"Estimation des couts","max":25},
-          {"key":"forecast","label":"Previsions de ventes","max":25},
-          {"key":"hypotheses","label":"Hypotheses explicitees","max":25},
-          {"key":"sensitivity","label":"Sensibilite / scenarios","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 2
+       25, 2
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -310,19 +325,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.8 — Mission 5 (L4) : Strategie prix / ventes / canaux
+-- 5.8 — Mission 5 (L4) : Plan acquisition AgriTech
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'strategie-commerciale-v1',
-       'Strategie prix, ventes & canaux',
-       'Definir la strategie de prix, le tunnel de vente et les canaux d''acquisition prioritaires.',
+       'Plan acquisition AgriTech',
+       'Identifier 3-5 organisations relais (ORMVA, COPAG, cooperative, ONCA), cycle de decision, canal (digital/physique/mixte), action concrete semaine 1 post-bootcamp.',
        '[
-          {"key":"pricing","label":"Strategie de prix justifiee","max":25},
-          {"key":"channels","label":"Canaux d''acquisition","max":25},
-          {"key":"funnel","label":"Tunnel de conversion","max":25},
-          {"key":"metrics","label":"Metriques cles (CAC, LTV)","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -335,19 +351,20 @@ on conflict (mission_id, slug) do update
       max_score = excluded.max_score,
       ord = excluded.ord;
 
--- 5.9 — Mission 6 (L5) : Pitch deck V1
+-- 5.9 — Mission 6 (L5) : Pitch deck AgriTech
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'pitch-deck-v1',
-       'Pitch deck V1',
-       'Deck de pitch (10-12 slides) couvrant probleme, solution, marche, business model, equipe, demande.',
+       'Pitch deck AgriTech',
+       'Deck pitch 10-12 slides AgriTech : probleme filiere, solution, marche agricole Maroc, ROI/ha, equipe, demande. Slide 4 = preuve terrain (verbatim L2 OU chiffre L4).',
        '[
-          {"key":"narrative","label":"Narrative et fil conducteur","max":25},
-          {"key":"completeness","label":"Completude des sections cles","max":25},
-          {"key":"design","label":"Design et lisibilite","max":25},
-          {"key":"impact","label":"Impact et call to action","max":25}
+          {"key":"innovation","label":"Innovation / pertinence probleme AgriTech","max":5},
+          {"key":"feasibility","label":"Faisabilite technique et agronomique","max":5},
+          {"key":"business","label":"Modele economique (ROI agriculteur, viabilite)","max":5},
+          {"key":"evidence","label":"Preuves terrain (verbatims, donnees, sources)","max":5},
+          {"key":"quality","label":"Qualite d''execution et clarte","max":5}
         ]'::jsonb,
-       100, 1
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
