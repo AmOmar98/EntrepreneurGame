@@ -1588,6 +1588,19 @@ tr:last-child td {
   }
 }
 
+/* Phase 11 / B2 — Mobile scroll-snap on track. Proximity (not mandatory)
+   preserves keyboard nav. scroll-margin-top:30vh accounts for sticky
+   topbar offset so .is-current node lands above the fold. */
+@media (max-width: 720px) {
+  .eic-journey__track-col {
+    scroll-snap-type: y proximity;
+  }
+  .eic-track__node.is-current {
+    scroll-margin-top: 30vh;
+    scroll-snap-align: center;
+  }
+}
+
 /* === JourneyTrack === */
 .eic-track {
   position: relative;
