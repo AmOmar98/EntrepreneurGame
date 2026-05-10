@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { EICLogo } from "@/components/ui";
+import { SideMenuTrigger } from "@/components/menu/SideMenu";
 
 export type TopbarLiteProps = {
   navItems: { href: string; label: string }[];
@@ -32,6 +33,7 @@ export function TopbarLite({
           </Link>
         ))}
       </nav>
+      <SideMenuTrigger />
       <form action={signOut} className="eic-topbar__logout-form">
         <button className="eic-topbar__logout" type="submit">
           {logoutLabel}

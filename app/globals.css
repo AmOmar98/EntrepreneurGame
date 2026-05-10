@@ -3287,6 +3287,202 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   Phase 10 / Section 14 — Side menu (eic-side-menu) + Settings (eic-settings)
+   ========================================================================== */
+.eic-side-menu__trigger {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--home-border-strong, #B7AE9D);
+  color: var(--home-ink, #14243D);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+.eic-side-menu__trigger:hover { background: var(--wf-paper); }
+
+.eic-side-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-end;
+}
+.eic-side-menu__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 36, 61, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: none;
+  cursor: pointer;
+  animation: eic-side-menu-fade 200ms ease-out both;
+}
+.eic-side-menu__panel {
+  position: relative;
+  width: min(360px, 92vw);
+  height: 100%;
+  background: var(--home-surface, #fff);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: eic-side-menu-slide 240ms ease-out both;
+}
+.eic-side-menu__header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--home-border);
+}
+.eic-side-menu__brand {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--home-ink);
+  flex: 1;
+}
+.eic-side-menu__close {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--home-muted-strong);
+}
+.eic-side-menu__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+.eic-side-menu__group h3 {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--home-muted);
+  margin: 0 0 6px;
+}
+.eic-side-menu__group ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.eic-side-menu__group a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--home-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+.eic-side-menu__group a:hover { background: var(--wf-paper); color: var(--eic-blue); }
+
+@keyframes eic-side-menu-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes eic-side-menu-slide {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-side-menu__overlay,
+  .eic-side-menu__panel { animation: none; }
+}
+
+/* Settings page */
+.eic-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  position: relative;
+}
+.eic-settings__header h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--home-ink);
+}
+.eic-settings__header p {
+  font-family: var(--font-body);
+  margin: 0;
+  color: var(--home-muted-strong);
+}
+.eic-settings__saved {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: var(--eic-green);
+  color: #fff;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.eic-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 22px;
+  background: var(--home-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--home-border);
+}
+.eic-settings__section h2 {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-settings__toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+.eic-settings__toggle strong {
+  display: block;
+  font-size: 15px;
+  color: var(--home-ink);
+}
+.eic-settings__hint {
+  display: block;
+  font-size: 13px;
+  color: var(--home-muted);
+  margin-top: 2px;
+}
+.eic-settings__toggle input[type="checkbox"] {
+  width: 36px;
+  height: 22px;
+  accent-color: var(--eic-green);
+}
+.eic-settings__field {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.eic-settings__label { color: var(--home-muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; }
+.eic-settings__value { color: var(--home-ink); }
+
+/* ==========================================================================
    Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
    Pedagogical revision view: mentor quote + pass/miss checklists +
    green "no XP loss" banner + V2 submission form + collapsible V1.
