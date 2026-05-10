@@ -314,9 +314,17 @@ Plans (Agent 9B — admin live mode + radar + Pixel) :
 **Plans:** 1 plan (à exploser en sous-plans après validation operator)
 
 Plans:
-- [ ] 10-01-PLAN.md — T-3 Critical Gates + Design v2 Tail Sections (8 sous-phases : T-3 Gates → Design system → Section 13 → 11 → 10 → 12 → 14 → Smoke E2E)
+- [ ] 10-01-PLAN.md — T-3 Critical Gates + Design v2 Tail Sections (8 sous-phases : T-3 Gates → Design system → Section 13 → 11 → 10 → 12 → 14 → Smoke E2E) — *patched 2026-05-10 via quick `260510-l3a`*
 
 **Phase 10 status** : 📥 Imported via `/gsd-import --from C:\Users\omara\.claude\plans\glimmering-sauteeing-wilkinson.md` (2026-05-10). En attente exécution. Spawn `eic-pedagogical-advisor` AVANT toute édition des zones sensibles (cf. CONTEXT.md `<decisions>`).
+
+**Patch 2026-05-10** (quick [`260510-l3a`](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/)) :
+- Sub-tâches `10.0.2` (B1 percée R1 /results) et `10.0.7` (R3 tooltip ambre journey) marquées ✅ **DONE** post-quicks `260510-kpw` (commits `c740d48` + `16aa0f7`) et `260510-j2j` (commits `8f46892` + `25f830e` + `4733406` + `d49ad1b`).
+- Path `eic-tokens.css` corrigé en `app/globals.css` (le fichier séparé n'existe pas — tokens dans `globals.css`).
+- Phase 1.3 (Pixel `loading`/`error`) précisée : A5 a déjà livré `pixel-mascot-player.tsx` + `use-pixel-trigger.ts` via quick `260510-jm8`. Phase 10 = extension moods uniquement.
+- Sub-tâche `10.0.3` (régénération 7 missions AgreenTech) absorbe A2/B3/B4 data-side de `T3-IMPROVEMENTS.md` (validators warn-only mots noirs L1 + ROI cohérence L4↔L2.1, extra_fields `hypothese_invalider`/`hypothese_revisee`, helper `cite_from_M2.2` slide 4 L6). UI side B4 (`Slide4Editor`) reportée en sous-task séparée.
+- **Nouvelle sub-tâche `10.0.10`** : C3 ordre randomisé pitch + équipes ancres milieu (couplé 10.0.3, même seed event).
+- **Hors scope Phase 10** : B5 (Excellence/Trajectoire scoring), C1 (notation différée jury), C2 (décomposition 5×/20 + σ), C4 (lettre retour PDF signée) — partent en `/gsd-quick` séparés ou v0.3.
 
 ---
 
