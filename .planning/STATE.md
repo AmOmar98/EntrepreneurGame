@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
-last_updated: "2026-05-10T22:00:00.000Z"
-last_activity: 2026-05-10
+last_updated: "2026-05-10T11:45:00.000Z"
+last_activity: 2026-05-10 — Completed quick task 260510-heu: Audit R1 (score invisible côté Player) + 1 patch
 progress:
   total_phases: 4
   completed_phases: 4
@@ -129,6 +129,12 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 
 _None_
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260510-heu | Audit R1 (score invisible côté Player) + 1 patch | 2026-05-10 | 1291f94 | [260510-heu-audit-r1-score-invisible-cote-player-et-](./quick/260510-heu-audit-r1-score-invisible-cote-player-et-/) |
+
 ---
 
-*Last updated: 2026-05-10 — milestone v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9 = 33 commits feat/db/docs/chore depuis v0.1-pilot-ready). 23 v0.2 requirements implémentés (DSY×7 + PLR×8 + MNT×6 + GMR×9 — wait 7+8+6+9=30 mais 7 DSY déjà Phase 6). Pending : apply migrations SQL (08+09), visual review, smoke E2E régression, a11y/reduced-motion check. v0.1 pilot-ready intact via tag `v0.1-pilot-ready` ; rollback distant possible si nécessaire.*
+*Last updated: 2026-05-10 — milestone v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9 = 33 commits feat/db/docs/chore depuis v0.1-pilot-ready). 23 v0.2 requirements implémentés (DSY×7 + PLR×8 + MNT×6 + GMR×9 — wait 7+8+6+9=30 mais 7 DSY déjà Phase 6). Pending : apply migrations SQL (08+09), visual review, smoke E2E régression, a11y/reduced-motion check. v0.1 pilot-ready intact via tag `v0.1-pilot-ready` ; rollback distant possible si nécessaire. Quick task 260510-heu (audit R1) completed 2026-05-10 — 1 patch posé sur app/journey/deliverable/[id]/page.tsx pour masquer poids rubric côté Player.*
