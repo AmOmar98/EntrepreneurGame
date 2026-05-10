@@ -8,3 +8,9 @@ dist
 *.tsbuildinfo
 
 .vercel
+
+# Smoketest local-only artifacts (test accounts with creds)
+smoketest/TEST-ACCOUNTS.local.md
+smoketest/*.local.*
+**/*.local.md
+
