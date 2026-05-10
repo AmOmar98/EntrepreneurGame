@@ -2155,6 +2155,16 @@ tr:last-child td {
   height: 22px;
   font-size: 12px;
 }
+
+/* Phase 11 / B5 — auto-compact hero on mobile (<=720px) without
+   requiring the `compact` prop. Mirrors the .eic-hero--compact rules. */
+@media (max-width: 720px) {
+  .eic-hero { gap: 14px; }
+  .eic-hero__title { font-size: 28px; }
+  .eic-hero__subtitle { font-size: 13px; margin-top: 8px; }
+  .eic-hero__cta { padding: 14px 22px; border-radius: 14px; font-size: 14px; }
+  .eic-hero__arrow { width: 22px; height: 22px; font-size: 12px; }
+}
 .eic-hero__meta {
   display: inline-flex;
   align-items: center;
