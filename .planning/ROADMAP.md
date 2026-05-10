@@ -435,20 +435,20 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 6. Audit grep R1 clean côté Player : aucun `multiplier_factor`, `score`, `/100`, `toFixed`, `points`, `number` rendu sur surfaces Player.
 7. `npm run typecheck && npm run lint && npm run build` clean après chaque commit atomique.
 
-**Plans:** 11 plans (1 plan supprimé en cours de revision — Plan 04 absorbé dans Plan 01)
+**Plans:** 12/12 plans complete
 
 Plans:
-- [ ] 12-01-PLAN.md — Wave 0 : commit T-3-polish live edits (seed sections 5.1-5.9 + journey hero + CLAUDE.md)
-- [ ] 12-02-PLAN.md — Wave 1 : migration `bonus_events` schema + RLS + trigger
-- [ ] 12-03-PLAN.md — Wave 1 : migration `moscow_cards` schema + RLS + trigger
-- [ ] 12-05-PLAN.md — Wave 2 : `lib/types.ts` BonusType/BonusEvent/MoscowBucket/MoscowCard + BONUS_DEFAULTS + cap
-- [ ] 12-06-PLAN.md — Wave 2 : server actions Flow (claim/review bonus + CRUD moscow + submit deliverable) + i18n keys
-- [ ] 12-07-PLAN.md — Wave 2 : `applyBonusMultiplier` pure fn dans `lib/score.ts` (cap 3.00x, scopes)
-- [ ] 12-08-PLAN.md — Wave 3 : `bonus-claim-form.tsx` + `bonus-status-badge.tsx` (R1 strict qualitatif)
-- [ ] 12-09-PLAN.md — Wave 3 : `moscow-card.tsx` + `moscow-kanban.tsx` DnD `@dnd-kit/*` PIN strict
-- [ ] 12-10-PLAN.md — Wave 3 : routes `/journey/bonus/[type]`, `/mentor/bonus/[id]`, `/journey/deliverable/[id]/moscow-snapshot` + helpers `lib/bonus.ts` + `lib/moscow.ts`
-- [ ] 12-11-PLAN.md — Wave 4 : route handler `/api/export/moscow/[deliverableId].csv` GM-only
-- [ ] 12-12-PLAN.md — Wave 4 : smoke E2E full parcours + audit R1/R2/R3
+- [x] 12-01-PLAN.md — Wave 0 : commit T-3-polish live edits (seed sections 5.1-5.9 + journey hero + CLAUDE.md)
+- [x] 12-02-PLAN.md — Wave 1 : migration `bonus_events` schema + RLS + trigger
+- [x] 12-03-PLAN.md — Wave 1 : migration `moscow_cards` schema + RLS + trigger
+- [x] 12-05-PLAN.md — Wave 2 : `lib/types.ts` BonusType/BonusEvent/MoscowBucket/MoscowCard + BONUS_DEFAULTS + cap
+- [x] 12-06-PLAN.md — Wave 2 : server actions Flow (claim/review bonus + CRUD moscow + submit deliverable) + i18n keys
+- [x] 12-07-PLAN.md — Wave 2 : `applyBonusMultiplier` pure fn dans `lib/score.ts` (cap 3.00x, scopes)
+- [x] 12-08-PLAN.md — Wave 3 : `bonus-claim-form.tsx` + `bonus-status-badge.tsx` (R1 strict qualitatif)
+- [x] 12-09-PLAN.md — Wave 3 : `moscow-card.tsx` + `moscow-kanban.tsx` DnD `@dnd-kit/*` PIN strict
+- [x] 12-10-PLAN.md — Wave 3 : routes `/journey/bonus/[type]`, `/mentor/bonus/[id]`, `/journey/deliverable/[id]/moscow-snapshot` + helpers `lib/bonus.ts` + `lib/moscow.ts`
+- [x] 12-11-PLAN.md — Wave 4 : route handler `/api/export/moscow/[deliverableId].csv` GM-only
+- [x] 12-12-PLAN.md — Wave 4 : smoke E2E full parcours + audit R1/R2/R3
 
 **Phase 12 status** : 📥 Created 2026-05-10. CONTEXT.md + 11 PLAN files importés depuis quick `260510-t3x-scope-expansion-moscow-kanban-bonus-events` via `/gsd-plan-phase 12 --auto`. **Risque T-1** : exécution serrée 10/05 → 12/05 23h, freeze T-3 override assumé par owner — fallback non identifié si bug bloquant 12/05 soir.
 
@@ -456,4 +456,87 @@ Plans:
 
 ---
 
-*Last updated: 2026-05-10 — Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto` (CONTEXT.md + 11 PLAN files Wave 0→4). v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : apply migrations SQL Phase 8+9 + visual review + smoke E2E régression v0.1.*
+## Phase 13: Smoke Completion + Phase 11 Gates Closeout + Bug Annexes
+
+**Quand** : 2026-05-10 → 2026-05-12 23h00 (T-3 → T-1, avant cutoff merge `main` pré-pilote AgreenTech)
+**Goal:** combler les 3 trous critiques du smoke PROD T-3 (mentor eval E2E, jury+publication, 8 porteurs missing), boucler les 4 gates opérateur Phase 11 (visual review prod, reduced-motion, mobile 390px, GM radar), corriger les bugs annexes identifiés smoke (logout `type=submit`, Pouls "Diagnostic 0/1" SQL). Pré-requis go-live AgreenTech 13/05 8h30.
+**Depends on:** Phase 11 (refinements design shippés `327ef86`), Phase 12 (n'impacte pas flux mentor direct)
+**UI hint** : non (testing + bugfix uniquement)
+
+**Source** : `.planning/quick/260510-smk-smoke-prod-option-c-3porteurs-27-livr/260510-smk-SUMMARY.md` (rapport smoke 27/27 livrables P01/P02/P04) + `.planning/seeds/SEED-002-smoke-e2e-mentor-jury-completion.md` (trigger dormant) + `.planning/phases/11-design-audit-refinements/SUMMARY.md` (Phase 11 gates 4 pendants).
+
+**Cardinaux R1/R2/R3 préservés** : tout fix code passe par `eic-pedagogical-advisor` si zone Player-facing. Bouton logout `type=submit` = hors zone sensible (advisor non requis).
+
+**Success Criteria** (what must be TRUE):
+
+1. **R2 mentor warn-only validé E2E** : M01 (`m.mentor1@ueuromed.org`) login PROD, ouvre ≥2 submissions parmi les 27 disponibles (P01/P02/P04), soumet rubric 5×5=25 + verdict `validate_v1` ET `request_v2`, propagation côté Player vérifiée (feedback visible sur `/journey/deliverable/[id]`). Aucun validator `severity: "error"` bloquant déclenché.
+2. **Flux jury E2E validé** : G01 ouvre `/jury` PROD, soumet ≥1 `pitch_score` test sur P01, vérifie persistance + agrégation côté `/results`. Publication test via SQL `events.results_published_at = now()`, vérifier que `/results` côté Player affiche annonce qualitative EIC-validated (R1 OK), côté GM scores + ranking visibles.
+3. **8 porteurs manquants couverts** (option A swarm parallèle si Claude Code redémarré OU option B Option C étendue 2-3 villes-clés) : P03 (Fès argan) + P05 (El Hajeb compostage) + P09 (Agadir aquaponie) minimum. P06/P08/P10/P11 nice-to-have. Validation : titres UI AgreenTech v2 affichés pour chaque idée seed.
+4. **Phase 11 G1 — Visual review prod terminé** : screenshot `05-admin-radar.png` capturé + rapport `.planning/phases/11-design-audit-refinements/G1-VISUAL-PROD.md` écrit avec verdict PASS/WARN/BLOCK par route (`/landing`, `/journey`, `/results`, `/admin?live=1`).
+5. **Phase 11 G2 — Reduced-motion** : Playwright `emulate prefers-reduced-motion:reduce` sur 5 routes, vérifier que `.eic-track__fill` mount, node stagger, hero scroll, IO reveal sont neutralisés. Rapport `G2-REDUCED-MOTION.md`.
+6. **Phase 11 G3 — Mobile 390px** : Playwright resize 390×844 sur `/journey` (scroll-snap proximity B2 + hero compact B5) + `/results` + `/landing`. Screenshots + scroll vertical. Rapport `G3-MOBILE-390.md`.
+7. **Phase 11 G4 — GM radar dashed lines** : `/admin?live=1` avec ≥2 teams actives, vérifier SVG dashed lines entre cercles. Couplable avec G1 screenshot 05.
+8. **Bug fix logout `type=submit`** : `components/app-shell.tsx` (StaffShell + AppShell) bouton "Se déconnecter" → `type="button"` ou hors `<form>`. Pas de régression flux signOut. Commit atomique ~2 min, hors zone sensible.
+9. **SQL diagnostic Pouls "Diagnostic 0/1"** : query `select level, slug, title from public.deliverable_templates order by level, slug` + `count(*) filter (where level = 'L0_diagnostic')` exécutée. Verdict : mapping seed correct OU correction appliquée + commit.
+10. `npm run typecheck && npm run lint && npm run build` clean après chaque commit atomique.
+
+**Plans:** 4 waves (sériel : tests d'abord, bugfix après)
+
+Plans:
+- [ ] 13-01-PLAN.md — Wave A : SEED-002 Option C Mentor smoke E2E (M01 batch 27 submissions, rubric 5×5, validate_v1 + request_v2) + propagation Player check
+- [ ] 13-02-PLAN.md — Wave A : SEED-002 Jury smoke (G01 `/jury` pitch_score + publication results SQL + `/results` Player/GM check)
+- [ ] 13-03-PLAN.md — Wave A : SEED-002 porteurs missing (P03 Fès argan + P05 El Hajeb compostage + P09 Agadir aquaponie minimum) via subagent porteur-projet-agreentech
+- [ ] 13-04-PLAN.md — Wave B : Phase 11 G1-finish (admin radar screenshot 05 + rapport markdown) + G4 fusion (couplé G1 screenshot 05)
+- [ ] 13-05-PLAN.md — Wave B : Phase 11 G2 reduced-motion check Playwright + rapport
+- [ ] 13-06-PLAN.md — Wave B : Phase 11 G3 mobile 390px smoke Playwright + rapport
+- [ ] 13-07-PLAN.md — Wave C : Fix logout `type=submit` `components/app-shell.tsx` (StaffShell + AppShell) commit atomique
+- [ ] 13-08-PLAN.md — Wave C : SQL diagnostic Pouls "Diagnostic 0/1" `deliverable_templates` L0_diagnostic + fix si nécessaire
+- [ ] 13-09-PLAN.md — Wave D : Smoke régression final demo mode (`/landing` → `/login` → `/journey` seed → `/results`) + audit grep R1 clean
+
+**Priorités** :
+- 🔴 **CRITIQUE J1 14h** : plans 13-01 (mentor) + 13-02 (jury) — sans ces deux, le pilote partenaires démarre aveugle
+- 🟠 **J2** : plan 13-03 (porteurs missing) — couverture diversité idées AgreenTech
+- 🟡 **Polish** : plans 13-04/05/06 (Phase 11 gates) — design refinements validation
+- 🟢 **Quick wins** : plans 13-07/08 — bugs annexes 5 min chacun
+- 🔒 **Pré-cutoff** : plan 13-09 — smoke régression final avant 12/05 23h00
+
+**Phase 13 status** : 📥 Created 2026-05-10 (ce commit). En attente exécution. **Pré-requis swarm parallèle plan 13-03** : redémarrage Claude Code pour activer `.mcp.json --isolated` (cf. mémoire `feedback_playwright_mcp_swarm_restart.md`).
+
+**Risques acceptés** : (a) si Claude Code non redémarré, plan 13-03 reste sériel (~35 min P05+P09) au lieu de parallèle ; (b) reset PROD 12/05 23h00 nettoie pollution résiduelle 2 agents tués smoke 10/05 — plans 13-01/02 doivent s'exécuter AVANT reset OU être réexécutés après reset avec porteurs re-provisionnés ; (c) G1-G4 sont gates manuels-visuels, verdict subjectif tolerable (PASS/WARN/BLOCK).
+
+---
+
+## Phase 14: Scoring d'engagement livrables (paliers 100/25/50)
+
+**Quand** : post-pilote AgreenTech (à confirmer en `/gsd-discuss-phase 14`) — défaut v0.3 sauf décision owner contraire
+**Goal:** ajouter une couche de scoring d'engagement aux livrables, indépendante de la note rubric qualité (qui reste intacte). Trois paliers cumulatifs par livrable : **+100 soumis**, **+25 reviewed mentor**, **+50 validé**. Total max 175 pts d'engagement par livrable validé (en plus de la note qualité 0..25).
+**Depends on:** Phase 13 (smoke régression final clean), pilote 13-14 mai (validation de la pondération 80/20 actuelle en conditions réelles avant toute extension scoring).
+**UI hint** : oui (badges paliers côté Player + colonne admin GameMaster) — design à drafter en discuss.
+
+**Source** : conversation live owner ↔ Claude Code 2026-05-10 post-rétro T-3. CONTEXT initial : `.planning/phases/14-scoring-engagement-livrables/14-CONTEXT.md`.
+
+**Cardinaux R1/R2/R3 à protéger** : zone hautement sensible (touche `lib/score.ts`, triggers DB, surface Player). Spawn `eic-pedagogical-advisor` **obligatoire** avant tout edit. Visibilité Player des paliers à arbitrer en discuss (Option A/B/C documentées dans CONTEXT).
+
+**Questions ouvertes à trancher en discuss** (cf CONTEXT §3) :
+- Q1 — Visibilité Player des paliers (R1)
+- Q2 — Entre-t-il dans `combined` ranking 80/20 ? (défaut recommandé : hors ranking, alimente `players.score_engagement`)
+- Q3 — Stockage (probable : colonne `players.score_engagement` existante + nouveau trigger DB)
+- Q4 — Timing : pré-pilote (risqué T-1) ou post-pilote (recommandé)
+- Q5 — Réversibilité si livrable validé puis re-évalué `reject`
+
+**Success Criteria** (draft, à enrichir en discuss) :
+1. Chaque livrable porte 3 paliers d'engagement indépendants de la note rubric.
+2. Trigger DB recalcule `players.score_engagement` à chaque insert/update sur `submissions` + `evaluations`.
+3. Surface Player montre l'avancement des paliers **sans révéler le rang ni le total comparé** (R1 préservé).
+4. Pondération `combined` `0.8 × pitch + 0.2 × project` reste lockée (sauf décision Q2 explicite).
+5. `npm run typecheck && npm run lint && npm run build` clean + audit grep R1 clean côté Player-facing.
+
+**Plans:** à drafter via `/gsd-plan-phase 14` une fois discuss terminé. Aucun PLAN.md écrit à date.
+
+**Phase 14 status** : 📥 Created 2026-05-10. CONTEXT initial drafté, **discuss-phase non encore lancé**. À enchaîner via `/gsd-discuss-phase 14` après cutoff pilote.
+
+**Risques acceptés** : (a) si owner décide exécution pré-pilote, risque régression scoring très élevé T-2/T-1 sans marge smoke ; (b) si visibilité Player mal cadrée (Q1), risque R1 contourné indirectement par déduction du rang.
+
+---
+
+*Last updated: 2026-05-10 — Phase 14 (Scoring d'engagement livrables, paliers 100/25/50) ajoutée post-conversation owner. CONTEXT initial drafté, discuss-phase à lancer. Phase 13 (Smoke Completion + Phase 11 Gates Closeout + Bug Annexes) ajoutée post-smoke PROD T-3 (rapport `260510-smk-SUMMARY.md`, seed `SEED-002`). 9 plans en 4 waves (mentor/jury smoke → porteurs missing → Phase 11 gates → bugfixes). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss à lancer.*
