@@ -6,10 +6,12 @@
 // PLR-01..PLR-04 + PLR-08: barre verticale + hero unique + drawer + en-revue.
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { CohortPulse } from "@/components/cohort-pulse";
 import { JourneyClient } from "@/components/journey-client";
 import { PlayerAnnouncementStrip } from "@/components/player-announcement-strip";
 import { getAnnouncementsForPlayer } from "@/lib/announcements";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
+import { getCohortPulse } from "@/lib/cohort-pulse";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJourneyData } from "@/lib/journey";
@@ -36,12 +38,19 @@ export default async function JourneyPage() {
 
   const data = await getJourneyData(user.id);
 
+  // Quick 260510-k1f / B1 - cohort pulse (anonymised, R1).
+  // Computed even when data.empty so a non-onboarded Player still sees the
+  // collective dynamic (motivation pre-onboarding). Helper returns safe
+  // entries (count=0/total=0) on any error or unresolved cohort.
+  const cohortPulse = await getCohortPulse(user.id);
+
   if (data.empty || !data.player) {
     return (
       <AppShell role="player" variant="player">
         <main className="eic-journey">
           <div aria-hidden="true" className="eic-journey__bg" />
           <div className="eic-journey__main">
+            <CohortPulse entries={cohortPulse} />
             <div style={{ padding: 32, maxWidth: 720, margin: "0 auto" }}>
               <h1 className="eic-hero__title">{t.journey_title}</h1>
               <p className="eic-hero__subtitle">{t.journey_empty_account}</p>
@@ -97,6 +106,7 @@ export default async function JourneyPage() {
   return (
     <AppShell role="player" variant="player">
       <PlayerAnnouncementStrip announcements={announcements} />
+      <CohortPulse entries={cohortPulse} />
       <JourneyClient
         currentLevel={data.player.currentLevel}
         hero={hero}

@@ -98,9 +98,10 @@ export function FieldCompletionCounter({
       obs.disconnect();
       form.removeEventListener("input", recompute);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // NOTE: formRef intentionally excluded — stable ref, .current read at effect time.
+  // (eslint-plugin-react-hooks is not registered in eslint.config.mjs at the moment,
+  // so no exhaustive-deps directive is needed. Re-add when the plugin lands.)
 
   const { filled, total } = counts;
 

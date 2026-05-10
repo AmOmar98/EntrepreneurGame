@@ -65,10 +65,11 @@ export function useAutoSave(
     } catch {
       // Corrupted JSON or storage unavailable — ignore silently.
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   // NOTE: formRef intentionally excluded from deps — the ref object is stable,
   // its .current is what matters and is read at effect time (not captured).
+  // (eslint-plugin-react-hooks not registered in eslint.config.mjs; no
+  // exhaustive-deps disable directive needed at the moment.)
 
   // Polling tick: read form, compare, write if changed.
   useEffect(() => {
@@ -104,9 +105,9 @@ export function useAutoSave(
 
     const id = window.setInterval(tick, intervalMs);
     return () => window.clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervalMs, key]);
   // NOTE: formRef intentionally excluded from deps — stable ref, read at tick time.
+  // (See note above re: eslint-plugin-react-hooks not registered.)
 
   const clear = (): void => {
     if (typeof window === "undefined") return;
