@@ -121,12 +121,12 @@ export function JuryPitchGrid({
       </div>
 
       <label className="eic-jury-grid__comment">
-        <span>Commentaire</span>
+        <span>{t.jury_pitch_grid_comment_label}</span>
         <textarea
           maxLength={1000}
           name="comment"
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Notes pour le débrief…"
+          placeholder={t.jury_pitch_grid_comment_placeholder}
           rows={2}
           value={comment}
         />

@@ -448,6 +448,8 @@ export const dictionaries = {
     jury_passage_status_upcoming: "À venir",
     jury_pitch_grid_title: "Grille de notation",
     jury_pitch_grid_legend_5: "Sur 5",
+    jury_pitch_grid_comment_label: "Commentaire",
+    jury_pitch_grid_comment_placeholder: "Notes pour le débrief…",
     jury_pitch_jurors_voted: "{n}/5 jurés ont noté",
     jury_pitch_theater_intro: "Pitch en cours",
     jury_pitch_theater_team_idea: "Idée",
