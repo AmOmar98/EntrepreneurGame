@@ -82,7 +82,7 @@ export default async function JourneyPage() {
             ? t.journey_v2_hero_title_default
             : t.journey_v2_hero_title_default,
         titleEm: t.journey_v2_hero_title_em,
-        subtitle: next.template.description || t.journey_v2_hero_subtitle_default,
+        subtitle: next.template.description?.split("\n\n")[0] || t.journey_v2_hero_subtitle_default,
         ctaHref: `/journey/deliverable/${next.template.id}`,
         ctaLabel:
           next.status === "feedback_received"
