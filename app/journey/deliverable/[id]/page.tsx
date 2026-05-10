@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { SubmissionFeedbackCard } from "@/components/submission-feedback-card";
+import { RevisionPanel } from "@/components/revision-panel";
 import { SubmissionForm } from "@/components/submission-form";
 import { SubmissionReadonly } from "@/components/submission-readonly";
 import { SubmissionTicket } from "@/components/submission-ticket";
@@ -242,11 +242,19 @@ export default async function DeliverableDetailPage({
           />
         ) : isLocked && latest ? (
           <SubmissionReadonly submission={latest} />
+        ) : isFeedbackPendingV2 && latestEvaluation ? (
+          // PLR-07 — pedagogical revision panel for verdict request_v2.
+          <RevisionPanel
+            deliverableTemplateId={id}
+            deliverableTitle={tpl.title}
+            evaluation={latestEvaluation}
+            previousSubmission={latest}
+            rewardXp={tpl.max_score}
+            rubric={rubric}
+          />
         ) : isFeedbackPendingV2 ? (
+          // Defensive fallback when feedback_received but no evaluation row found.
           <>
-            {latestEvaluation ? (
-              <SubmissionFeedbackCard evaluation={latestEvaluation} rubric={rubric} />
-            ) : null}
             <h2
               style={{
                 fontSize: 16,

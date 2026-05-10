@@ -2489,3 +2489,240 @@ tr:last-child td {
   display: flex;
   justify-content: center;
 }
+
+/* ==========================================================================
+   Phase 7 / Plan 07-04 — Revision V2 panel (PLR-07)
+   Pedagogical revision view: mentor quote + pass/miss checklists +
+   green "no XP loss" banner + V2 submission form + collapsible V1.
+   ========================================================================== */
+.eic-revision {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 8px;
+}
+.eic-revision__kicker {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #D97706;
+  margin: 0;
+}
+.eic-revision__title {
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-revision__title-em {
+  font-style: italic;
+  font-weight: 600;
+  color: #D97706;
+}
+.eic-revision__lead {
+  font-size: 15px;
+  color: var(--wf-ink-soft);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 640px;
+}
+.eic-revision__mentor {
+  padding: 18px 22px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  border-left: 4px solid #D97706;
+}
+.eic-revision__mentor-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--eic-blue);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+}
+.eic-revision__mentor-body { flex: 1 1 auto; }
+.eic-revision__mentor-quote {
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--home-ink);
+  margin: 0;
+  white-space: pre-wrap;
+}
+.eic-revision__checklists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 720px) {
+  .eic-revision__checklists { grid-template-columns: 1fr; }
+}
+.eic-revision__checklist {
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  background: rgba(255, 255, 255, 0.6);
+}
+.eic-revision__checklist--pass {
+  border-color: rgba(46, 125, 50, 0.3);
+  background: rgba(46, 125, 50, 0.06);
+}
+.eic-revision__checklist--miss {
+  border-color: rgba(217, 119, 6, 0.4);
+  background: rgba(217, 119, 6, 0.08);
+}
+.eic-revision__checklist-kicker {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wf-ink-soft);
+  margin: 0 0 8px;
+}
+.eic-revision__checklist--pass .eic-revision__checklist-kicker { color: var(--eic-green); }
+.eic-revision__checklist--miss .eic-revision__checklist-kicker { color: #D97706; }
+.eic-revision__checklist ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.eic-revision__checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--home-ink);
+  line-height: 1.45;
+}
+.eic-revision__bullet {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.eic-revision__bullet.is-pass {
+  background: var(--eic-green);
+  color: #fff;
+}
+.eic-revision__bullet.is-miss {
+  background: #fff;
+  color: #D97706;
+  border: 1.5px solid #D97706;
+}
+.eic-revision__banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(46, 125, 50, 0.10);
+  border: 1px solid rgba(46, 125, 50, 0.3);
+  border-radius: var(--radius-md);
+}
+.eic-revision__banner-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--eic-green);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.eic-revision__banner-text {
+  flex: 1 1 auto;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+  color: var(--home-ink);
+}
+.eic-revision__banner-xp {
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--eic-blue);
+  flex-shrink: 0;
+}
+.eic-revision__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(217, 119, 6, 0.45);
+  border-radius: var(--radius-md);
+}
+.eic-revision__v1 {
+  border-top: 1px solid rgba(154, 145, 127, 0.22);
+  padding-top: 12px;
+}
+.eic-revision__v1-toggle {
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  cursor: pointer;
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--eic-blue);
+  text-decoration: underline;
+}
+.eic-revision__v1-toggle:focus-visible {
+  outline: 2px solid var(--eic-blue);
+  outline-offset: 3px;
+}
+.eic-revision__v1-body {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(154, 145, 127, 0.25);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.eic-revision__v1-meta {
+  font-size: 12px;
+  color: var(--wf-ink-soft);
+  margin: 0;
+}
+.eic-revision__v1-link {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--eic-blue);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.eic-revision__v1-text {
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(154, 145, 127, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--home-ink);
+}

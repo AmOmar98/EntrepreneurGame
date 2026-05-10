@@ -202,6 +202,24 @@ export const dictionaries = {
     submission_ticket_hint:
       "Sami revient avec son retour sous 10 minutes. Vous pouvez enchainer ou attendre le verdict.",
     submission_ticket_cta_back: "Retour au parcours",
+    // ---- Revision V2 panel (Phase 7 / Plan 07-04 — PLR-07) -------------------
+    revision_kicker: "REVISION DEMANDEE",
+    revision_title_prefix: "Presque.",
+    revision_title_em: "Encore un detail a regler.",
+    revision_lead:
+      "Votre mentor a relu votre livrable. Pas de perte d'XP — c'est une boucle courte avant validation.",
+    revision_breadcrumb_back: "Parcours",
+    revision_mentor_section_aria: "Message du mentor",
+    revision_checklist_kicker: "A corriger avant de ressoumettre",
+    revision_checklist_pass: "Ce qui passe",
+    revision_checklist_missing: "Ce qui manque",
+    revision_pedagogical_banner_strong: "Aucune perte d'XP.",
+    revision_pedagogical_banner_body:
+      "Votre V1 est conservee. La V2 affine, elle ne remplace pas votre demarche initiale.",
+    revision_form_kicker: "Soumettre un nouveau lien",
+    revision_v1_toggle_show: "Voir la V1 originale",
+    revision_v1_toggle_hide: "Masquer la V1 originale",
+    revision_no_feedback: "Aucun message specifique pour cette revision.",
     mentor_title: "Espace Mentor",
     mentor_subtitle: "Evaluez les livrables de la cohorte.",
     mentor_filter_pending: "Afficher uniquement les Players avec livrables en attente",
