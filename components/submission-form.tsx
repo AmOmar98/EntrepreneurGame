@@ -10,7 +10,9 @@ import { submitDeliverable, type WorkflowState } from "@/app/actions";
 import { dictionaries } from "@/lib/i18n";
 import { AutoSaveBadge } from "@/components/auto-save-badge";
 import { FieldCompletionCounter } from "@/components/field-completion-counter";
+import { PixelMascotPlayer } from "@/components/pixel-mascot-player";
 import { useAutoSave } from "@/hooks/use-auto-save";
+import { useFirstDeliveryTrigger } from "@/hooks/use-pixel-trigger";
 
 const t = dictionaries.fr;
 
@@ -28,6 +30,11 @@ export function SubmissionForm({
   const [kind, setKind] = useState<"proof_url" | "proof_text">("proof_url");
   const submitLabel = version === 2 ? t.submission_v2_submit : t.submission_submit;
 
+  // T3-A5 (a) — Pixel mascot 1er livrable soumis (mood euphorique).
+  // Déclenchement déterministe : flip true UNE FOIS quand state.ok === true
+  // pour la première soumission de ce navigateur (localStorage flag).
+  const firstDelivery = useFirstDeliveryTrigger(state.ok);
+
   // A1 — Auto-save: ref wired to <form> so the hook can read FormData.
   const formRef = useRef<HTMLFormElement>(null);
   const { lastSavedAt, clear } = useAutoSave(formRef, {
@@ -43,6 +50,7 @@ export function SubmissionForm({
   }, [state.ok, clear, router]);
 
   return (
+    <>
     <form
       ref={formRef}
       action={formAction}
@@ -159,5 +167,13 @@ export function SubmissionForm({
         </p>
       ) : null}
     </form>
+    {firstDelivery.triggered ? (
+      <PixelMascotPlayer
+        mood="euphorique"
+        message={t.pixel_player_first_delivery_quote}
+        onDismiss={firstDelivery.dismiss}
+      />
+    ) : null}
+    </>
   );
 }

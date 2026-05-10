@@ -7,7 +7,12 @@ import { useCallback, useState } from "react";
 import { JourneyDrawer } from "@/components/journey-drawer";
 import { JourneyHeroNextStep } from "@/components/journey-hero-next-step";
 import { JourneyTrack } from "@/components/journey-track";
+import { PixelMascotPlayer } from "@/components/pixel-mascot-player";
 import { Button } from "@/components/ui";
+import {
+  useStagnationTrigger,
+  useVerbatimCountTrigger,
+} from "@/hooks/use-pixel-trigger";
 import { dictionaries } from "@/lib/i18n";
 import {
   getShortLevelLabel,
@@ -52,6 +57,12 @@ export function JourneyClient({
 }: JourneyClientProps) {
   const [openLevel, setOpenLevel] = useState<LevelId | null>(null);
   const [hovered, setHovered] = useState<LevelId | null>(null);
+
+  // T3-A5 (b) — Stagnation >15min sur /journey (mood inquiet).
+  const stagnation = useStagnationTrigger();
+  // T3-A5 (c) — Verbatim n°2 saisi (mood concentré). Câblage prêt, DORMANT
+  // tant que M2.2 cartes_repetables n'existe pas (T3-IMPROVEMENTS section F).
+  const verbatim = useVerbatimCountTrigger();
 
   const levelStates = new Map<LevelId, LevelState>(levelStateEntries);
 
@@ -121,6 +132,19 @@ export function JourneyClient({
           objective={objectivesByLevel[openLevel] ?? null}
           onClose={handleClose}
           state={openState}
+        />
+      ) : null}
+      {stagnation.triggered ? (
+        <PixelMascotPlayer
+          mood="inquiet"
+          message={t.pixel_player_stagnation_quote}
+          onDismiss={stagnation.dismiss}
+        />
+      ) : verbatim.triggered ? (
+        <PixelMascotPlayer
+          mood="concentre"
+          message={t.pixel_player_verbatim_count_quote}
+          onDismiss={verbatim.dismiss}
         />
       ) : null}
     </div>
