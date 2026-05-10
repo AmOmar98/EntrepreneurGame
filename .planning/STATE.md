@@ -4,7 +4,7 @@ milestone: v0.2
 milestone_name: EIC Design v2 Refresh — Phases 6-9
 status: implementation_complete_pending_human_verification
 last_updated: "2026-05-10T11:45:00.000Z"
-last_activity: 2026-05-10 — Completed quick task 260510-l68: B4 RÉTRO — refonte seed_event_hackdays.sql AgreenTech 2026 (rubric 5×5=25, 6 missions/9 livrables relabelés)
+last_activity: 2026-05-10 — Completed quick task 260510-lu5: B3 RÉTRO — migrations Phase 8+9 appliquées EN PROD via supabase CLI (toolchain wired, 4 entries aligned)
 progress:
   total_phases: 4
   completed_phases: 4
@@ -143,6 +143,7 @@ _None_
 | 260510-l3m | **B2 RÉTRO** — pondération 20/80 AgreenTech (DEFAULT_PITCH_WEIGHT 0.5→0.8) — décision EIC manager 10/05 | 2026-05-10 | 8199fb1 | [260510-l3m-b2retro-ponderation-20-80-default-pitch-](./quick/260510-l3m-b2retro-ponderation-20-80-default-pitch-/) |
 | 260510-l3a | Patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 DONE, paths fix, A2/B3/B4 absorption, 0.10 C3 ajouté, B5/C1/C2/C4 hors scope) | 2026-05-10 | 79f0e36 | [260510-l3a-patch-phase-10-plan-roadmap-post-quick-s](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/) |
 | 260510-l68 | **B4 RÉTRO** — refonte seed_event_hackdays.sql AgreenTech 2026 (6 missions + 9 livrables relabelés, rubric 5×5=25 uniforme, idempotent slugs préservés, +1 patch evaluationSchema .max(25)) | 2026-05-10 | d8ca1cf | [260510-l68-b4retro-seed-agreentech-7-missions-l1-l2](./quick/260510-l68-b4retro-seed-agreentech-7-missions-l1-l2/) |
+| 260510-lu5 | **B3 RÉTRO** — migrations Phase 8+9 appliquées en PROD Supabase via supabase CLI (npx, toolchain wired, supabase/migrations/ + config.toml committés, 4 entries aligned local↔remote) | 2026-05-10 | d7b3e80 | [260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr](./quick/260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr/) |
 
 ### Seeds Planted
 
