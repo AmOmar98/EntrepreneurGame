@@ -547,6 +547,11 @@ export const dictionaries = {
     results_replay_export_players: "Cohorte (CSV)",
     results_replay_export_ranking: "Classement (CSV)",
     results_replay_export_public: "Page publique",
+    pitch_order_pending: "Ordre de passage : annonce jeudi 14/05 matin.",
+    pitch_order_announced: "Tu pitches en {position}e position. Tirage au sort.",
+    pitch_order_first: "Tu ouvres les pitchs ! Sois pret 5 min avant 13h30.",
+    pitch_order_window: "Creneau approximatif : {start} - {end} (selon rythme jury).",
+    pitch_order_explainer: "L'ordre a ete tire au sort. Aucun lien avec ta preselection ou tes scores.",
   },
   en: {
     brand_name: "Entrepreneur Game",
@@ -856,6 +861,11 @@ export const dictionaries = {
     pixel_player_first_delivery_quote: "First hypothesis logged.",
     pixel_player_stagnation_quote: "A tip is waiting on your right.",
     pixel_player_verbatim_count_quote: "One more and L3 gains depth.",
+    pitch_order_pending: "Pitch order: announced Thursday May 14, morning.",
+    pitch_order_announced: "You pitch in position {position}. Random draw.",
+    pitch_order_first: "You open the pitches! Be ready 5 min before 1:30 PM.",
+    pitch_order_window: "Approximate window: {start} - {end} (depends on jury pace).",
+    pitch_order_explainer: "The order was drawn at random. No connection with your preselection or scores.",
   },
 } as const;
 
