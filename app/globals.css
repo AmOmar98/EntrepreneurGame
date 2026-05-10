@@ -1697,6 +1697,18 @@ tr:last-child td {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
+/* === Mount animation: charge fill builds from 0 on first paint === */
+@media (prefers-reduced-motion: no-preference) {
+  .eic-track__fill {
+    animation: eic-track-charge 600ms ease-out;
+    animation-fill-mode: forwards;
+  }
+}
+@keyframes eic-track-charge {
+  from { height: 0 !important; }
+  to {} /* preserved by `forwards` from inline style */
+}
+
 /* === Locked-level tooltip (R2/R3 — warn-only ambre) === */
 .eic-track__node-tooltip {
   position: absolute;
