@@ -415,6 +415,45 @@ Tous les MUST (M1-M12) sont mappés à au moins une phase :
 
 ✓ **30/30 v0.2 requirements implémentés** (2026-05-10) — Phase 6 (DSY×7) + Phase 7 (PLR×8) + Phase 8 (MNT×6) + Phase 9 (GMR×9). 33 commits feat/db/docs/chore. Build typecheck/lint/build clean. VERIFICATIONs Phase 7+8+9 status `human_needed` — visual review + apply migrations SQL + smoke E2E à faire par Omar.
 
+## Phase 12: T-3 Scope Expansion — MoSCoW Kanban + Bonus Events Recreate
+
+**Quand** : 2026-05-10 → 2026-05-12 23h00 (T-3 → T-1, freeze T-3 explicitement override par owner)
+**Goal:** livrer 3 capacités produit majeures avant go-live AgreenTech 13/05 : (1) recréer le mécanisme `bonus_events` retiré en v0.2 avec 3 types initiaux (`bonus_verbatims_terrain`, `bonus_dev_plan`, `bonus_prototype_draft`) + multiplier `next_deliverable`/`rest_of_event` cap 3.00x ; (2) MoSCoW Kanban web natif (DnD `@dnd-kit/core`) remplaçant ex-livrable #4, persisté en table `moscow_cards`, exporté CSV GM-only ; (3) polish des 9 livrables AgreenTech (sections 5.1-5.9 seed). Verbatims terrain migrent du livrable obligatoire vers un BONUS optionnel (trade-off pédagogique conscient).
+**Depends on:** Phase 10 (T-3 Critical Gates B1-B4 fixés), Phase 11 (Design Audit Refinements en attente exécution)
+**UI hint** : oui
+
+**Cardinaux R1/R2/R3 préservés** : multiplier_factor numeric jamais rendu Player (R1), validators warn-only + actions safeParse (R2), no inter-mission blocking (R3). Spawn `eic-pedagogical-advisor` AVANT chaque édition zone sensible.
+
+**Source** : `.planning/quick/260510-t3x-scope-expansion-moscow-kanban-bonus-events/BRIEF.md` (decisions live session 2026-05-10).
+
+**Success Criteria:**
+1. Wave 0 (Plan 01) : commit live edits T-3-polish atomique (sections seed 5.1/5.2/5.3 + journey hero subtitle + CLAUDE.md sections T-3 Gates / Pre-edit guards / Freeze) — **AVANT toute autre édition**.
+2. Wave 1 (Plans 02-03) : migrations Supabase `bonus_events` + `moscow_cards` (schema, enums, RLS pilote-grade, triggers `updated_at`, idempotence). Mirror `database/*.sql`.
+3. Wave 2 (Plans 05-07) : `lib/types.ts` étendu (BonusType, BonusStatus, MultiplierScope, BonusEvent, MoscowBucket, MoscowCard, BONUS_DEFAULTS, BONUS_MULTIPLIER_CAP=3.00) + 7 server actions Flow (`claimBonusEvent`, `reviewBonusEvent`, `createMoscowCard`, `updateMoscowCard`, `deleteMoscowCard`, `reorderMoscowCards`, `submitMoscowDeliverable`) + `applyBonusMultiplier` pure fn dans `lib/score.ts` (signature `sumPlayerScoreProject` inchangée).
+4. Wave 3 (Plans 08-10) : composants UI (`bonus-claim-form.tsx`, `bonus-status-badge.tsx` qualitatif strict R1, `moscow-card.tsx`, `moscow-kanban.tsx` DnD `@dnd-kit/core@^6.1.0` + `@dnd-kit/sortable@^8.0.0` + `@dnd-kit/utilities@^3.2.2`) + routes (`/journey/bonus/[type]`, `/mentor/bonus/[id]`, `/journey/deliverable/[id]/moscow-snapshot`) + helpers `lib/bonus.ts` + `lib/moscow.ts`.
+5. Wave 4 (Plans 11-12) : route handler CSV export `/api/export/moscow/[deliverableId].csv` (GM-only `is_game_master()`, `dynamic='force-dynamic'`, demo mode bypass) + smoke E2E full parcours (Player onboarding → 9 livrables incl MoSCoW Kanban → bonus claim → pitch ; Mentor evaluate ; GM announce + export ; RLS ; audit grep R1).
+6. Audit grep R1 clean côté Player : aucun `multiplier_factor`, `score`, `/100`, `toFixed`, `points`, `number` rendu sur surfaces Player.
+7. `npm run typecheck && npm run lint && npm run build` clean après chaque commit atomique.
+
+**Plans:** 11 plans (1 plan supprimé en cours de revision — Plan 04 absorbé dans Plan 01)
+
+Plans:
+- [ ] 12-01-PLAN.md — Wave 0 : commit T-3-polish live edits (seed sections 5.1-5.9 + journey hero + CLAUDE.md)
+- [ ] 12-02-PLAN.md — Wave 1 : migration `bonus_events` schema + RLS + trigger
+- [ ] 12-03-PLAN.md — Wave 1 : migration `moscow_cards` schema + RLS + trigger
+- [ ] 12-05-PLAN.md — Wave 2 : `lib/types.ts` BonusType/BonusEvent/MoscowBucket/MoscowCard + BONUS_DEFAULTS + cap
+- [ ] 12-06-PLAN.md — Wave 2 : server actions Flow (claim/review bonus + CRUD moscow + submit deliverable) + i18n keys
+- [ ] 12-07-PLAN.md — Wave 2 : `applyBonusMultiplier` pure fn dans `lib/score.ts` (cap 3.00x, scopes)
+- [ ] 12-08-PLAN.md — Wave 3 : `bonus-claim-form.tsx` + `bonus-status-badge.tsx` (R1 strict qualitatif)
+- [ ] 12-09-PLAN.md — Wave 3 : `moscow-card.tsx` + `moscow-kanban.tsx` DnD `@dnd-kit/*` PIN strict
+- [ ] 12-10-PLAN.md — Wave 3 : routes `/journey/bonus/[type]`, `/mentor/bonus/[id]`, `/journey/deliverable/[id]/moscow-snapshot` + helpers `lib/bonus.ts` + `lib/moscow.ts`
+- [ ] 12-11-PLAN.md — Wave 4 : route handler `/api/export/moscow/[deliverableId].csv` GM-only
+- [ ] 12-12-PLAN.md — Wave 4 : smoke E2E full parcours + audit R1/R2/R3
+
+**Phase 12 status** : 📥 Created 2026-05-10. CONTEXT.md + 11 PLAN files importés depuis quick `260510-t3x-scope-expansion-moscow-kanban-bonus-events` via `/gsd-plan-phase 12 --auto`. **Risque T-1** : exécution serrée 10/05 → 12/05 23h, freeze T-3 override assumé par owner — fallback non identifié si bug bloquant 12/05 soir.
+
+**Risques acceptés** : (a) cassure freeze T-3 ; (b) délai go-live 13/05 si bug ; (c) smoke régression compressé 0.5j ; (d) triple casquette Omar burnout ; (e) verbatims migrés en BONUS affaiblit pédagogie B4-retro ; (f) zéro comm partenaires sur scope expansion.
+
 ---
 
-*Last updated: 2026-05-10 — v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé intégralement via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : apply migrations SQL Phase 8+9 + visual review + smoke E2E régression v0.1.*
+*Last updated: 2026-05-10 — Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto` (CONTEXT.md + 11 PLAN files Wave 0→4). v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : apply migrations SQL Phase 8+9 + visual review + smoke E2E régression v0.1.*
