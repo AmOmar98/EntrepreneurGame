@@ -3399,3 +3399,17 @@ tr:last-child td {
 .eic-mentor-brief__meta-item strong {
   color: var(--home-ink, #14243d);
 }
+
+/* a11y utility — hide visually but expose to assistive tech (used by composer
+   labels). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

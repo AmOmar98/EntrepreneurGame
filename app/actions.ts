@@ -317,13 +317,29 @@ export async function submitDeliverable(
 // `trg_evaluation_recalc` recomputes `players.score_project` automatically;
 // we never touch that column from TypeScript (SCORE-01).
 
-const evaluationSchema = z.object({
-  submissionId: z.string().uuid(),
-  feedback: z.string().min(0).max(4000),
-  verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
-  // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
-  scores: z.record(z.string(), z.coerce.number().min(0).max(100)),
-});
+const evaluationSchema = z
+  .object({
+    submissionId: z.string().uuid(),
+    feedback: z.string().min(0).max(4000),
+    verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
+    expectedAction: z.string().max(500).optional(),
+    // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
+    scores: z.record(z.string(), z.coerce.number().min(0).max(100)),
+  })
+  .superRefine((data, ctx) => {
+    // MNT-04 — expected_action MUST be provided (and non-empty) when the
+    // verdict is request_v2. Server-side validation; UI mirrors this.
+    if (data.verdict === "request_v2") {
+      const trimmed = (data.expectedAction ?? "").trim();
+      if (trimmed.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["expectedAction"],
+          message: "L'action attendue est obligatoire pour une demande de revision.",
+        });
+      }
+    }
+  });
 
 export async function evaluateSubmission(
   _prev: WorkflowState,
@@ -348,10 +364,15 @@ export async function evaluateSubmission(
     }
   }
 
+  const rawExpectedAction = formData.get("expectedAction");
   const parsed = evaluationSchema.safeParse({
     submissionId: formData.get("submissionId"),
     feedback: formData.get("feedback") ?? "",
     verdict: formData.get("verdict"),
+    expectedAction:
+      typeof rawExpectedAction === "string" && rawExpectedAction.length > 0
+        ? rawExpectedAction
+        : undefined,
     scores: scoresParsed,
   });
   if (!parsed.success) {
@@ -454,6 +475,11 @@ export async function evaluateSubmission(
 
   // Insert evaluation row. The trg_evaluation_recalc Postgres trigger will
   // recompute players.score_project automatically (SCORE-01).
+  // expected_action is only persisted when verdict=request_v2 (MNT-04).
+  const expectedActionToPersist =
+    parsed.data.verdict === "request_v2"
+      ? (parsed.data.expectedAction ?? "").trim()
+      : null;
   const { error: insErr } = await supabase.from("evaluations").insert({
     submission_id: submission.id,
     evaluator_id: user.id,
@@ -461,6 +487,7 @@ export async function evaluateSubmission(
     total_score: totalScore,
     feedback: parsed.data.feedback,
     verdict: parsed.data.verdict,
+    expected_action: expectedActionToPersist,
   });
   if (insErr) {
     if ((insErr as { code?: string }).code === "23505") {
@@ -489,7 +516,133 @@ export async function evaluateSubmission(
   revalidatePath(`/mentor/submission/${submission.id}`);
   revalidatePath(`/journey/deliverable/${submission.deliverable_template_id}`);
   revalidatePath("/journey");
-  return { ok: true, message: "Evaluation enregistree." };
+
+  // MNT-05 — confirmation toast payload. The client (mentor-confirmation-banner)
+  // parses message as JSON when ok=true to render
+  // "Score envoye . +X XP attribues a [equipe] . Player notifie".
+  const xpAwarded =
+    parsed.data.verdict === "validate_v1" || parsed.data.verdict === "validate_v2"
+      ? Math.round(totalScore)
+      : 0;
+
+  // Best-effort fetch of the player name for the toast (non-blocking on error).
+  let teamName: string | null = null;
+  const { data: playerRow } = await supabase
+    .from("players")
+    .select("name")
+    .eq("id", submission.player_id)
+    .maybeSingle();
+  if (playerRow) {
+    teamName = (playerRow as { name: string }).name;
+  }
+
+  const payload = JSON.stringify({
+    kind: "mentor_evaluation_sent",
+    xp: xpAwarded,
+    team: teamName,
+    verdict: parsed.data.verdict,
+  });
+  return { ok: true, message: payload };
+}
+
+// ============================================================================
+// Mentor flow — Phase 8 (MNT-03)
+// Async tagged comments tied to a submission. Used by both mentors and player
+// members of the team to discuss a submission asynchronously (no live chat).
+// RLS gates writes; we still defense-in-depth role/membership-check here so
+// that error messages are readable.
+// ============================================================================
+
+const addCommentSchema = z.object({
+  submissionId: z.string().uuid(),
+  tag: z.enum(["remarque", "a_corriger"]),
+  body: z.string().min(1).max(2000),
+});
+
+export async function addEvaluationCommentFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawBody = formData.get("body");
+  const parsed = addCommentSchema.safeParse({
+    submissionId: formData.get("submissionId"),
+    tag: formData.get("tag"),
+    body: typeof rawBody === "string" ? rawBody.trim() : rawBody,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Resolve role + membership; both mentors and team members can post.
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+
+  // Load submission to know which player_id it belongs to (for membership
+  // gate when role=player).
+  const { data: subRow, error: subErr } = await supabase
+    .from("submissions")
+    .select("id, player_id, deliverable_template_id")
+    .eq("id", parsed.data.submissionId)
+    .maybeSingle();
+  if (subErr) {
+    return { ok: false, message: subErr.message };
+  }
+  if (!subRow) {
+    return { ok: false, message: "Submission introuvable." };
+  }
+  const submission = subRow as {
+    id: string;
+    player_id: string;
+    deliverable_template_id: string;
+  };
+
+  if (role !== "mentor" && role !== "game_master") {
+    // Player path — must be a member of the submission's player.
+    const { data: membership } = await supabase
+      .from("player_members")
+      .select("player_id")
+      .eq("user_id", user.id)
+      .eq("player_id", submission.player_id)
+      .maybeSingle();
+    if (!membership) {
+      return { ok: false, message: "Acces refuse." };
+    }
+  }
+
+  const { error: insErr } = await supabase.from("evaluation_comments").insert({
+    submission_id: submission.id,
+    author_user_id: user.id,
+    tag: parsed.data.tag,
+    body: parsed.data.body,
+  });
+  if (insErr) {
+    return { ok: false, message: insErr.message };
+  }
+
+  revalidatePath("/mentor");
+  revalidatePath(`/mentor/submission/${submission.id}`);
+  revalidatePath(`/journey/deliverable/${submission.deliverable_template_id}`);
+  revalidatePath("/journey");
+  return { ok: true, message: "Commentaire publie." };
 }
 
 // ============================================================================

@@ -9,6 +9,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { MentorCommentComposer } from "@/components/mentor-comment-composer";
+import {
+  MentorCommentsList,
+  type MentorCommentEntry,
+} from "@/components/mentor-comments-list";
 import { RevisionPanel } from "@/components/revision-panel";
 import { SubmissionForm } from "@/components/submission-form";
 import { SubmissionReadonly } from "@/components/submission-readonly";
@@ -173,11 +178,12 @@ export default async function DeliverableDetailPage({
     totalScore: number;
     feedback: string;
     verdict: Verdict;
+    expectedAction: string | null;
   } | null = null;
   if (latestRow && latestRow.status === "feedback_received") {
     const { data: evalRow } = await supabase
       .from("evaluations")
-      .select("scores, total_score, feedback, verdict")
+      .select("scores, total_score, feedback, verdict, expected_action")
       .eq("submission_id", latestRow.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -188,13 +194,91 @@ export default async function DeliverableDetailPage({
         total_score: number | null;
         feedback: string | null;
         verdict: Verdict;
+        expected_action: string | null;
       };
       latestEvaluation = {
         scores: row.scores ?? {},
         totalScore: Number(row.total_score ?? 0),
         feedback: row.feedback ?? "",
         verdict: row.verdict,
+        expectedAction: row.expected_action ?? null,
       };
+    }
+  }
+
+  // Phase 8 / MNT-03 — load async comments tied to the latest submission.
+  // Visible to both Mentor (on /mentor/submission/[id]) and Player (here in
+  // the revision panel). RLS enforces visibility; we additionally check role
+  // for avatar coloring.
+  let comments: MentorCommentEntry[] = [];
+  if (latestRow) {
+    const { data: commentRows } = await supabase
+      .from("evaluation_comments")
+      .select("id, author_user_id, tag, body, created_at")
+      .eq("submission_id", latestRow.id)
+      .order("created_at", { ascending: false });
+    if (commentRows && commentRows.length > 0) {
+      const authorIds = Array.from(
+        new Set(
+          (commentRows as { author_user_id: string }[]).map((c) => c.author_user_id),
+        ),
+      );
+      const { data: authorRows } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, app_role")
+        .in("user_id", authorIds);
+      const authorsById = new Map<
+        string,
+        { fullName: string | null; email: string | null; appRole: string | null }
+      >();
+      for (const row of (authorRows ?? []) as {
+        user_id: string;
+        full_name: string | null;
+        email: string | null;
+        app_role: string | null;
+      }[]) {
+        authorsById.set(row.user_id, {
+          fullName: row.full_name,
+          email: row.email,
+          appRole: row.app_role,
+        });
+      }
+      comments = (
+        commentRows as {
+          id: string;
+          author_user_id: string;
+          tag: "remarque" | "a_corriger";
+          body: string;
+          created_at: string;
+        }[]
+      ).map((c) => {
+        const author = authorsById.get(c.author_user_id);
+        const fullName =
+          (author?.fullName && author.fullName.trim().length > 0
+            ? author.fullName
+            : null) ??
+          author?.email ??
+          "Membre";
+        const initials = fullName
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((p) => p.charAt(0).toUpperCase())
+          .join("") || "?";
+        const isMentor =
+          author?.appRole === "mentor" || author?.appRole === "game_master";
+        return {
+          id: c.id,
+          authorName: fullName,
+          authorInitials: initials,
+          authorAvatarColor: isMentor ? "#1B3A5C" : "#D97706",
+          isMentor,
+          isOwn: c.author_user_id === user.id,
+          tag: c.tag,
+          body: c.body,
+          createdAt: c.created_at,
+        };
+      });
     }
   }
 
@@ -242,9 +326,35 @@ export default async function DeliverableDetailPage({
           />
         ) : isLocked && latest ? (
           <SubmissionReadonly submission={latest} />
-        ) : isFeedbackPendingV2 && latestEvaluation ? (
+        ) : isFeedbackPendingV2 && latestEvaluation && latestRow ? (
           // PLR-07 — pedagogical revision panel for verdict request_v2.
           <RevisionPanel
+            commentsSlot={
+              <section
+                aria-labelledby="player-comments-title"
+                className="eic-mentor-comments"
+              >
+                <header className="eic-mentor-comments__header">
+                  <h2
+                    className="eic-mentor-comments__title"
+                    id="player-comments-title"
+                  >
+                    {t.mentor_comments_section_title}
+                  </h2>
+                  <span className="eic-mentor-comments__count">
+                    {comments.length} · {t.mentor_comments_async_label}
+                  </span>
+                </header>
+                <MentorCommentsList
+                  ariaLabel={t.mentor_comments_section_title}
+                  comments={comments}
+                />
+                <MentorCommentComposer
+                  audience="player"
+                  submissionId={latestRow.id}
+                />
+              </section>
+            }
             deliverableTemplateId={id}
             deliverableTitle={tpl.title}
             evaluation={latestEvaluation}

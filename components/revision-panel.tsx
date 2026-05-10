@@ -18,7 +18,7 @@
 // table (or rubric-driven check items) once Mentor flow supports it.
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { SubmissionForm } from "@/components/submission-form";
 import { dictionaries } from "@/lib/i18n";
 import type { RubricCriterion, Submission, Verdict } from "@/lib/types";
@@ -30,6 +30,8 @@ type Evaluation = {
   totalScore: number;
   feedback: string;
   verdict: Verdict;
+  /** Phase 8 / MNT-04 — required action when verdict=request_v2. */
+  expectedAction?: string | null;
 };
 
 export type RevisionPanelProps = {
@@ -40,6 +42,12 @@ export type RevisionPanelProps = {
   rewardXp: number;
   // Latest V1 submission, surfaced in the collapsible block.
   previousSubmission: Submission | null;
+  /**
+   * Phase 8 / MNT-03 — async comments slot. Rendered between the checklist
+   * and the resubmission form. Server component (list + composer) provided
+   * by the parent page so the data fetch stays on the server.
+   */
+  commentsSlot?: ReactNode;
 };
 
 type ChecklistItem = { kind: "pass" | "miss"; text: string };
@@ -83,11 +91,13 @@ export function RevisionPanel({
   evaluation,
   rewardXp,
   previousSubmission,
+  commentsSlot,
 }: RevisionPanelProps) {
   const [showV1, setShowV1] = useState(false);
   const { items: checklist, freeText } = parseChecklist(evaluation.feedback);
   const passes = checklist.filter((c) => c.kind === "pass");
   const misses = checklist.filter((c) => c.kind === "miss");
+  const expectedAction = (evaluation.expectedAction ?? "").trim();
 
   // Display fallback: if the parser found no markers, show the entire
   // feedback as the mentor's quote (no checklist).
@@ -162,6 +172,23 @@ export function RevisionPanel({
         </p>
         <span className="eic-revision__banner-xp">{rewardXp} XP</span>
       </div>
+
+      {expectedAction.length > 0 ? (
+        <aside
+          aria-labelledby="revision-action-title"
+          className="eic-mentor-eval__expected"
+          style={{ marginTop: 0 }}
+        >
+          <p className="eic-mentor-eval__expected-label" id="revision-action-title">
+            {t.mentor_action_expected_label}
+          </p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "#14243d" }}>
+            {expectedAction}
+          </p>
+        </aside>
+      ) : null}
+
+      {commentsSlot ? <div>{commentsSlot}</div> : null}
 
       <div className="eic-revision__form">
         <p className="eic-revision__kicker">{t.revision_form_kicker}</p>
