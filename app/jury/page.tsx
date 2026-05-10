@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { JuryPitchTheater } from "@/components/jury-pitch-theater";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
@@ -8,7 +10,15 @@ import { JuryForm } from "./jury-form";
 
 const t = dictionaries.fr;
 
-export default async function JuryPage() {
+type SearchParams = {
+  theater?: string;
+};
+
+export default async function JuryPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -17,18 +27,75 @@ export default async function JuryPage() {
     redirect(pathForRole(role));
   }
 
+  const { theater } = await searchParams;
+  const isTheater = theater === "1";
+
   const { eventId, rows } = hasSupabaseEnv()
     ? await getJuryOverview()
     : { eventId: null, rows: [] };
 
+  // -----------------------------------------------------------------------
+  // Theater mode (GMR-04)
+  // -----------------------------------------------------------------------
+  if (isTheater) {
+    return (
+      <AppShell role={role ?? "mentor"} variant="staff">
+        <main className="eic-jury-theater-shell">
+          <header className="eic-jury-theater-shell__topbar">
+            <h1 className="eic-jury-theater-shell__title">{t.jury_title}</h1>
+            <Link className="eic-jury-theater-shell__toggle" href="/jury">
+              {t.jury_pitch_theater_toggle_off}
+            </Link>
+          </header>
+          {!hasSupabaseEnv() ? (
+            <p className="eic-jury-theater-shell__demo">{t.jury_demo_disabled}</p>
+          ) : !eventId || rows.length === 0 ? (
+            <p className="eic-jury-theater-shell__empty">{t.jury_empty}</p>
+          ) : (
+            <JuryPitchTheater eventId={eventId} rows={rows} />
+          )}
+        </main>
+      </AppShell>
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Standard mode (Phase 5)
+  // -----------------------------------------------------------------------
   return (
     <AppShell role={role ?? "mentor"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1100 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
-          {t.jury_title}
-        </h1>
-        <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 16px" }}>{t.jury_subtitle}</p>
-        <p style={{ color: "#94a3b8", fontSize: 12, margin: "0 0 16px" }}>{t.jury_each_max_20}</p>
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 16,
+            marginBottom: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
+              {t.jury_title}
+            </h1>
+            <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 4px" }}>{t.jury_subtitle}</p>
+            <p style={{ color: "#94a3b8", fontSize: 12, margin: 0 }}>{t.jury_each_max_20}</p>
+          </div>
+          <Link
+            href="/jury?theater=1"
+            style={{
+              padding: "8px 14px",
+              borderRadius: 6,
+              background: "#0f172a",
+              color: "#fff",
+              fontSize: 13,
+              textDecoration: "none",
+            }}
+          >
+            {t.jury_pitch_theater_toggle_on}
+          </Link>
+        </header>
         {!hasSupabaseEnv() ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_demo_disabled}</p>
         ) : rows.length === 0 || !eventId ? (
