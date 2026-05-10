@@ -1,8 +1,8 @@
 ---
 phase: 06-design-system-eic-tokens-composants-partag-s-appshell-login-branded
 verified: 2026-05-10T00:00:00Z
-status: human_needed
-score: 17/17 must-haves verified (visual smoke pending operator)
+status: passed
+score: 17/17 must-haves verified + 7/7 human smoke passed (06-HUMAN-UAT.md + 06-SMOKE-RESULTS.md)
 overrides_applied: 0
 human_verification:
   - test: "Charger /login dans navigateur, vérifier rendu global"
