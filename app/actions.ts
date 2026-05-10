@@ -324,7 +324,7 @@ const evaluationSchema = z
     verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
     expectedAction: z.string().max(500).optional(),
     // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
-    scores: z.record(z.string(), z.coerce.number().min(0).max(100)),
+    scores: z.record(z.string(), z.coerce.number().min(0).max(25)),
   })
   .superRefine((data, ctx) => {
     // MNT-04 — expected_action MUST be provided (and non-empty) when the
