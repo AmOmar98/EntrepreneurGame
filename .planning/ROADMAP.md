@@ -289,6 +289,37 @@ Plans (Agent 9B — admin live mode + radar + Pixel) :
 
 ---
 
+## Phase 10: T-3 Critical Gates + Design v2 Tail Sections
+
+**Quand** : 2026-05-10 → 2026-05-12 (T-3 → T-1, urgent)
+**Goal:** boucler v0.2 sur deux fronts en parallèle avant le pilote AgreenTech : (1) résoudre les 5 T-3 Critical Gates B1-B5 documentés dans `CLAUDE.md § T-3 Critical Gates`, (2) implémenter les 5 sections design absentes du bundle Claude Design v2 (10·Pitch prep H-2, 11·Coup de pouce, 12·Profil joueur, 13·États système, 14·Menu & réglages).
+**Depends on:** Phase 6 (tokens), Phase 7 (`submission-ticket.tsx`), Phase 8 (migration SQL `08-mentor-comments.sql`), Phase 9 (`pixel-mascot.tsx`, `results-podium.tsx`, `results-replay.tsx`, migration SQL `09-gamemaster-live.sql`)
+**UI hint** : oui
+
+**Bloquants couverts** : B1 (R1 percée /results), B2 (pondération 20/80), B3 (migrations SQL prod), B4 (7 missions AgreenTech), B5 (member_emails — hors scope tech)
+
+**Sections design couvertes** : 10·Pitch prep H-2, 11·Coup de pouce, 12·Profil joueur, 13·États système, 14·Menu & réglages
+
+**Success Criteria** (what must be TRUE):
+1. `lib/results.ts:30 DEFAULT_PITCH_WEIGHT = 0.8` (et non 0.5) ; commentaire `lib/results.ts:3` reflète 0.20/0.80 ; REQUIREMENTS.md JURY-03 mis à jour pour cohérence.
+2. `combined.toFixed(1)` n'est rendu côté Player nulle part — gating par `isGameMaster` sur `components/results-podium.tsx:64-66` et `components/results-replay.tsx:126-134`. Side Player = annonce qualitative (Excellence / Trajectoire / Wildcards).
+3. Migrations SQL `08-mentor-comments.sql` + `09-gamemaster-live.sql` appliquées en prod Supabase (vérifiable via `mcp__plugin_supabase_supabase__list_migrations`).
+4. 7 missions AgreenTech (L1 hypothèse VP / L2.1 Persona / L2.2 Verbatims / L3 MoSCoW / L4 ROI/ha / L5 Plan acquisition / L6 Pitch + Bonus B) seedées en SQL et seed in-memory, avec rubric AgriTech (Innovation / Faisabilité / Modèle éco / Qualité × 5pts) et `severity: "warn"` sur tous les validators (R2 OK).
+5. R1/R2/R3 cardinaux vérifiés : audit grep `+\${.*xp.*}` clean dans pages Player, aucun `disabled` ni `pointer-events: none` sur missions verrouillées de `journey-level-node.tsx`, aucun validator `severity: "error"` ou `blocking: true`.
+6. Routes nouvelles créées et navigables : `/journey/help` (Coup de pouce), `/journey/pitch-prep` (Pitch prep H-2), `/settings` (Réglages). `app/player/[slug]/page.tsx` refondu (plus placeholder), gated par publication ranking.
+7. États système unifiés via `components/system/Sys{Loading,Empty,Error,Offline}.tsx`, branchés sur `app/loading.tsx`, `app/error.tsx`, `app/not-found.tsx`.
+8. `components/pixel-mascot.tsx` étendu avec moods `loading` + `error` ; tokens mood vars dans `eic-tokens.css` ; classe `.eic-toast` dans `app/globals.css`.
+9. `npm run typecheck` + `npm run lint` + `npm run build` clean.
+
+**Plans:** 1 plan (à exploser en sous-plans après validation operator)
+
+Plans:
+- [ ] 10-01-PLAN.md — T-3 Critical Gates + Design v2 Tail Sections (8 sous-phases : T-3 Gates → Design system → Section 13 → 11 → 10 → 12 → 14 → Smoke E2E)
+
+**Phase 10 status** : 📥 Imported via `/gsd-import --from C:\Users\omara\.claude\plans\glimmering-sauteeing-wilkinson.md` (2026-05-10). En attente exécution. Spawn `eic-pedagogical-advisor` AVANT toute édition des zones sensibles (cf. CONTEXT.md `<decisions>`).
+
+---
+
 ## Phases SHOULD (si J5 fini en avance) — héritées v0.1
 
 ### Phase 6 — Notifications & Engagement (S1, SCORE-03) [renumérotée mentalement → différée]
