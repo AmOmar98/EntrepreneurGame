@@ -119,6 +119,9 @@ export function JourneyClient({
             )}
           </div>
 
+          {/* R1 (CARDINAL) — DO NOT add a "/{totalXpMax}" denominator here.
+              Showing a max creates a comparison/ranking frame forbidden Player-side.
+              XP gauge is progression-only. Ref: T3-IMPROVEMENTS.md R1. */}
           <div className="eic-journey__progress-label">
             {`${t.journey_v2_progress_label} . ${totalEarnedXp} XP`}
           </div>
