@@ -12,6 +12,7 @@ import { AppShell } from "@/components/app-shell";
 import { SubmissionFeedbackCard } from "@/components/submission-feedback-card";
 import { SubmissionForm } from "@/components/submission-form";
 import { SubmissionReadonly } from "@/components/submission-readonly";
+import { SubmissionTicket } from "@/components/submission-ticket";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
@@ -232,7 +233,14 @@ export default async function DeliverableDetailPage({
           </section>
         ) : null}
 
-        {isLocked && latest ? (
+        {isLocked && latest && latest.status === "submitted_v1" ? (
+          // PLR-06 — editorial SOUMIS ticket replaces the legacy readonly view.
+          <SubmissionTicket
+            deliverableTitle={tpl.title}
+            rewardXp={tpl.max_score}
+            submission={latest}
+          />
+        ) : isLocked && latest ? (
           <SubmissionReadonly submission={latest} />
         ) : isFeedbackPendingV2 ? (
           <>

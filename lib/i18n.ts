@@ -192,6 +192,16 @@ export const dictionaries = {
     submission_readonly_submitted_at: "Soumis le",
     submission_demo_disabled: "Mode demo : soumission desactivee.",
     submission_back_to_journey: "Retour au parcours",
+    // ---- Submission ticket SOUMIS (Phase 7 / Plan 07-03 — PLR-06) -------------
+    submission_ticket_aria: "Livrable soumis",
+    submission_ticket_lead: "Bravo, vous avez transmis votre livrable.",
+    submission_ticket_kicker: "SOUMISSION",
+    submission_ticket_stamp: "SOUMIS",
+    submission_ticket_proof_url: "Lien soumis",
+    submission_ticket_proof_text: "Texte soumis",
+    submission_ticket_hint:
+      "Sami revient avec son retour sous 10 minutes. Vous pouvez enchainer ou attendre le verdict.",
+    submission_ticket_cta_back: "Retour au parcours",
     mentor_title: "Espace Mentor",
     mentor_subtitle: "Evaluez les livrables de la cohorte.",
     mentor_filter_pending: "Afficher uniquement les Players avec livrables en attente",
