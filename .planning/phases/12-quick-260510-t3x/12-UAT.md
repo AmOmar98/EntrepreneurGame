@@ -1,5 +1,5 @@
 ---
-status: complete
+status: partial-deferred
 phase: 12-quick-260510-t3x
 source:
   - 12-01-SUMMARY.md
@@ -15,8 +15,9 @@ source:
   - 12-11-SUMMARY.md
   - 12-12-SUMMARY.md
 started: 2026-05-10T22:30:00Z
-updated: 2026-05-11T00:15:00Z
+updated: 2026-05-11T00:30:00Z
 findings_fixed_commit: dfd61b1
+deferral_decision: 2026-05-11 — owner Omar — remaining manual UAT items (tests 5-DnD-flow, 6, 7, 8, 9, 11, 12) deferred to AFTER Phase 14 (scoring-engagement-livrables) completes. Phase 12 codebase audit + critical findings (F1/F2/F3) shipped — no go-live blocker remains on Phase 12 scope.
 ---
 
 ## Current Test
@@ -130,20 +131,32 @@ pending: 0
 - F2 (P3-i18n) — "Bonus deja review" → "Bonus deja evalue" (2 files).
 - F3 (P1-DATA) — PROD seed re-aligned via patch migration `20260511000000_reapply_seed_t3_polish_refonte.sql`.
 
-## Deferred (manual smoke required pre-pilote 13/05)
+## Deferred to AFTER Phase 14 (decision 2026-05-11, owner Omar)
 
-Per Plan 12-12 SUMMARY "Manual-portion pending (Omar, AVANT cutoff 12/05 23h)" — 40+ screenshots multi-session sections A-G remain. This UAT session validated:
+Phase 12 codebase audit + critical findings (F1/F2/F3) shipped via commit `dfd61b1`.
+No go-live blocker remains on Phase 12 scope.
+
+**Decision** : remaining manual UAT items below are deferred to AFTER Phase 14
+(`scoring-engagement-livrables`) completes. Rationale : Phase 14 may modify the
+same surfaces (MoSCoW Kanban scoring, submission warn-only logic, snapshot
+rendering) — running these tests now would re-run after Phase 14 anyway.
+
+This UAT session VALIDATED :
 - Schema + data correctness (F3 fix).
 - Bonus claim/review flows (Tests 2 + 4 + F1).
 - R1 cardinal strict on Player surfaces (Test 3 DOM grep).
-- AgreenTech 9 livrables refondus (Test 10 + F3).
-- MoSCoW Kanban UI structure rendering (Test 5 partial).
+- AgreenTech 9 livrables refondus + new tam-sam-som-v1 (Test 10 + F3).
+- MoSCoW Kanban UI structure rendering with refonded title (Test 5 partial).
 
-Remaining gates for go-live:
-- MoSCoW DnD end-to-end flow (manual click through window.prompt cascade).
-- MoSCoW submit warn-only message rendering (visual check).
-- MoSCoW snapshot proof_url rendering.
-- GM CSV export (curl + Player 403 check).
-- Mobile + a11y keyboard DnD.
-- RLS isolation cross-team.
+DEFERRED to post-Phase-14 manual smoke :
+- Test 5 (DnD end-to-end flow with window.prompt cascade).
+- Test 6 (MoSCoW mobile + a11y keyboard DnD).
+- Test 7 (MoSCoW submit warn-only message rendering visual check).
+- Test 8 (MoSCoW snapshot proof_url rendering).
+- Test 9 (GM CSV export curl + Player 403 check).
+- Test 11 (RLS isolation cross-team).
+- Test 12 (Dual-mode demo with env unset).
+
+Tracker reference : `.planning/phases/12-quick-260510-t3x/deferred-items.md`
+under section "Phase 12 UAT — post-Phase-14 manual smoke".
 - Dual-mode demo (env unset).

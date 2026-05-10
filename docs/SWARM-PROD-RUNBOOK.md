@@ -138,21 +138,31 @@ Spawn agent mentor M01 (en foreground, batch toutes les évaluations)
 
 Le `--isolated` n'est pas requis — chaque agent termine et libère le profil avant le suivant.
 
-### Option C — Smoke réduit (45 min, recommandé pour validation rapide)
+### Option C — Smoke minimal 2P + 1M + 1GM (30-40 min, **format standard à privilégier**)
 
-3 porteurs représentatifs séquentiels couvrant les 3 villes principales :
-- **P01** Adil TADARTI (Casablanca, capteurs irrigation)
-- **P02** Houenha Ange-Herson Evaeme (Fès, drone agricole)
-- **P04** Tariq Hmidani (Meknès, marketplace B2B)
+**Convention 2026-05-10 (post-rétro Option C 3 porteurs trop longue)** : tout smoke E2E PROD doit être réduit à **2 porteurs séquentiels + 1 mentor batch + 1 game_master jury/results** par défaut.
 
-Puis 1 mentor batch (M01). Total ~45 min. Suffisant pour valider :
+**Composition** :
+- **2 porteurs séquentiels** couvrant 2 villes/idées différentes pour diversité AgriTech (ex. P05 El Hajeb compostage + P09 Agadir aquaponie, ou P01 Casablanca + P02 Fès si jamais testés). ~15-20 min × 2 = 30-40 min.
+- **1 mentor M01 batch** sur les ~18 submissions générées par les 2 porteurs (rubric 5×5=25, mix 80% validate_v1 / 20% request_v2). ~10 min.
+- **1 game_master G01 (Omar UEMF)** ouvre `/jury`, soumet 1-2 `pitch_scores` tests, met `events.results_published_at` (SQL editor), audit R1 podium côté Player. ~5 min.
+
+**Couverture validée** :
 - Login porteur + onboarding 3 étapes
-- 9 livrables soumis × 3 = 27 submissions
-- Eval mentor 80% validate_v1 / 20% request_v2
-- R1/R2/R3 (audit grep côté Player)
+- 9 livrables × 2 = 18 submissions
+- Eval mentor (rubric AgreenTech 5×5 + verdicts validate_v1/request_v2 + propagation côté Player → R2 warn-only)
+- Pitch + jury + publication `/results` (pondération 20/80, gating `isGameMaster` → R1)
+- R1/R2/R3 audit côté Player (rubric, score, rang, /100, /140 → 0 match attendu)
 - Trigger XP recalc + progression niveau
 
-**Le smoke réduit est OK pour confiance avant 13/05** : le pilote réel utilisera 11 PCs séparés, donc la limitation Playwright MCP n'affecte que les tests internes.
+**Pourquoi ce format remplace l'ancien Option C 3 porteurs** :
+- 3 porteurs ont pris ~60 min (smoke 2026-05-10) sans tester mentor ni jury — trous critiques.
+- 2 porteurs suffisent pour la diversité (ville + idée), libèrent du temps pour mentor + GM.
+- Mentor + GM systématiques comblent les trous J1 (eval) et J2 (publication résultats).
+
+**Quand basculer vers swarm parallèle (Option A)** : seulement si Omar exige couverture exhaustive 11 porteurs. Sinon le format 2P+1M+1GM suffit.
+
+Voir mémoire `feedback_smoke_minimal_2p_1m_1gm.md`.
 
 ---
 
