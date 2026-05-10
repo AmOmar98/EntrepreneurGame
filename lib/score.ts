@@ -69,6 +69,12 @@ export function combineScores(
  * Pure function : no DB mutations, no side effects. Caller must fetch
  * bonusEvents (via server component or client-side query) and pass them in.
  *
+ * IMPORTANT (D-03 single-shot semantics) : after this call, when scope is
+ * `next_deliverable` and `applied !== null`, the caller MUST persist
+ * consumption via `consumeBonusMultiplier(supabase, applied)`. Otherwise the
+ * same bonus would re-apply to every subsequent submission. See
+ * `consumeBonusMultiplier` below for the canonical caller pattern.
+ *
  * @param args.rawScore         The raw evaluation total_score for this submission.
  * @param args.bonusEvents      All bonus_events for the player (filtered server-side).
  * @param args.submission       The submission whose score is being boosted (needs submittedAt + playerId).
@@ -110,6 +116,56 @@ export function applyBonusMultiplier(args: {
   const factor = Math.min(winner.multiplierFactor, BONUS_MULTIPLIER_CAP);
   const boostedScore = Math.round(rawScore * factor * 100) / 100; // 2 decimals
   return { boostedScore, applied: winner.id };
+}
+
+/**
+ * Persist consumption of a `next_deliverable`-scoped bonus multiplier.
+ *
+ * `applyBonusMultiplier` is a PURE function (no side effects). After computing
+ * the boosted score, the caller MUST invoke this helper to mark the winning
+ * bonus as consumed in the DB — otherwise the same `next_deliverable` bonus
+ * would re-apply to every subsequent submission, defeating the documented
+ * D-03 single-shot semantics.
+ *
+ * The UPDATE is conditional on `multiplier_consumed_at IS NULL` to make
+ * concurrent `evaluations` inserts race-safe (first writer wins, others no-op).
+ *
+ * Caller pattern :
+ *
+ * ```typescript
+ * const { boostedScore, applied } = applyBonusMultiplier({ ... });
+ * if (applied) {
+ *   await consumeBonusMultiplier(supabase, applied);
+ * }
+ * ```
+ *
+ * NOTE for v0.3 hardening : prefer moving consumption to the DB-side
+ * `trg_evaluation_recalc` trigger (database/triggers.sql) so the UPDATE is
+ * atomic with score recompute. This helper is the application-level fallback.
+ *
+ * @param supabase  Supabase client (server-side, service role or RLS-permitted).
+ * @param bonusEventId  The `applied` value returned by `applyBonusMultiplier`.
+ * @returns `{ ok: true }` if consumed (or already consumed by a concurrent write), `{ ok: false, error }` on DB error.
+ */
+export async function consumeBonusMultiplier(
+  supabase: {
+    from: (table: string) => {
+      update: (patch: Record<string, unknown>) => {
+        eq: (col: string, val: string) => {
+          is: (col: string, val: null) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+    };
+  },
+  bonusEventId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { error } = await supabase
+    .from("bonus_events")
+    .update({ multiplier_consumed_at: new Date().toISOString() })
+    .eq("id", bonusEventId)
+    .is("multiplier_consumed_at", null);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 /**
