@@ -1,0 +1,2 @@
+-- Stub local matching remote migration entry 20260508222224 (applied 2026-05-08).
+-- See note in 20260508222155_initial_schema.sql.

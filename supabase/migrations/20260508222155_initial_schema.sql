@@ -1,0 +1,4 @@
+-- Stub local matching remote migration entry 20260508222155 (applied 2026-05-08).
+-- The actual schema lives in database/schema.sql / triggers.sql / rls.sql which
+-- were applied to the linked Supabase project before the CLI was wired up.
+-- This empty file exists only to align local↔remote migration history.
