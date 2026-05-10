@@ -310,7 +310,7 @@ export default async function DeliverableDetailPage({
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "#0f172a" }}>
               {rubric.map((c) => (
                 <li key={c.key} style={{ marginBottom: 4 }}>
-                  <strong>{c.label}</strong> ({c.max} pts)
+                  <strong>{c.label}</strong>
                 </li>
               ))}
             </ul>
