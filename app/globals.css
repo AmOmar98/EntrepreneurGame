@@ -5690,6 +5690,14 @@ tr:last-child td {
 .eic-admin-radar__sweep--inner {
   inset: 30%;
 }
+.eic-admin-radar__links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
 .eic-admin-radar__legend {
   position: absolute; bottom: 14px; left: 14px;
   display: flex; flex-direction: column; gap: 6px;
