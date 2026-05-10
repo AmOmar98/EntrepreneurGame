@@ -57,6 +57,11 @@ export function MoscowKanban({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [submitMessage, setSubmitMessage] = useState<string>("");
+  // WR-05 : track severity from server-side WorkflowState rather than
+  // substring-matching the message text.
+  const [submitSeverity, setSubmitSeverity] = useState<"ok" | "warn" | "error" | null>(
+    null,
+  );
 
   // No optimistic state : initialCards is the source of truth, server actions
   // mutate the DB, router.refresh() re-fetches the parent SSR data.
@@ -155,6 +160,7 @@ export function MoscowKanban({
       const res = await reorderMoscowCardsFlow({ ok: false, message: "" }, fd);
       if (!res.ok) {
         setSubmitMessage(res.message);
+        setSubmitSeverity(res.severity ?? "error");
         return;
       }
       router.refresh();
@@ -173,6 +179,7 @@ export function MoscowKanban({
     fd.set("contrainte", "");
     const res = await createMoscowCardFlow({ ok: false, message: "" }, fd);
     setSubmitMessage(res.message);
+    setSubmitSeverity(res.severity ?? (res.ok ? "ok" : "error"));
     if (res.ok) {
       // Pas d'optimistic state update : revalidatePath dans l'action invalide
       // le cache server, router.refresh() force le re-fetch -> la nouvelle
@@ -186,6 +193,7 @@ export function MoscowKanban({
     fd.set("cardId", cardId);
     const res = await deleteMoscowCardFlow({ ok: false, message: "" }, fd);
     setSubmitMessage(res.message);
+    setSubmitSeverity(res.severity ?? (res.ok ? "ok" : "error"));
     if (res.ok) {
       router.refresh();
     }
@@ -207,6 +215,7 @@ export function MoscowKanban({
     fd.set("contrainte", newContrainte);
     const res = await updateMoscowCardFlow({ ok: false, message: "" }, fd);
     setSubmitMessage(res.message);
+    setSubmitSeverity(res.severity ?? (res.ok ? "ok" : "error"));
     if (res.ok) {
       router.refresh();
     }
@@ -217,13 +226,18 @@ export function MoscowKanban({
     fd.set("deliverableTemplateId", deliverableTemplateId);
     const res = await submitMoscowDeliverableFlow({ ok: false, message: "" }, fd);
     setSubmitMessage(res.message);
+    setSubmitSeverity(res.severity ?? (res.ok ? "ok" : "error"));
     if (res.ok) {
       router.refresh();
     }
   }
 
-  // R2 detection : message warn-only contient "recommandation" (cf. submitMoscowDeliverableFlow)
-  const isWarnMessage = submitMessage.toLowerCase().includes("recommandation");
+  // WR-05 : prefer structured severity flag from server. Fall back to substring
+  // detection for backwards-compat (e.g., during deploy lag where server hasn't
+  // shipped severity yet).
+  const isWarnMessage =
+    submitSeverity === "warn" ||
+    (submitSeverity === null && submitMessage.toLowerCase().includes("recommandation"));
 
   return (
     <section style={{ padding: 16 }}>

@@ -21,7 +21,14 @@ import {
   type ImportReport,
 } from "@/lib/admin-import";
 
-export type WorkflowState = { ok: boolean; message: string };
+export type WorkflowState = {
+  ok: boolean;
+  message: string;
+  // WR-05 : optional severity flag so client UIs can style warn-vs-success
+  // without coupling on French substring matches. Backwards-compatible —
+  // existing callers/consumers ignore this field.
+  severity?: "ok" | "warn" | "error";
+};
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -1769,5 +1776,8 @@ export async function submitMoscowDeliverableFlow(
   return {
     ok: true,
     message: `Kanban MoSCoW soumis V1.${warningSuffix} Le Mentor va le valider.`,
+    // WR-05 : structured severity flag — clients style on this rather than
+    // substring-matching the French message text.
+    severity: warns.length > 0 ? "warn" : "ok",
   };
 }
