@@ -78,6 +78,25 @@ export function levelLabel(levelId: LevelId): string {
   return LEVEL_LABELS[levelId] ?? String(levelId);
 }
 
+const LEVEL_ORDS: Record<LevelId, number> = {
+  L0_diagnostic: 0,
+  L1_problem: 1,
+  L2_solution: 2,
+  L3_market: 3,
+  L4_business_model: 4,
+  L5_pitch: 5,
+  L6_traction: 6,
+  L7_alumni: 7,
+};
+
+/**
+ * Numeric ordinal (0..7) for a LevelId. Mirrors database/schema.sql ord values.
+ * Used by the admin radar (Phase 9 GMR-02) and any UI that needs to compare levels.
+ */
+export function levelOrd(levelId: LevelId): number {
+  return LEVEL_ORDS[levelId] ?? 0;
+}
+
 // Same calendar day in local time. We do not store timezone separately; pilot
 // runs in a single TZ (Africa/Casablanca) and the server runs UTC, so this is
 // intentionally a "best effort" same-date match.
