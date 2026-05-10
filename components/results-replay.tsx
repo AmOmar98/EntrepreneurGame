@@ -1,12 +1,18 @@
 // Phase 9 / GMR-05 — Results replay editorial wrapper. Composes hero +
 // podium + 5-stats strip + full ranking + timeline + exports band.
-// Pure server component.
+// Server component (RevealOnView is a client wrapper around children).
+//
+// Phase 11 / B3 — wraps podium / stats / timeline with RevealOnView so the
+// three sections fade-in via IntersectionObserver. The R1 gate on
+// `combined.toFixed(1)` (results-podium.tsx:65-67) is preserved INSIDE the
+// reveal wrapper — wrapping does not change conditional rendering.
 import { ResultsPodium, type PodiumEntry } from "@/components/results-podium";
 import {
   ResultsStatsStrip,
   type ReplayStats,
 } from "@/components/results-stats-strip";
 import { ResultsTimelineMoments } from "@/components/results-timeline-moments";
+import { RevealOnView } from "@/components/reveal-on-view";
 import { dictionaries } from "@/lib/i18n";
 import type { RankingRow } from "@/lib/results";
 
@@ -76,10 +82,14 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
       </header>
 
       {podium.length > 0 ? (
-        <ResultsPodium entries={podium} isGameMaster={isGameMaster} />
+        <RevealOnView>
+          <ResultsPodium entries={podium} isGameMaster={isGameMaster} />
+        </RevealOnView>
       ) : null}
 
-      <ResultsStatsStrip stats={stats} />
+      <RevealOnView>
+        <ResultsStatsStrip stats={stats} />
+      </RevealOnView>
 
       {isGameMaster ? (
         <section
@@ -157,7 +167,9 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         </section>
       )}
 
-      <ResultsTimelineMoments />
+      <RevealOnView>
+        <ResultsTimelineMoments />
+      </RevealOnView>
 
       <footer className="eic-results-replay__exports">
         <h2 className="eic-results-replay__exports-title">

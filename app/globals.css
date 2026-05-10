@@ -5698,6 +5698,30 @@ tr:last-child td {
   pointer-events: none;
   z-index: 1;
 }
+
+/* === Phase 11 / B3 — Reveal-on-view (IntersectionObserver-driven). ===
+   Server-renders with reduced opacity + small translate. Client adds
+   `is-revealed` once the element enters the viewport. Reduced-motion
+   users get is-revealed immediately via the use-in-view hook. */
+.eic-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 600ms ease-out,
+    transform 600ms ease-out;
+  will-change: opacity, transform;
+}
+.eic-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 .eic-admin-radar__legend {
   position: absolute; bottom: 14px; left: 14px;
   display: flex; flex-direction: column; gap: 6px;
