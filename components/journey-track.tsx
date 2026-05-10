@@ -105,11 +105,15 @@ export function JourneyTrack({
             : state === "done"
               ? `Niveau ${number} - ${label} (valide)`
               : `Niveau ${number} - ${label} (verrouille)`;
+        // Phase 11 / A3 — bottom-up stagger to match the charging metaphor.
+        // i=0 is top (L7), i=N-1 is bottom (L0). Higher i = appears first.
+        const nodeDelayMs = (N - 1 - i) * 80;
         return (
           <JourneyLevelNode
             ariaLabel={aria}
             key={id}
             levelId={id}
+            nodeDelayMs={nodeDelayMs}
             number={number}
             onClick={() => state !== "locked" && onLevelClick?.(id)}
             onMouseEnter={() => onLevelHover?.(id)}

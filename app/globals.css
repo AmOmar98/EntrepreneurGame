@@ -1709,6 +1709,21 @@ tr:last-child td {
   to {} /* preserved by `forwards` from inline style */
 }
 
+/* === Node first-paint stagger (Phase 11 / A3) ===
+   Bottom-up stagger to match charging metaphor. Each node fades + scales in.
+   Driven by --node-delay set inline by journey-level-node.tsx (in ms via CSS
+   custom prop). animation-delay (motion layer) preserves AT focus order. */
+@media (prefers-reduced-motion: no-preference) {
+  .eic-track__node {
+    animation: eic-track-node-rise 360ms ease-out var(--node-delay, 0ms);
+    animation-fill-mode: backwards;
+  }
+}
+@keyframes eic-track-node-rise {
+  from { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+  to   { opacity: 1; }
+}
+
 /* === Locked-level tooltip (R2/R3 — warn-only ambre) === */
 .eic-track__node-tooltip {
   position: absolute;

@@ -20,6 +20,12 @@ export type JourneyLevelNodeProps = {
   state: LevelState;
   topPct: number;
   ariaLabel: string;
+  // Phase 11 / A3 — first-paint stagger. Milliseconds, applied as
+  // CSS custom prop --node-delay on the button. Kept in motion-layer only
+  // (animation-delay, not opacity transition-delay) so AT focus order
+  // is unaffected. Caller computes delay from node position to match the
+  // bottom-up "charging" metaphor.
+  nodeDelayMs?: number;
   onClick?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -31,6 +37,7 @@ export function JourneyLevelNode({
   state,
   topPct,
   ariaLabel,
+  nodeDelayMs,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -42,7 +49,10 @@ export function JourneyLevelNode({
         ? "is-current"
         : "is-locked";
   const className = `eic-track__node ${stateClass}`;
-  const style: CSSProperties = { top: `${topPct}%` };
+  const style: CSSProperties & { ["--node-delay"]?: string } = {
+    top: `${topPct}%`,
+    ...(typeof nodeDelayMs === "number" ? { ["--node-delay"]: `${nodeDelayMs}ms` } : {}),
+  };
   const label = state === "done" ? "✓" : number;
   const isLocked = state === "locked";
   const tooltipId = `eic-track-tooltip-${levelId}`;
