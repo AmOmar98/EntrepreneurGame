@@ -1303,6 +1303,31 @@ tr:last-child td {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.78);
 }
+.eic-staff-sidebar__logout {
+  margin-top: auto;
+  padding: 16px 12px 0;
+}
+.eic-staff-sidebar__logout-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.eic-staff-sidebar__logout-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.eic-staff-sidebar__logout-btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
 
 /* ==========================================================================
    EIC Design v2 — Login layout (DSY-06)

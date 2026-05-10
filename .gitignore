@@ -14,3 +14,7 @@ smoketest/TEST-ACCOUNTS.local.md
 smoketest/*.local.*
 **/*.local.md
 
+# Cohort credentials — contains PROD passwords + personal emails + phones (RGPD)
+cohorte-agreentech-creds.csv
+cohorte-*-creds.csv
+
