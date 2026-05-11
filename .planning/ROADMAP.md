@@ -542,10 +542,10 @@ Plans:
 **Goal:** Durcir l'app contre edge cases data + scénarios concurrence avant pilote 13-14/05. Audit ciblé : idempotence trigger Phase 14, RLS cross-cohort, inputs adversariaux (URLs malformées, longueurs limite), course de mentors concurrents. Patches préventifs uniquement, cardinaux R1/R2/R3 préservés. Cutoff strict `2026-05-12 23h00`.
 **Requirements**: Pré-pilote AgreenTech — zéro régression sur Phases 13/14, zéro fuite cross-team, scoring engagement déterministe sous concurrence, validation adversariale `submitDeliverable` / `evaluateSubmission`.
 **Depends on:** Phase 14
-**Plans:** 1 plan (5 sub-tâches en 1 wave, audits indépendants)
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 15-01-PLAN.md — Adversarial hardening : idempotence trigger Phase 14 + RLS cross-cohort + adversarial inputs + concurrence mentors + audit R1 extension
+- [x] 15-01-PLAN.md — Adversarial hardening : idempotence trigger Phase 14 + RLS cross-cohort + adversarial inputs + concurrence mentors + audit R1 extension
 
 ---
 

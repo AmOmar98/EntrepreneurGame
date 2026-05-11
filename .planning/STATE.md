@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
 status: unknown
-last_updated: "2026-05-11T01:35:50.749Z"
-last_activity: 2026-05-11 -- Phase 15 planning complete
+last_updated: "2026-05-11T01:48:21.612Z"
+last_activity: 2026-05-11
 progress:
   total_phases: 5
   completed_phases: 5
@@ -25,11 +25,11 @@ See: `.planning/PROJECT.md` (updated 2026-05-09)
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
+Phase: 15 (adversarial-hardening-pre-pilote-agreentech) — EXECUTING
+Plan: 1 of 1
 Milestone v0.2 : implementation complete — pending human verification.
 All 4 phases (6, 7, 8, 9) implementation completed 2026-05-10.
-Last activity: 2026-05-11 -- Phase 15 planning complete
+Last activity: 2026-05-11
 
 ## Active Milestone
 
@@ -112,6 +112,7 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 - [Phase 09]: Migration SQL `09-gamemaster-live.sql` separated DDL — deliverable_templates.is_active boolean + announcements table (kind/target_kind/target_ids) + RLS via is_game_master() (note: codebase helper, brief said is_staff). Apply via `supabase db push` ou manuel.
 - [Phase 09]: Agent 9A delivered GMR-04/05/06/09 — jury pitch theater (?theater=1, timer 5min CSS countdown, /5 grid persisting /20 via existing savePitchScoreFlow), results replay (podium SVG, 5 stats strip, hardcoded timeline moments v0.2), /admin/deliverables toggle is_active + filter in lib/journey.ts, /admin/announce composer 4 kinds × 4 targets + Player strip on /journey.
 - [Phase 09]: Agent 9B delivered GMR-01/02/03/07/08 — admin live mode (?live=1) atomic with radar SVG (computeRadarLayout polar arrangement, sized by score, color by activity state), team-circle CSS pulsations + vibrate (no React tick re-render), team-focus editorial layout, status banner 4 states (serein/concentre/inquiet/euphorique) computed from team activity distribution + recent validated events. Pixel mascotte SVG floating bottom-right with 4 moods mirroring hackStatus, foldable to pill. GMR-08 committed BEFORE GMR-07 per ROADMAP DoD. 9/9 GMR delivered.
+- [Phase 15]: Phase 15 Plan 01: 5 audits adversariaux livres en scripts SQL/markdown + 5 verdict skeletons, zero modification code applicatif (D-02), R1 audit etendu cohort-* exit 0
 
 ## Accumulated Context (préservé v0.1)
 
