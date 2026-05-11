@@ -190,6 +190,7 @@ function CohortTable({ rows }: { rows: CohortRow[] }) {
             <th style={th}>{t.admin_col_team}</th>
             <th style={th}>{t.admin_col_level}</th>
             <th style={th}>{t.admin_col_score}</th>
+            <th style={th}>{t.admin_col_engagement}</th>
             <th style={th}>{t.admin_col_status}</th>
             <th style={th}>{t.admin_col_next}</th>
           </tr>
@@ -207,6 +208,10 @@ function CohortTable({ rows }: { rows: CohortRow[] }) {
               </td>
               <td style={td}>{row.levelLabel}</td>
               <td style={td}>{Number(row.player.scoreProject).toFixed(1)}</td>
+              {/* Phase 14 / W4 — score_engagement column (GameMaster surface
+                  only — this page is gated by `/admin` role check upstream).
+                  Numeric render is OK here (NOT a Player-facing surface). */}
+              <td style={td}>{Number(row.player.scoreEngagement).toFixed(0)}</td>
               <td style={td}>
                 <StatusBadge status={row.status} />
               </td>
