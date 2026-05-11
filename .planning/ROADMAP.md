@@ -554,10 +554,10 @@ Plans:
 **Goal:** Compléter les 2 audits Phase 15 non-exécutables via MCP : (a) checklist adversariale 20 vecteurs POST `submitDeliverable` / `evaluateSubmission` avec session P11 authentifiée DevTools/curl ; (b) test concurrence mentors via 2 sessions psql parallèles (vraies race conditions). Non-bloquant pilote 13-14/05 (Phase 15 ALL PASS sur 3 axes critiques). Cutoff souple : avant pilote idéalement, sinon post-pilote v0.3 absorbed.
 **Requirements**: ADVERSARIAL-INPUTS-VERDICT.md rempli, CONCURRENCE-VERDICT.md rempli, escalade D-16 si FAIL critique.
 **Depends on:** Phase 15 (artefacts `scripts/adversarial-inputs-checklist.md` + `scripts/test-concurrent-evaluations.sql` déjà committed `f4cf557`/`301ab43`).
-**Plans:** 1 plans
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 16-01-PLAN.md — Phase 15 closeout : exécuter audits adversarial inputs (DevTools P11) + concurrence mentors (Cloud Studio 2 onglets) + remplir 2 verdict markdowns Phase 15
+- [x] 16-01-PLAN.md — Phase 15 closeout : exécuter audits adversarial inputs (DevTools P11) + concurrence mentors (Cloud Studio 2 onglets) + remplir 2 verdict markdowns Phase 15
 
 ---
 
