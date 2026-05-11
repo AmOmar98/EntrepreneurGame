@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { EngagementMilestonesBadges } from "@/components/engagement-milestones-badges";
 import { MentorCommentComposer } from "@/components/mentor-comment-composer";
 import {
   MentorCommentsList,
@@ -307,6 +308,23 @@ export default async function DeliverableDetailPage({
         <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px", color: "#0f172a" }}>
           {tpl.title}
         </h1>
+
+        {/* Phase 14 / W3 — Engagement milestones (qualitative R1).
+            Derives from submission status alone : status === 'submitted_v1'
+            means submitted but not reviewed yet ; any other locked status
+            ('feedback_received', 'submitted_v2', 'validated', 'rejected')
+            implies the mentor has at least reviewed once. 'validated' is
+            the only status indicating the latest verdict is validate_v1 or
+            validate_v2 (cf. database/migrations/202605110007 trigger).
+            Status-based derivation is consistent with the DB trigger because
+            status transitions are driven by the same verdicts. */}
+        <EngagementMilestonesBadges
+          milestones={{
+            submitted: latest !== null,
+            reviewed: latest !== null && latest.status !== "submitted_v1",
+            validated: latest !== null && latest.status === "validated",
+          }}
+        />
 
         {tpl.description ? (
           <section style={{ marginTop: 12 }}>
