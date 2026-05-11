@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Baskervville, Montserrat } from "next/font/google";
 import "./globals.css";
 import "./eic-tokens.css";
+import "./wf-components.css";
 
 const baskervville = Baskervville({
   subsets: ["latin"],
