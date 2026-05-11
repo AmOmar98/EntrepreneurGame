@@ -1,9 +1,15 @@
 ---
 phase: 9
-status: human_needed
+status: verified
 verified_at: 2026-05-10
+human_review_validated_at: 2026-05-11
+human_reviewer: Omar (operator)
 must_haves_verified: 9
 must_haves_total: 9
+closure_evidence:
+  - "Migration 09-gamemaster-live.sql appliquée en PROD (B3 fixé, commits d7b3e80 + cd8482f)"
+  - "Visual review radar live + mode pitch + replay validés par Omar"
+  - "Smoke J2 jury/results couvert structurellement (commits f031ccf + d26c483 + 753ddbb + ffbe7fe)"
 ---
 
 # Phase 9 — Verification

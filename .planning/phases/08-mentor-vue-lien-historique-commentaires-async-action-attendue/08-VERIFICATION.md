@@ -1,9 +1,15 @@
 ---
 phase: 8
-status: human_needed
+status: verified
 verified_at: 2026-05-10
+human_review_validated_at: 2026-05-11
+human_reviewer: Omar (operator)
 must_haves_verified: 6
 must_haves_total: 6
+closure_evidence:
+  - "Migration 08-mentor-comments.sql appliquée en PROD (B3 fixé, commits d7b3e80 + cd8482f)"
+  - "Bug RLS evaluation_comments F-16-01 fixé via quick 260511-sbt (commit 2b78801)"
+  - "Smoke swarm PROD 2026-05-10 — M01 mentor login + parcours évaluation validés"
 ---
 
 # Phase 8 — Mentor flow refondu link-based · VERIFICATION
