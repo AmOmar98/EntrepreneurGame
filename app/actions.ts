@@ -1141,6 +1141,56 @@ export async function publishResultsFlow(
     return { ok: true, message: "Resultats deja publies." };
   }
 
+  // Guard against publishing a ranking with players missing pitch jury votes
+  // (defensive pre-pilot fix B, AgreenTech 2026-05-11). Without this guard,
+  // a player with 0 pitch_scores receives pitchAvg=0 → combined=0.20*scoreProject
+  // and appears at the bottom of the ranking silently. Force GM to verify
+  // jury attendance before publication.
+  const { data: cohortRows, error: cohortErr } = await supabase
+    .from("cohorts")
+    .select("id")
+    .eq("event_id", event.id);
+  if (cohortErr) {
+    return { ok: false, message: cohortErr.message };
+  }
+  const cohortIds = ((cohortRows ?? []) as { id: string }[]).map((r) => r.id);
+  if (cohortIds.length > 0) {
+    const { data: playerRows, error: playerErr } = await supabase
+      .from("players")
+      .select("id, name")
+      .in("cohort_id", cohortIds);
+    if (playerErr) {
+      return { ok: false, message: playerErr.message };
+    }
+    const players = (playerRows ?? []) as { id: string; name: string }[];
+
+    const { data: scoreRows, error: scoreErr } = await supabase
+      .from("pitch_scores")
+      .select("player_id")
+      .eq("event_id", event.id);
+    if (scoreErr) {
+      return { ok: false, message: scoreErr.message };
+    }
+    const scoredSet = new Set<string>();
+    for (const r of (scoreRows ?? []) as { player_id: string }[]) {
+      scoredSet.add(r.player_id);
+    }
+
+    const missingPlayers = players
+      .filter((p) => !scoredSet.has(p.id))
+      .map((p) => p.name);
+    if (missingPlayers.length > 0) {
+      const preview = missingPlayers.slice(0, 5).join(", ");
+      const suffix = missingPlayers.length > 5 ? "..." : "";
+      const plural = missingPlayers.length > 1 ? "s" : "";
+      return {
+        ok: false,
+        severity: "error",
+        message: `Publication bloquee : ${missingPlayers.length} porteur${plural} sans note jury (${preview}${suffix}). Verifiez le vote des jures avant publication.`,
+      };
+    }
+  }
+
   // Conditional update (only when still null) to avoid races.
   const { error: updErr } = await supabase
     .from("events")
