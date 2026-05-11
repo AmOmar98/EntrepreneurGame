@@ -537,6 +537,16 @@ Plans:
 
 **Risques acceptés (owner 2026-05-11)** : (a) régression scoring T-2/T-1 — mitigée par commits atomiques + typecheck/lint/build clean avant chaque commit + tag `v0.2.2-pre-ralph-13` rollback distant ; (b) visibilité Player mal cadrée (Q1) → audit grep R1 obligatoire post-edit + spawn `eic-pedagogical-advisor` avant tout edit Player-facing.
 
+## Phase 15: Adversarial Hardening Pré-Pilote AgreenTech
+
+**Goal:** Durcir l'app contre edge cases data + scénarios concurrence avant pilote 13-14/05. Audit ciblé : idempotence trigger Phase 14, RLS cross-cohort, inputs adversariaux (URLs malformées, longueurs limite), course de mentors concurrents. Patches préventifs uniquement, cardinaux R1/R2/R3 préservés. Cutoff strict `2026-05-12 23h00`.
+**Requirements**: Pré-pilote AgreenTech — zéro régression sur Phases 13/14, zéro fuite cross-team, scoring engagement déterministe sous concurrence, validation adversariale `submitDeliverable` / `evaluateSubmission`.
+**Depends on:** Phase 14
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 15 to break down)
+
 ---
 
-*Last updated: 2026-05-11 — **Phase 14 délockée pré-pilote** (décision owner 2026-05-11, Q4 tranchée). Exécution autorisée avant cutoff `2026-05-12 23h00`. Enchaînement : Phase 13 (9 plans, 4 waves) → Phase 14 (discuss → plan → execute). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss/plan/execute, tous pré-pilote.*
+*Last updated: 2026-05-11 — **Phase 15 ajoutée** (Adversarial Hardening Pré-Pilote AgreenTech). **Phase 14 délockée pré-pilote** (décision owner 2026-05-11, Q4 tranchée). Exécution autorisée avant cutoff `2026-05-12 23h00`. Enchaînement : Phase 13 (9 plans, 4 waves) → Phase 14 (discuss → plan → execute) → Phase 15 (à drafter). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss/plan/execute + Phase 15 plan, tous pré-pilote.*
