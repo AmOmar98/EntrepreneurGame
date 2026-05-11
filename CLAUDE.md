@@ -115,10 +115,10 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 Avant tout edit dans `app/journey/`, `app/onboarding/`, `app/mission/`, `app/jury/`, `app/results/`, `components/results-*`, `components/submission-*`, `lib/score.ts`, `lib/results.ts`, `lib/seed/`, `database/`, ou `lib/types.ts` :
 
 1. **Spawn `eic-pedagogical-advisor`** (cf. `.claude/agents/eic-pedagogical-advisor.md`) pour valider l'edit contre les 3 règles cardinales :
-   - **R1** : score/rang invisible côté Player (jury et GameMaster uniquement).
+   - **R1 (révisée 2026-05-11)** : score visible UNIQUEMENT sur la page de détail d'un livrable (`app/journey/deliverable/[id]/` via `DeliverableScoreBlock`) — invisible partout ailleurs côté Player (`/journey` index, `/results`, badges, milestones, navbar, mascot, dashboards). Le rang/classement reste invisible Player en TOUS lieux. Jury et GameMaster : tout autorisé.
    - **R2** : validators **warn-only** (`severity: "warn"`), jamais bloquants — `"error"` doit lever review humain.
    - **R3** : aucun blocage inter-mission codé en dur — pas de `disabled` DOM, pas de `blocks_progression_to` actif. Utiliser `eic-locked-hint--amber` / tooltip ambre.
-2. **Audit grep R1 post-edit** sur composants Player-facing : `grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/results-* components/submission-* --include="*.tsx"`. Aucun match attendu côté Player.
+2. **Audit grep R1 post-edit** sur composants Player-facing (le détail livrable est désormais une hot zone légitime) : `grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/results-* components/submission-* --include="*.tsx" | grep -v "app/journey/deliverable/" | grep -v "components/deliverable-score-block"`. Aucun match attendu côté Player hors page détail livrable. En supplément, `grep -rn "rank\|classement\|percentile\|leaderboard" app/journey/deliverable/` doit rester vide (rang interdit même sur le détail).
 3. **Dual-mode demo préservé** : ne jamais ajouter de `redirect("/login")` ou `getCurrentUser()` avant le check `hasSupabaseEnv()` / fallback seed. Régression vue dans `app/journey/page.tsx:27-30` v0.2 → cassait 9/12 surfaces. L'auth réelle est gérée par `middleware.ts`, pas par la page.
 
 ## Convention orchestrator quick
