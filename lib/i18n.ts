@@ -417,6 +417,8 @@ export const dictionaries = {
     results_subtitle: "Moyenne PitchScore + Score Projet, ponderation 50/50.",
     results_pending_title: "Resultats a venir",
     results_pending_body: "Le classement sera publie par le GameMaster a la fin du jour 2. Revenez plus tard.",
+    results_announce_title: "Merci a toutes les equipes !",
+    results_announce_body: "Le classement complet reste interne au comite EIC. Les trois equipes laureates seront devoilees en direct lors de la ceremonie de cloture.",
     results_col_rank: "Rang",
     results_col_team: "Equipe",
     results_col_pitch: "Moyenne pitch",

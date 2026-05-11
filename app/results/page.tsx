@@ -130,8 +130,52 @@ export default async function ResultsPage() {
     );
   }
 
+  // Design v2 (polish/design-v2-match V6): after publication, the full
+  // ranking stays internal to the EIC committee (GM-only). Non-GM users
+  // (founders, jurors, mentors) see a thank-you announcement screen — the
+  // top 3 will be revealed live during the closing ceremony via the GM
+  // ceremony screen (V8).
+  if (isPublished && !isGm) {
+    return (
+      <AppShell role={role ?? "player"} variant="staff">
+        <main
+          style={{
+            padding: "64px 24px",
+            maxWidth: 720,
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "var(--font-heading, Baskervville, serif)",
+              fontSize: 36,
+              fontWeight: 600,
+              margin: "0 0 16px",
+              color: "var(--wf-ink)",
+              lineHeight: 1.15,
+            }}
+          >
+            {t.results_announce_title}
+          </h1>
+          <p
+            style={{
+              fontSize: 16,
+              color: "var(--wf-ink-soft)",
+              margin: 0,
+              lineHeight: 1.55,
+            }}
+          >
+            {t.results_announce_body}
+          </p>
+        </main>
+      </AppShell>
+    );
+  }
+
   // Phase 9 / GMR-05 — once results are published, render the editorial
   // replay view (hero, podium, stats, ranking, timeline, exports).
+  // GM-only branch (non-GM caught by the !isGm guard above).
   if (isPublished) {
     const stats = await loadReplayStats();
     return (
