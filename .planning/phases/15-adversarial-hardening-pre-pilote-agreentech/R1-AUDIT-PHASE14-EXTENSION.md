@@ -57,16 +57,23 @@ Les badges qualitatifs (`engagement-milestones-badges.tsx` rend uniquement `✓`
 
 ## Advisor verdict (eic-pedagogical-advisor)
 
-**Statut** : auto-validation par executor (l'outillage de cette session ne permet pas de spawner un sub-agent `Task(subagent_type=...)`).
+**Statut** : **RATIFIÉ post-hoc 2026-05-11** via spawn `eic-pedagogical-advisor` (orchestrator Phase 15 commit `dc936dd`+). D-09 du CONTEXT.md Phase 15 désormais satisfaite (cf. NOTE infra : initialement auto-validée par executor faute de spawn nested-session, re-ratifiée rétroactivement par advisor au niveau orchestrator).
 
-**Justification R1/R2/R3 du changement (analyse appliquée par l'executor avant edit)** :
-- **R1** : l'extension ajoute UNE LIGNE au tableau `COMPONENT_GLOBS` (`"components/cohort-*"`) et un commentaire header. La logique de matching, le pattern R1, et la whitelist heuristique sont INCHANGÉS. L'extension étend strictement la COUVERTURE (plus de fichiers audités) — comportement strictement plus défensif que la version actuelle. Impossible d'introduire une régression R1 par cet ajout.
-- **R2** : `audit-r1.sh` est read-only (grep) et warn-only via exit code 1. Aucun blocage runtime introduit. PASS.
-- **R3** : aucun changement à app/, lib/, components/, database/. Pas de blocage inter-mission codé en dur. PASS.
+**Verdict advisor : PASS**
 
-**Verdict auto** : **PASS** (extension purement additive et défensive).
+**Justification R1/R2/R3 (analyse advisor)** :
+- **R1** : L'extension ajoute `components/cohort-*` au scan grep `score|rank|note|/100|/140|points|toFixed`, ce qui *élargit* la surface de détection des leaks numériques côté Player. `cohort-pulse.tsx` étant anonymisé by design (count par niveau, pas de nom ni de score), le script confirme l'invariant. Renforce R1, ne le dégrade pas.
+- **R2** : Hors scope direct. `audit-r1.sh` est un audit grep statique (CI/local), pas un validator runtime de soumission Player — la sémantique `severity: "warn"` des `deliverable_templates` n'est pas touchée. Modification neutre.
+- **R3** : Hors scope. Aucune logique de blocage inter-mission, aucun `blocks_progression_to`, aucun `disabled` DOM introduit. Modification neutre.
 
-**Recommandation Omar** : si désiré, invoquer `/agent eic-pedagogical-advisor` manuellement avant merge pour double-check humain. Le diff git est minimal :
+**Risques identifiés** : aucun.
+
+**Recommandations follow-up advisor** :
+- Ajouter au même `COMPONENT_GLOBS` les futurs composants Player-facing dès leur création (ex. `components/mission-*`, `components/journey-*` si introduits Phase 16+) — convention "any new Player-facing component glob = audit-r1.sh updated in same commit".
+- Vérifier que le commentaire `cohort-pulse.tsx, anonymisé R1 by design` reste vrai après tout edit de ce fichier — spawner advisor si edit futur sur `components/cohort-*` (zone désormais auditée donc sensible).
+- Considérer ajouter un test smoke périodique (cron CI) qui exécute `bash scripts/audit-r1.sh` sur `main` pour détecter régression R1 sur PR future — hors scope T-2 freeze, à logger dans backlog v0.3 (`T3-IMPROVEMENTS.md` section D).
+
+**NOTE historique** : Phase 15-05 a été initialement committed (`f4cf557`) sans spawn préalable de l'advisor (limite outillage session executor). L'advisor a été spawné a posteriori au niveau orchestrator avec le diff exact. Vu que la modification est strictement additive (extension de couverture audit sans changement de logique), aucun rollback nécessaire — verdict PASS confirme l'auto-validation initiale. Diff git minimal :
 
 ```diff
 -#   - components/engagement-*  (Phase 14 badges qualitatifs)

@@ -1,73 +1,75 @@
 # Phase 15-02 — Verdict RLS cross-cohort
 
-**Date** : YYYY-MM-DD HH:MM (à remplir)
-**Exécuté par** : Omar (Cloud Studio, role par défaut = postgres bypass RLS, simulation auth via `set local request.jwt.claim.sub`)
-**Script** : `scripts/test-rls-cross-cohort.sql`
+**Date exécution** : 2026-05-11 10:42 UTC
+**Exécuté par** : Claude Code via Supabase MCP `execute_sql` (projet `vzzbjxmfkmvqkaqxalhr`)
+**Script source** : `scripts/test-rls-cross-cohort.sql` (adapté procéduralement — voir Notes §exécution)
+**RLS policies auditées** : `database/rls.sql`
 
-## Pré-requis
+## UUIDs utilisés
 
-Avant exécution, récupérer les UUIDs ci-dessous depuis Supabase Auth :
+| Acteur | user_id (auth.uid) | player.id |
+|---|---|---|
+| P01 (Adil Tadarti, tadarti2004@gmail.com) | `8d5fa915-eee6-4a56-9647-ae4c70a92fc7` | `51fe7e90-1e05-4ac2-9dc2-0dab699ac181` (slug `p01`) |
+| P02 (Houenha Ange-Herson, 2hangeevaeme@gmail.com) | `9c0b65e2-1e3a-4e56-8840-73311d5a8807` | `4fab6132-0642-47d8-8685-05bdfee52417` (slug `p02`) |
+| M01 (mentor1.agreentech@smoke.entrepreneurgame.local) | `8676f6c5-e94d-41f6-b080-1bb43c0c11d8` | — (app_role=`mentor`) |
 
+**Cohortes en base** : 2 (cross-cohort test pleinement applicable).
+
+## Mécanisme d'authentification simulée
+
+Chaque scénario applique :
 ```sql
--- Pour récupérer les UUIDs en mode service_role (Cloud Studio par défaut) :
-select id as user_id, email from auth.users
- where email in (
-   'p.player1@ueuromed.org',
-   'p.player2@ueuromed.org',
-   'm.mentor1@ueuromed.org'
- );
-
--- Pour récupérer le public.players.id du Player de P02 :
-select p.id as player_id, pm.user_id, u.email
-  from public.players p
-  join public.player_members pm on pm.player_id = p.id
-  join auth.users u on u.id = pm.user_id
- where u.email = 'p.player2@ueuromed.org';
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '<uuid>', true);
+select set_config('request.jwt.claims', '{"sub":"<uuid>","role":"authenticated"}', true);
 ```
 
-Variables psql `\set` à pré-remplir :
-- `p01_uuid` = user_id pour `p.player1@ueuromed.org`
-- `p02_uuid` = user_id pour `p.player2@ueuromed.org`
-- `m01_uuid` = user_id pour `m.mentor1@ueuromed.org`
-- `p02_player_id` = `public.players.id` du Player de P02
-
-Si Cloud Studio classique ne supporte pas `\set`, remplacer les `:'xxx'` dans le SQL par les littéraux UUID directement.
+Cela force le rôle Postgres à `authenticated` (sortie de service_role bypass) et alimente `auth.uid()` qui résout via `current_setting('request.jwt.claim.sub')`. Vérifié dans S1 : `auth.uid()` retourne bien `8d5fa915-eee6-4a56-9647-ae4c70a92fc7` (P01).
 
 ## Résultats
 
-| # | Scénario | Rows attendues | Rows observées | PASS/FAIL/SKIP |
-|---|----------|----------------|----------------|----------------|
-| 1 | Player A (P01) → submissions Player B (P02) | 0 (RLS narrowing `is_my_player`) | _à remplir_ | _à remplir_ |
-| 2 | Player A (P01) → evaluations Player B (P02) | 0 (join policy via is_my_player) | _à remplir_ | _à remplir_ |
-| 3 | Player A → players d'une autre cohorte | 0 ou SKIP (n=1 cohorte AgreenTech) | _à remplir_ | _à remplir_ |
-| 4 | Mentor M01 → submissions all | > 0 (visibilité mentor légitime) | _à remplir_ | _à remplir_ |
-| 5 | anon → submissions | 0 ou erreur "permission denied" | _à remplir_ | _à remplir_ |
+| # | Scénario | Rows attendues | Rows observées | PASS/FAIL |
+|---|----------|----------------|----------------|-----------|
+| 1 | P01 → submissions de P02 | 0 (RLS `is_my_player`) | **0** | ✅ **PASS** |
+| 2 | P01 → evaluations de P02 (join submissions) | 0 (RLS `is_my_player` via join) | **0** | ✅ **PASS** |
+| 3 | P01 → players visibles vs ses memberships | visible = my_member_count | **visible=1, my_member=1** (sur 2 cohortes en base) | ✅ **PASS** |
+| 4 | M01 → toutes submissions (visibilité Mentor légitime) | > 0 (`is_mentor()` = true) | **40 submissions, is_mentor()=true** | ✅ **PASS** |
+| 5 | anon → submissions | erreur `permission denied` OR 0 rows | **`42501: permission denied for schema public`** | ✅ **PASS** |
 
 ## Verdict global
 
-_À remplir post-exécution._
+✅ **ALL PASS (5/5).** RLS pilot-grade fonctionne correctement :
+- Aucune fuite cross-cohort active (S3 cross-cohort scope correct malgré 2 cohortes en base).
+- Aucune fuite cross-Player (S1+S2 P01 invisible vers P02).
+- Visibilité Mentor légitime préservée (S4).
+- anon strictement bloqué au niveau schéma (S5 — revoke `usage on schema public from anon` en place).
 
-Options :
-- **ALL PASS** : RLS pilot-grade OK pour AgreenTech 13-14/05, pas de blocker.
-- **FAIL scénarios 1/2/5** → **STOP D-16 escalade owner** (fuite cross-Player active = critique go/no-go pilote).
-- **FAIL scénario 3 (cross-cohort)** : si une seule cohorte AgreenTech présente → non-applicable, défer SEED-002 v0.3 (multi-tenant refonte).
-- **FAIL scénario 4** : visibilité mentor cassée = blocker workflow Mentor (escalade owner si trouvé).
+**Aucune escalade D-16.** Pas de go/no-go pilote sur ce front. Ready for AgreenTech 13-14/05/2026.
 
-## Cross-références CONCERNS.md
+## Findings annexes / Documentation à jour
 
-Policies known-weak documentées dans `.planning/codebase/CONCERNS.md` §"Pilot-grade RLS — known weak policies" :
+### CONCERNS.md obsolète (constat, non-bloquant)
 
-- **`members_same_project_or_staff_select`** : **N'EXISTE PAS dans le schéma actuel** (`database/rls.sql` utilise `player_members_self_or_mentor_select` ligne 147, modèle différent basé sur `player_members.user_id = auth.uid()`). CONCERNS référence un schéma "projects" antérieur. → **À mettre à jour dans CONCERNS.md post-pilote** (defer SEED-002 v0.3).
+`.planning/codebase/CONCERNS.md` §"Pilot-grade RLS — known weak policies" référence :
+- **`members_same_project_or_staff_select`** : N'EXISTE PAS dans `database/rls.sql` actuel. Le schéma utilise `player_members_self_or_mentor_select` (ligne 147) avec un modèle différent basé sur `player_members.user_id = auth.uid()` — pas un self-join bug.
+- **`bootcamp_deliverables_all_authenticated_select`** : N'EXISTE PAS. Le schéma utilise `deliverable_templates_authenticated_select` (ligne 91) avec `using (true)` — tous les authenticated voient le catalogue de templates. **Par design** (catalogue partagé du Hack-Days), pas un leak.
 
-- **`bootcamp_deliverables_all_authenticated_select`** : pas non plus dans `database/rls.sql` (le schéma actuel utilise `deliverable_templates_authenticated_select` ligne 91 avec `using (true)`). Tous les Players voient tous les `deliverable_templates` — par design (catalogue partagé du Hack-Days). Pas un leak ; documenter en CONCERNS comme "par design".
+CONCERNS.md référence un schéma "projects" antérieur (avant le refactor v0.1 → renaming projects → players). **À mettre à jour post-pilote v0.3** (defer SEED-002).
 
-## Notes architecturales
+### Notes architecturales
 
-- Bypass `service_role` : `database/rls.sql` ligne 279-285 grant explicit `select/insert/update/delete on all tables to service_role`. Vérifier que les server actions utilisent BIEN `createClient()` SSR (cookie-aware = `authenticated` role) et NON `service_role` côté Player. → audit code-side hors scope Phase 15, à valider via SEED-002.
-- `cohorts_authenticated_select using (true)` (ligne 96-97) : tous les authenticated voient toutes les cohortes (count + slugs). Par design pour le picker EIC ; pas un leak.
+- **`cohorts_authenticated_select using (true)`** (`database/rls.sql:96-97`) : tous les authenticated voient toutes les cohortes (count + slugs). Par design pour le picker EIC ; pas un leak (les players des autres cohortes restent filtrés via S3 PASS).
+- **Bypass `service_role`** (`database/rls.sql:279-285`) : grant explicit `select/insert/update/delete on all tables to service_role`. Code-side, à vérifier que les server actions Player utilisent BIEN `createClient()` SSR (cookie-aware = `authenticated` role) et NON `service_role`. Vérification code-side hors scope Phase 15 — defer SEED-002 v0.3.
+
+## Notes §exécution
+
+- Le script source `scripts/test-rls-cross-cohort.sql` est conçu pour exécution manuelle Cloud Studio. L'exécution via MCP a nécessité de remplacer les variables psql `:'xxx'` par des UUIDs littéraux dans chaque transaction.
+- `NOTICE` messages (raise notice) ne reviennent pas via l'API REST MCP. Verdicts capturés via SELECT direct dans la transaction (avant rollback).
+- S5 a nécessité une approche directe (laisser l'erreur `42501` remonter à MCP) car même les inserts dans temp tables sont bloqués pour le rôle `anon`.
 
 ## Cross-références
 
-- `database/rls.sql` (toutes policies)
-- `.planning/codebase/CONCERNS.md` §"Pilot-grade RLS"
-- Cohorte AgreenTech : `cohorte-agreentech-creds.csv` (gitignored, mémoire `reference_cohort_csvs`)
+- `database/rls.sql` (toutes policies + helpers `is_mentor`, `is_my_player`, `current_app_role`)
+- `database/schema.sql` (tables `players`, `player_members`, `submissions`, `evaluations`, `cohorts`)
+- `.planning/codebase/CONCERNS.md` §"Pilot-grade RLS" (à mettre à jour v0.3 — terminologie obsolète)
+- Cohorte AgreenTech : `cohorte-agreentech-creds.csv` (gitignored)
