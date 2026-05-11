@@ -18,6 +18,7 @@ const navItems: Record<AppRole, { href: string; label: string }[]> = {
   mentor: [{ href: "/mentor", label: t.nav_mentor_evaluations }],
   game_master: [
     { href: "/admin", label: t.nav_game_master_admin },
+    { href: "/mentor", label: t.nav_mentor_evaluations },
     { href: "/admin/players/import", label: t.nav_game_master_import },
   ],
 };

@@ -321,8 +321,30 @@ function SubmissionCard({ row }: { row: PlayerDetailSubmission }) {
           borderTop: "1px dashed #e2e8f0",
         }}
       >
-        <p style={{ margin: "0 0 6px", fontSize: 12, color: "#475569", fontWeight: 600 }}>
-          {t.admin_detail_evaluations_title}
+        <p
+          style={{
+            margin: "0 0 6px",
+            fontSize: 12,
+            color: "#475569",
+            fontWeight: 600,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            gap: 12,
+          }}
+        >
+          <span>{t.admin_detail_evaluations_title}</span>
+          <Link
+            href={`/mentor/submission/${submission.id}`}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#1d4ed8",
+              textDecoration: "none",
+            }}
+          >
+            {t.admin_detail_review_cta} →
+          </Link>
         </p>
         {evaluations.length === 0 ? (
           <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
