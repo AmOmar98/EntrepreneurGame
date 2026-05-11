@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.1
 milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
 status: unknown
-last_updated: "2026-05-10T22:21:32.879Z"
-last_activity: 2026-05-10
+last_updated: "2026-05-11T01:35:50.749Z"
+last_activity: 2026-05-11 -- Phase 15 planning complete
 progress:
   total_phases: 5
   completed_phases: 5
@@ -29,7 +29,7 @@ Phase: 12
 Plan: Not started
 Milestone v0.2 : implementation complete — pending human verification.
 All 4 phases (6, 7, 8, 9) implementation completed 2026-05-10.
-Last activity: 2026-05-10
+Last activity: 2026-05-11 -- Phase 15 planning complete
 
 ## Active Milestone
 
@@ -94,6 +94,7 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 - Phase 13 added 2026-05-10: smoke-completion-phase11-gates-bug-annexes (9 plans, 4 waves) — pré-pilote
 - Phase 14 added 2026-05-10: scoring-engagement-livrables (paliers 100/25/50) — initialement post-pilote
 - Phase 14 **délockée pré-pilote 2026-05-11** par owner (Q4 tranchée, exécution autorisée avant cutoff 2026-05-12 23h00)
+- Phase 15 added 2026-05-11: adversarial-hardening-pre-pilote-agreentech — pré-pilote
 
 ## Decisions
 
