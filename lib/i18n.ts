@@ -96,7 +96,7 @@ export const dictionaries = {
     onboarding_v2_step1_greeting_anon: "Salut.",
     onboarding_v2_step1_title_em: "Pret·e a entreprendre ?",
     onboarding_v2_step1_lead:
-      "Pendant les 3 prochains jours, vous allez faire passer une idee du brouillon au pitch. 7 niveaux, des missions courtes, un mentor a vos cotes.",
+      "Pendant les 2 prochains jours, vous allez faire passer une idee du brouillon au pitch (Jour 2 - 14h00). 7 niveaux, des missions courtes, un mentor a vos cotes.",
     onboarding_v2_stat_levels_label: "niveaux",
     onboarding_v2_stat_levels_detail: "L0 → L7",
     onboarding_v2_stat_deliverables_label: "livrables",
