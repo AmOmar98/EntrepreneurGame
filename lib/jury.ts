@@ -2,7 +2,12 @@
 // Server-side queries for /jury: list cohort Players + the connected juror's
 // existing PitchScore row (if any) for the current event.
 // Dual-mode (DATA-03): demo mode (no Supabase env) returns empty result.
+//
+// V10 (polish/design-v2-match): players are now ordered by
+// events.pitch_order_json {playerId: slot} ascending when present.
+// Falls back to name ASC when no order has been set by the GameMaster.
 import { createClient } from "@/utils/supabase/server";
+import { getPlayerSlot, type PitchOrder } from "@/lib/pitch-order";
 import type { PitchScore, Player, LevelId } from "@/lib/types";
 
 // ============================================================================
@@ -97,7 +102,7 @@ export async function getJuryOverview(): Promise<{
   // 1. Resolve current event (latest by starts_at - mirror lib/mentor.ts).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
-    .select("id")
+    .select("id, pitch_order_json")
     .order("starts_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -107,6 +112,9 @@ export async function getJuryOverview(): Promise<{
   }
   if (!eventRow) return { eventId: null, rows: [] };
   const eventId = (eventRow as { id: string }).id;
+  const pitchOrder =
+    ((eventRow as { pitch_order_json?: PitchOrder | null }).pitch_order_json ??
+      null) as PitchOrder | null;
 
   // 2. Fetch cohorts of this event, then players in those cohorts.
   const { data: cohortRows, error: cohortErr } = await supabase
@@ -131,8 +139,19 @@ export async function getJuryOverview(): Promise<{
     console.error("[jury] players query failed", playerErr);
     return { eventId, rows: [] };
   }
-  const players = ((playerRows ?? []) as PlayerRow[]).map(mapPlayer);
-  if (players.length === 0) return { eventId, rows: [] };
+  const playersUnsorted = ((playerRows ?? []) as PlayerRow[]).map(mapPlayer);
+  if (playersUnsorted.length === 0) return { eventId, rows: [] };
+
+  // Sort by GameMaster-set pitch order when present; players without a slot
+  // go after those with one. Stable tie-breaker on name ASC.
+  const players = [...playersUnsorted].sort((a, b) => {
+    const sa = getPlayerSlot(pitchOrder, a.id);
+    const sb = getPlayerSlot(pitchOrder, b.id);
+    if (sa !== null && sb !== null) return sa - sb;
+    if (sa !== null) return -1;
+    if (sb !== null) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   // 3. Fetch pitch_scores authored by the connected juror for this event.
   const { data: scoreRows, error: scoreErr } = await supabase

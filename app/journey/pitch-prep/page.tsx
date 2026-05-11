@@ -2,9 +2,16 @@
 // Server-rendered shell — fetches PitchPrepData and hands off to client
 // component. R1 gate : pitch_order_published_at applied at helper level.
 
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { PitchPrep } from "@/components/pitch-prep/PitchPrep";
-import { getPitchPrep, type PitchPrepData } from "@/lib/pitch-prep";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  getPitchPrep,
+  getPitchPrepForUser,
+  type PitchPrepData,
+} from "@/lib/pitch-prep";
+import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { dictionaries } from "@/lib/i18n";
 
 const t = dictionaries.fr;
@@ -13,16 +20,22 @@ export const metadata = {
   title: t.pitch_prep_title,
 };
 
-export default function PitchPrepPage() {
-  // Demo-mode placeholder : pitch order not yet published. Real data
-  // hookup (events.pitch_order_json + pitch_order_published_at) in
-  // Supabase mode requires server action / RLS-aware query — deferred
-  // to follow-up since pitch order is GameMaster-only mutation.
-  const prep: PitchPrepData = getPitchPrep({
-    playerId: "demo",
-    pitchOrderJson: null,
-    pitchOrderPublishedAt: null,
-  });
+export default async function PitchPrepPage() {
+  // Dual-mode demo guard (CLAUDE.md guard #3 + memory feedback_dual_mode_demo_guard).
+  // Supabase mode : resolve user, fetch real slot via player_members + events.
+  // Demo mode : render placeholder shape (slot not published).
+  const user = hasSupabaseEnv() ? await getCurrentUser() : null;
+  if (hasSupabaseEnv() && !user) {
+    redirect("/login");
+  }
+
+  const prep: PitchPrepData = user
+    ? await getPitchPrepForUser(user.id)
+    : getPitchPrep({
+        playerId: "demo",
+        pitchOrderJson: null,
+        pitchOrderPublishedAt: null,
+      });
 
   return (
     <AppShell role="player">

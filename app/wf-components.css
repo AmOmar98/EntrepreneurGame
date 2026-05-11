@@ -1,0 +1,259 @@
+/* ==========================================================================
+   Wireframe v2 utility components — design system layer
+   Source: design v2 wireframes (jury-screens.jsx, admin-screens.jsx,
+           Entrepreneur Game v2 - Wireframes _standalone_.html)
+   Tokens consumed from eic-tokens.css (--wf-*).
+   ========================================================================== */
+
+/* ---- Layout primitives ---- */
+.wf-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---- Text helpers ---- */
+.wf-faint {
+  color: var(--wf-ink-faint);
+}
+.wf-kicker {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--wf-ink-soft);
+  font-weight: 600;
+  font-family: var(--font-body, system-ui), sans-serif;
+}
+.wf-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.05em;
+}
+
+/* ---- Card ---- */
+.wf-card {
+  background: var(--wf-paper);
+  border: 1px solid var(--wf-line);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(27, 39, 64, 0.04);
+}
+
+/* ---- Pill (badges, tags) ---- */
+.wf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--wf-paper-deep);
+  border: 1px solid var(--wf-line);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wf-ink-soft);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.wf-pill.is-blue {
+  background: var(--wf-blue-tint);
+  color: var(--wf-blue);
+  border-color: #B6C5DA;
+}
+.wf-pill.is-green {
+  background: var(--wf-green-tint);
+  color: var(--wf-green);
+  border-color: #B6D6B8;
+}
+.wf-pill.is-amber {
+  background: var(--wf-amber-tint);
+  color: var(--wf-amber);
+  border-color: #E0CFA0;
+}
+.wf-pill.is-rose {
+  background: var(--wf-rose-tint);
+  color: var(--wf-rose);
+  border-color: #E0B8B8;
+}
+
+/* ---- Button ---- */
+.wf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--wf-paper);
+  border: 1px solid var(--wf-line);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body, system-ui), sans-serif;
+  color: var(--wf-ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-decoration: none;
+  line-height: 1.2;
+}
+.wf-btn:hover {
+  background: var(--wf-paper-deep);
+  border-color: var(--wf-line-strong);
+}
+.wf-btn:focus-visible {
+  outline: 2px solid var(--wf-blue);
+  outline-offset: 2px;
+}
+.wf-btn:disabled,
+.wf-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.wf-btn.is-primary {
+  background: var(--wf-blue);
+  color: #fff;
+  border-color: var(--wf-blue);
+}
+.wf-btn.is-primary:hover {
+  background: #143150;
+  border-color: #143150;
+}
+.wf-btn.is-success {
+  background: var(--wf-green);
+  color: #fff;
+  border-color: var(--wf-green);
+}
+.wf-btn.is-success:hover {
+  background: #246625;
+  border-color: #246625;
+}
+.wf-btn.is-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.wf-btn.is-ghost:hover {
+  background: var(--wf-paper-deep);
+  border-color: var(--wf-line);
+}
+
+/* ---- Glass card (admin KPI / floating panels) ---- */
+.wf-glass {
+  background: rgba(251, 248, 242, 0.72);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(201, 192, 174, 0.42);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(17, 30, 48, 0.06);
+}
+
+/* ---- Aurora background (admin shell decorative layer) ---- */
+.wf-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.wf-aurora > * {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+}
+
+/* ---- Brand mark / topbar ---- */
+.wf-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--wf-blue);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading, Baskervville, serif);
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.wf-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf-brand-name {
+  font-family: var(--font-heading, Baskervville, serif);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--wf-ink);
+}
+.wf-brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wf-ink-soft);
+  margin-top: 2px;
+}
+.wf-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--wf-line);
+  background: var(--wf-paper);
+}
+
+/* ---- Placeholder block (mockup text fields) ---- */
+.wf-ph {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--wf-paper-deep),
+    var(--wf-paper-deep) 8px,
+    var(--wf-paper) 8px,
+    var(--wf-paper) 16px
+  );
+  border: 1px dashed var(--wf-line);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--wf-ink-soft);
+  font-size: 12px;
+}
+
+/* ---- Voice / annotation (design notes) ---- */
+.wf-voice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--wf-paper);
+  border: 1px solid var(--wf-line);
+  margin-top: 6px;
+  font-size: 11px;
+}
+.wf-voice .who {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--wf-paper-deep);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--wf-ink-soft);
+  flex-shrink: 0;
+}
+.wf-voice .role {
+  font-weight: 600;
+  color: var(--wf-ink);
+  font-size: 10px;
+}
+.wf-voice .said {
+  color: var(--wf-ink-soft);
+  line-height: 1.4;
+}

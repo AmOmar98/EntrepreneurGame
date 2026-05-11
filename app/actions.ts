@@ -156,6 +156,11 @@ export async function saveOnboarding(
       idea: parsed.data.idea,
       onboarded_at: new Date().toISOString(),
       score_engagement: currentEngagement + 10,
+      // Onboarding completion bumps the Player off L0_diagnostic (the default)
+      // onto L1_problem so the journey track shows L0=done, L1=current.
+      // Without this, the L0 node stays "current/À rendre" forever even after
+      // the KYC form is filled. See memory project_onboarding_level_bump_sql.
+      current_level: "L1_problem",
     })
     .eq("id", player.id);
   if (updateError) {
@@ -669,7 +674,7 @@ const importSchema = z.object({
   cohortSlug: z.string().min(2).max(64).default("hack-days-mai-2026"),
 });
 
-const DEFAULT_COHORT_NAME = "Hack-Days Mai 2026";
+const DEFAULT_COHORT_NAME = "AgreenTech Mai 2026";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 
@@ -988,6 +993,11 @@ export async function importPlayersCsv(
 // juror_id is forced server-side from auth.uid() (T-05-03 mitigation).
 // ============================================================================
 
+// Design v2 (polish/design-v2-match): only c1..c4 are presented to jurors
+// (Innovation / Faisabilite technique / Modele economique / Equipe). c5 is
+// kept in the DB for backward-compat with the 5-criteria schema (legacy
+// scores). New submissions force c5=0; lib/results.ts normalises pitchAvg
+// to /100 regardless of the column count (c5>0 ? sum : sum * 5/4).
 const pitchScoreSchema = z.object({
   playerId: z.string().uuid(),
   eventId: z.string().uuid(),
@@ -995,7 +1005,7 @@ const pitchScoreSchema = z.object({
   c2: z.coerce.number().int().min(0).max(20),
   c3: z.coerce.number().int().min(0).max(20),
   c4: z.coerce.number().int().min(0).max(20),
-  c5: z.coerce.number().int().min(0).max(20),
+  c5: z.coerce.number().int().min(0).max(20).optional().default(0),
 });
 
 export async function savePitchScoreFlow(
@@ -1134,6 +1144,56 @@ export async function publishResultsFlow(
   if (event.results_published_at) {
     revalidatePath("/results");
     return { ok: true, message: "Resultats deja publies." };
+  }
+
+  // Guard against publishing a ranking with players missing pitch jury votes
+  // (defensive pre-pilot fix B, AgreenTech 2026-05-11). Without this guard,
+  // a player with 0 pitch_scores receives pitchAvg=0 → combined=0.20*scoreProject
+  // and appears at the bottom of the ranking silently. Force GM to verify
+  // jury attendance before publication.
+  const { data: cohortRows, error: cohortErr } = await supabase
+    .from("cohorts")
+    .select("id")
+    .eq("event_id", event.id);
+  if (cohortErr) {
+    return { ok: false, message: cohortErr.message };
+  }
+  const cohortIds = ((cohortRows ?? []) as { id: string }[]).map((r) => r.id);
+  if (cohortIds.length > 0) {
+    const { data: playerRows, error: playerErr } = await supabase
+      .from("players")
+      .select("id, name")
+      .in("cohort_id", cohortIds);
+    if (playerErr) {
+      return { ok: false, message: playerErr.message };
+    }
+    const players = (playerRows ?? []) as { id: string; name: string }[];
+
+    const { data: scoreRows, error: scoreErr } = await supabase
+      .from("pitch_scores")
+      .select("player_id")
+      .eq("event_id", event.id);
+    if (scoreErr) {
+      return { ok: false, message: scoreErr.message };
+    }
+    const scoredSet = new Set<string>();
+    for (const r of (scoreRows ?? []) as { player_id: string }[]) {
+      scoredSet.add(r.player_id);
+    }
+
+    const missingPlayers = players
+      .filter((p) => !scoredSet.has(p.id))
+      .map((p) => p.name);
+    if (missingPlayers.length > 0) {
+      const preview = missingPlayers.slice(0, 5).join(", ");
+      const suffix = missingPlayers.length > 5 ? "..." : "";
+      const plural = missingPlayers.length > 1 ? "s" : "";
+      return {
+        ok: false,
+        severity: "error",
+        message: `Publication bloquee : ${missingPlayers.length} porteur${plural} sans note jury (${preview}${suffix}). Verifiez le vote des jures avant publication.`,
+      };
+    }
   }
 
   // Conditional update (only when still null) to avoid races.
@@ -1780,4 +1840,101 @@ export async function submitMoscowDeliverableFlow(
     // substring-matching the French message text.
     severity: warns.length > 0 ? "warn" : "ok",
   };
+}
+
+// ============================================================================
+// Pitch order (polish/design-v2-match V10) — GameMaster reorders the pitch
+// passage order. Persisted in events.pitch_order_json as {playerId: slot}.
+// Slots are 1-indexed and contiguous. R1 gate: pitch_order_published_at must
+// stay set so Player /journey/pitch-prep can read its slot once published.
+// ============================================================================
+
+const setPitchOrderSchema = z.object({
+  eventId: z.string().uuid(),
+  // JSON-stringified Array<string> of player UUIDs in target order.
+  orderedPlayerIds: z.string().min(2).max(8192),
+  publish: z.coerce.boolean().optional().default(true),
+});
+
+export async function setPitchOrderFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const parsed = setPitchOrderSchema.safeParse({
+    eventId: formData.get("eventId"),
+    orderedPlayerIds: formData.get("orderedPlayerIds"),
+    publish: formData.get("publish"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  let ids: unknown;
+  try {
+    ids = JSON.parse(parsed.data.orderedPlayerIds);
+  } catch {
+    return { ok: false, message: "orderedPlayerIds doit etre un JSON Array." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { ok: false, message: "Liste d'IDs vide ou invalide." };
+  }
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const playerIds = (ids as unknown[]).filter(
+    (v): v is string => typeof v === "string" && uuidRe.test(v),
+  );
+  if (playerIds.length !== (ids as unknown[]).length) {
+    return { ok: false, message: "IDs invalides detectes." };
+  }
+  const dedup = Array.from(new Set(playerIds));
+  if (dedup.length !== playerIds.length) {
+    return { ok: false, message: "IDs en double dans la liste." };
+  }
+
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Role gate: game_master only.
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Reserve au GameMaster." };
+  }
+
+  const orderJson: Record<string, number> = {};
+  playerIds.forEach((pid, i) => {
+    orderJson[pid] = i + 1;
+  });
+
+  const patch: Record<string, unknown> = { pitch_order_json: orderJson };
+  if (parsed.data.publish) {
+    patch.pitch_order_published_at = new Date().toISOString();
+  }
+
+  const { error: updErr } = await supabase
+    .from("events")
+    .update(patch)
+    .eq("id", parsed.data.eventId);
+  if (updErr) {
+    return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/jury");
+  revalidatePath("/journey/pitch-prep");
+  return { ok: true, message: `Ordre de passage enregistre (${playerIds.length} equipes).` };
 }

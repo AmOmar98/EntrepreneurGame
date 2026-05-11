@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ResultsReplay } from "@/components/results-replay";
@@ -130,20 +131,75 @@ export default async function ResultsPage() {
     );
   }
 
+  // Design v2 (polish/design-v2-match V6): after publication, the full
+  // ranking stays internal to the EIC committee (GM-only). Non-GM users
+  // (founders, jurors, mentors) see a thank-you announcement screen — the
+  // top 3 will be revealed live during the closing ceremony via the GM
+  // ceremony screen (V8).
+  if (isPublished && !isGm) {
+    return (
+      <AppShell role={role ?? "player"} variant="staff">
+        <main
+          style={{
+            padding: "64px 24px",
+            maxWidth: 720,
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "var(--font-heading, Baskervville, serif)",
+              fontSize: 36,
+              fontWeight: 600,
+              margin: "0 0 16px",
+              color: "var(--wf-ink)",
+              lineHeight: 1.15,
+            }}
+          >
+            {t.results_announce_title}
+          </h1>
+          <p
+            style={{
+              fontSize: 16,
+              color: "var(--wf-ink-soft)",
+              margin: 0,
+              lineHeight: 1.55,
+            }}
+          >
+            {t.results_announce_body}
+          </p>
+        </main>
+      </AppShell>
+    );
+  }
+
   // Phase 9 / GMR-05 — once results are published, render the editorial
   // replay view (hero, podium, stats, ranking, timeline, exports).
+  // GM-only branch (non-GM caught by the !isGm guard above).
   if (isPublished) {
     const stats = await loadReplayStats();
     return (
       <AppShell role={role ?? "game_master"} variant="staff">
         <main className="eic-results-replay-shell">
           {isGm ? (
-            <div className="eic-results-replay-shell__gm-bar">
+            <div
+              className="eic-results-replay-shell__gm-bar"
+              style={{ display: "flex", gap: 12, alignItems: "center" }}
+            >
               <PublishButton
                 eventId={ranking.eventId}
                 alreadyPublished={isPublished}
                 dict={t}
               />
+              {/* V8 — GM-only ceremony reveal screen launcher. */}
+              <Link
+                href="/results/ceremony"
+                className="wf-btn is-success"
+                style={{ padding: "10px 18px", fontSize: 13 }}
+              >
+                {t.results_ceremony_enter}
+              </Link>
             </div>
           ) : null}
           <ResultsReplay
@@ -159,6 +215,13 @@ export default async function ResultsPage() {
 
   // GameMaster, results not yet published — keep the legacy preview table so
   // they can sanity-check the data before publication.
+  // Fix D (defensive pre-pilot, 2026-05-11) : detect porteurs without any
+  // jury pitch score and surface a red banner so the GM can chase missing
+  // votes before clicking publish. Complementary to the server guard in
+  // publishResultsFlow (Fix B) which hard-blocks the publish.
+  const missingPitchPlayers = ranking.rows
+    .filter((r) => r.pitchJurorCount === 0)
+    .map((r) => r.player.name);
   return (
     <AppShell role={role ?? "game_master"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1100 }}>
@@ -184,6 +247,33 @@ export default async function ResultsPage() {
             dict={t}
           />
         </header>
+
+        {missingPitchPlayers.length > 0 ? (
+          <div
+            role="alert"
+            style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#991b1b",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 16,
+              fontSize: 14,
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ display: "block", marginBottom: 4 }}>
+              {missingPitchPlayers.length} porteur
+              {missingPitchPlayers.length > 1 ? "s" : ""} sans note jury
+            </strong>
+            <span>
+              {missingPitchPlayers.slice(0, 6).join(", ")}
+              {missingPitchPlayers.length > 6 ? "…" : ""}. Verifiez que les
+              jures ont vote avant de publier — la publication sera bloquee
+              sinon.
+            </span>
+          </div>
+        ) : null}
 
         {ranking.rows.length === 0 ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.results_empty}</p>

@@ -43,15 +43,17 @@ export default async function JourneyPage() {
 
   // In demo mode user is null ; getJourneyData short-circuits to EMPTY when
   // createClient() returns null, so the userId arg is never read in that path.
-  const data = await getJourneyData(user?.id ?? "");
-
-  // Quick 260510-k1f / B1 - cohort pulse (anonymised, R1).
-  // Computed even when data.empty so a non-onboarded Player still sees the
-  // collective dynamic (motivation pre-onboarding). Helper returns safe
-  // entries (count=0/total=0) on any error or unresolved cohort.
-  // Phase 11 / C2 — getCohortPulse short-circuits to demo seed when supabase
-  // unavailable, so empty userId in demo mode is safe.
-  const cohortPulse = await getCohortPulse(user?.id ?? "");
+  // Quick 260511-spd / A1 — parallelize 3 independent fetches (data + cohort
+  // pulse + announcements). Announcements is fetched eagerly even when the
+  // empty-branch eventually discards it; tradeoff favors the common (non-empty)
+  // path. Each helper short-circuits safely on missing Supabase / user.
+  const [data, cohortPulse, announcements] = await Promise.all([
+    getJourneyData(user?.id ?? ""),
+    getCohortPulse(user?.id ?? ""),
+    hasSupabaseEnv() && user
+      ? getAnnouncementsForPlayer(user.id, 5)
+      : Promise.resolve([] as Awaited<ReturnType<typeof getAnnouncementsForPlayer>>),
+  ]);
 
   if (data.empty || !data.player) {
     return (
@@ -100,20 +102,16 @@ export default async function JourneyPage() {
             : t.journey_v2_hero_cta_resume,
         meta: {
           code: undefined as string | undefined,
-          xp: next.template.maxScore,
+          // R1 revised (2026-05-11) — display the GUARANTEED XP on submit
+          // (+100) rather than the rubric max. Aligns with the per-deliverable
+          // XP rules applied in lib/journey.ts (earnedXp).
+          xp: 100,
           due: undefined as string | undefined,
         },
       }
     : null;
 
   const totalEarnedXp = getTotalEarnedXp(data.missions);
-
-  // Phase 9 / GMR-09 — surface live GM announcements for this Player.
-  // C2: only fetch when authenticated (user defined). Demo mode skips this.
-  const announcements =
-    hasSupabaseEnv() && user
-      ? await getAnnouncementsForPlayer(user.id, 5)
-      : [];
 
   // T3X-EXPANSION wave 3 / plan 12-10 — Bonus rail entry types (D-02 / D-03).
   // Static list of optional bonus claim routes. R3 : optionnel, pas de blocage.

@@ -11,6 +11,7 @@ import type {
   Player,
   RubricCriterion,
   SubmissionStatus,
+  Verdict,
 } from "@/lib/types";
 
 export type DeliverableStatus = "a_rendre" | SubmissionStatus;
@@ -19,6 +20,10 @@ export type JourneyDeliverable = {
   template: DeliverableTemplate;
   status: DeliverableStatus;
   latestSubmissionId: string | null;
+  // R1 revised (2026-05-11) — Player-facing XP awarded for this deliverable.
+  // Rules: +100 for first submission, +rubric total_score on latest evaluation,
+  // +50 if verdict=validate_v1, +100 if verdict=validate_v2 (50 base + 50 V2 bonus).
+  earnedXp: number;
 };
 
 export type MissionStatus = "a_venir" | "en_cours" | "passe";
@@ -294,6 +299,34 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     submissions = (subRows ?? []) as typeof submissions;
   }
 
+  // R1 revised — fetch latest evaluation per template (across all versions) to
+  // compute Player-facing XP. One round-trip, group client-side.
+  const subIdToTplId = new Map<string, string>();
+  for (const s of submissions) subIdToTplId.set(s.id, s.deliverable_template_id);
+  const subIds = submissions.map((s) => s.id);
+  const latestEvalByTplId = new Map<string, { totalScore: number; verdict: Verdict }>();
+  if (subIds.length > 0) {
+    const { data: evalRows } = await supabase
+      .from("evaluations")
+      .select("submission_id, total_score, verdict, created_at")
+      .in("submission_id", subIds)
+      .order("created_at", { ascending: false });
+    for (const r of (evalRows ?? []) as {
+      submission_id: string;
+      total_score: number | null;
+      verdict: Verdict;
+      created_at: string;
+    }[]) {
+      const tplId = subIdToTplId.get(r.submission_id);
+      if (!tplId) continue;
+      if (latestEvalByTplId.has(tplId)) continue; // first row per template (DESC order)
+      latestEvalByTplId.set(tplId, {
+        totalScore: Number(r.total_score ?? 0),
+        verdict: r.verdict,
+      });
+    }
+  }
+
   // Group templates by mission, attach status.
   const tplByMission = new Map<string, DeliverableTemplate[]>();
   for (const tpl of templates) {
@@ -316,7 +349,20 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
       const { status, latestSubmissionId } = computeDeliverableStatus(
         subs.map((s) => ({ id: s.id, version: s.version, status: s.status })),
       );
-      return { template, status, latestSubmissionId };
+      // R1 revised — Player-facing XP per deliverable.
+      // +100 base on first submission (any version), +score from latest eval,
+      // +50 if verdict=validate_v1, +100 if verdict=validate_v2 (50 base + 50 V2 bonus).
+      let earnedXp = 0;
+      if (subs.length > 0) {
+        earnedXp += 100;
+        const evalEntry = latestEvalByTplId.get(template.id);
+        if (evalEntry) {
+          earnedXp += evalEntry.totalScore;
+          if (evalEntry.verdict === "validate_v1") earnedXp += 50;
+          if (evalEntry.verdict === "validate_v2") earnedXp += 100;
+        }
+      }
+      return { template, status, latestSubmissionId, earnedXp };
     });
     return {
       mission,

@@ -32,7 +32,7 @@ export const demoPlayerProfiles: PlayerProfile[] = [
       {
         startedAt: "2026-05-13T08:30:00+01:00",
         endedAt: null,
-        eventName: "Hack-Days AgreenTech 2026",
+        eventName: "AgreenTech 2026",
         outcome: "participant",
       },
     ],

@@ -95,30 +95,30 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 **Hotfix protocol J1/J2 (13-14/05)** : commit hotfix + push + smoke prod Vercel + monitoring 30 min. Tag rollback disponible : `v0.2-pilot-ready` (rollback distant `git push origin --force HEAD:main` après reset, à utiliser uniquement avec accord explicite Omar).
 
-## Polish post-pilot-ready — branche locale isolée (NO MERGE)
+## Polish post-pilot-ready — merge autorisé (2026-05-12)
 
-> **À partir du 2026-05-11**, `main` est **gelée à `v0.2-pilot-ready`** côté pilote AgreenTech. Tout travail de polish/refinement se fait sur **une branche locale dédiée**, **sans merge sur `main`** et **sans push vers `origin`** tant que le pilote 13-14/05 n'est pas terminé.
+> **Mise à jour 2026-05-12** : la policy "NO MERGE jusqu'au 14/05 soir" est **levée**. Les branches `polish/*` peuvent être merge sur `main` + push origin dès que le smoke régression passe. Tag `v0.2-pilot-ready` (commit `ccdc2bc`) reste disponible pour rollback distant en cas de besoin.
 
-**Règles strictes :**
-1. **Toute édition (composants, lib, design)** = checkout d'une branche feature locale (ex: `polish/<topic>` ou `wip/<topic>`) — ne JAMAIS commiter directement sur `main`.
-2. **Pas de `git push`** sur cette branche (sauf demande explicite Omar). `main` distante doit rester sur `ccdc2bc` / tag `v0.2-pilot-ready` jusqu'au pilote.
-3. **Pas de merge / rebase / fast-forward** vers `main` avant 14/05 soir (post-pilote).
-4. **Exception hotfix pilote** : un bug bloquant J1/J2 (R1/R2/R3 cardinaux) peut être committé directement sur `main` + push + redeploy Vercel, suivi du protocole hotfix ci-dessus. Tout le reste = branche locale.
-5. **Smoke régression obligatoire** avant tout merge éventuel post-pilote (`npm run typecheck && npm run lint && npm run build` + revue visuelle Player/Mentor/GM).
+**Règles courantes (post-levée) :**
+1. **Smoke régression obligatoire** avant tout merge : `npm run typecheck && npm run lint && npm run build` minimum + revue visuelle Player/Mentor/GM si surface UI touchée.
+2. **Tag avant merge risqué** : créer `v0.2.X-pre-<merge>` local + push avant de merger une branche polish volumineuse (>20 commits ou touchant zones sensibles R1/R2/R3).
+3. **Commits atomiques** : préférer merge sans squash pour conserver l'historique granulaire (rollback `git revert <sha>` chirurgical).
+4. **Hotfix pilote J1/J2 (13-14/05)** : commit hotfix direct sur `main` + push + smoke prod Vercel + monitoring 30 min reste prioritaire si bug bloquant R1/R2/R3 détecté en live.
+5. **Pre-edit guards** (cf. section suivante) toujours actifs sur zones sensibles, indépendamment du merge.
 
-**Why:** le tag `v0.2-pilot-ready` est l'état de référence partagé avec partenaires (Tamwilcom / BoA Academy / Innov Invest / Bluespace). Toute régression introduite par polish casserait la crédibilité institutionnelle. La branche locale isolée garantit le rollback gratuit.
+**Why:** À T-1 du pilote (13/05), bloquer le merge des refinements design + fixes accumulés sur `polish/*` est plus coûteux que de les livrer — meilleure crédibilité partenaires avec polish appliqué. Tag `v0.2-pilot-ready` garantit le rollback gratuit si régression détectée.
 
-**How to apply:** Avant tout edit, vérifier `git branch --show-current`. Si `main`, créer une branche `polish/*` ou `wip/*` immédiatement. Si une trace de polish est nécessaire côté GSD, utiliser `.planning/quick/YYMMDD-XXX-slug/` (convention quick orchestrator) — les artefacts sont gitignorables côté branche feature.
+**How to apply:** Avant merge, `git checkout main && git pull && npm run typecheck && npm run lint && npm run build`. Si OK, `git merge polish/<topic>` puis `git push origin main`. Si zone sensible touchée, créer tag pré-merge d'abord.
 
 ## Pre-edit guards (zones sensibles)
 
 Avant tout edit dans `app/journey/`, `app/onboarding/`, `app/mission/`, `app/jury/`, `app/results/`, `components/results-*`, `components/submission-*`, `lib/score.ts`, `lib/results.ts`, `lib/seed/`, `database/`, ou `lib/types.ts` :
 
 1. **Spawn `eic-pedagogical-advisor`** (cf. `.claude/agents/eic-pedagogical-advisor.md`) pour valider l'edit contre les 3 règles cardinales :
-   - **R1** : score/rang invisible côté Player (jury et GameMaster uniquement).
+   - **R1 (révisée 2026-05-11)** : score visible UNIQUEMENT sur la page de détail d'un livrable (`app/journey/deliverable/[id]/` via `DeliverableScoreBlock`) — invisible partout ailleurs côté Player (`/journey` index, `/results`, badges, milestones, navbar, mascot, dashboards). Le rang/classement reste invisible Player en TOUS lieux. Jury et GameMaster : tout autorisé.
    - **R2** : validators **warn-only** (`severity: "warn"`), jamais bloquants — `"error"` doit lever review humain.
    - **R3** : aucun blocage inter-mission codé en dur — pas de `disabled` DOM, pas de `blocks_progression_to` actif. Utiliser `eic-locked-hint--amber` / tooltip ambre.
-2. **Audit grep R1 post-edit** sur composants Player-facing : `grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/results-* components/submission-* --include="*.tsx"`. Aucun match attendu côté Player.
+2. **Audit grep R1 post-edit** sur composants Player-facing (le détail livrable est désormais une hot zone légitime) : `grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/results-* components/submission-* --include="*.tsx" | grep -v "app/journey/deliverable/" | grep -v "components/deliverable-score-block"`. Aucun match attendu côté Player hors page détail livrable. En supplément, `grep -rn "rank\|classement\|percentile\|leaderboard" app/journey/deliverable/` doit rester vide (rang interdit même sur le détail).
 3. **Dual-mode demo préservé** : ne jamais ajouter de `redirect("/login")` ou `getCurrentUser()` avant le check `hasSupabaseEnv()` / fallback seed. Régression vue dans `app/journey/page.tsx:27-30` v0.2 → cassait 9/12 surfaces. L'auth réelle est gérée par `middleware.ts`, pas par la page.
 
 ## Convention orchestrator quick

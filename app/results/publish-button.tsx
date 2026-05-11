@@ -33,7 +33,7 @@ const buttonDisabledStyle: React.CSSProperties = {
 
 export function PublishButton({ eventId, alreadyPublished, dict }: Props) {
   const [state, formAction, pending] = useActionState(publishResultsFlow, initialState);
-  const disabled = !eventId;
+  const disabled = !eventId || alreadyPublished;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (disabled) {

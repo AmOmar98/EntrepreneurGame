@@ -6,6 +6,7 @@
 
 import type { PitchOrder } from "@/lib/pitch-order";
 import { getPlayerSlot, isPitchOrderPublished } from "@/lib/pitch-order";
+import { createClient } from "@/utils/supabase/server";
 
 export type PitchPrepData = {
   // ISO string when this player should be ready (start of their slot).
@@ -60,4 +61,48 @@ export function getPitchPrep({
     totalTeams,
     published,
   };
+}
+
+// Server-side fetch wrapper : resolves player_id from auth user via
+// player_members, fetches the latest event row, and delegates to
+// getPitchPrep. Returns demo-mode placeholder shape when Supabase is
+// unavailable (preserves dual-mode contract per CLAUDE.md guard #3).
+export async function getPitchPrepForUser(userId: string): Promise<PitchPrepData> {
+  const empty: PitchPrepData = {
+    readyAt: null,
+    position: null,
+    totalTeams: 0,
+    published: false,
+  };
+
+  const supabase = await createClient();
+  if (!supabase) return empty;
+
+  // 1. Map auth user -> player_id (Player belongs to at most one team for pilot).
+  const { data: memberRow } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  const playerId = (memberRow as { player_id?: string } | null)?.player_id ?? null;
+  if (!playerId) return empty;
+
+  // 2. Latest event row (single pilot event for AgreenTech 2026).
+  const { data: eventRow } = await supabase
+    .from("events")
+    .select("pitch_order_json, pitch_order_published_at")
+    .order("starts_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const event = (eventRow ?? null) as {
+    pitch_order_json: PitchOrder | null;
+    pitch_order_published_at: string | null;
+  } | null;
+
+  return getPitchPrep({
+    playerId,
+    pitchOrderJson: event?.pitch_order_json ?? null,
+    pitchOrderPublishedAt: event?.pitch_order_published_at ?? null,
+  });
 }
