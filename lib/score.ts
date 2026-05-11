@@ -48,6 +48,108 @@ export function combineScores(
   };
 }
 
+// ============================================================================
+// Phase 14 — Scoring d'engagement livrables (paliers 100/25/50)
+// ============================================================================
+//
+// Décisions advisor lockées (cf. .planning/phases/14-scoring-engagement-livrables/ADVISOR-VERDICT-DISCUSS.md) :
+//   Q1=A : badges qualitatifs Player (ZÉRO chiffre brut côté Player)
+//   Q3=A : helper TS miroir du trigger DB `recalc_player_engagement`
+//   Q5=A : Soumis/Reviewed irréversibles ; Validé recalculé par verdict le
+//          plus récent par template.
+//
+// Contrat de l'array `evaluations` : doit être ORDONNÉ par recency DESC
+// (latest first), e.g. via `.order('updated_at', { ascending: false })`
+// côté server, OU dans l'ordre seed pour le mode demo. Le helper prend
+// la PREMIÈRE evaluation de chaque template comme verdict courant.
+//
+// R1 : la valeur numérique retournée par `sumPlayerScoreEngagement` NE DOIT
+//      JAMAIS être rendue côté Player en chiffres ni en composante d'un
+//      classement. Player surface = badges qualitatifs via
+//      `getEngagementMilestones()`. Mentor/GM surface peut afficher
+//      numériquement (cf. lib/admin-*.ts + colonne admin GM).
+
+const SUBMITTED_POINTS = 100;
+const REVIEWED_POINTS = 25;
+const VALIDATED_POINTS = 50;
+
+type EngagementMilestones = {
+  /** Au moins une submission existe pour ce (player, template). +100, irréversible. */
+  submitted: boolean;
+  /** Au moins une evaluation existe pour ≥1 submission de ce template. +25, irréversible. */
+  reviewed: boolean;
+  /** Verdict le plus récent par template = validate_v1 ou validate_v2. +50, recalculable. */
+  validated: boolean;
+};
+
+/**
+ * Calcule les 3 paliers d'engagement pour un (player, template) donné.
+ * Usage : surface Player /journey/deliverable/[id]/page.tsx pour render
+ * 3 badges qualitatifs (Soumis ✓ / Lu par le mentor ✓ / Validé ✓), zéro chiffre.
+ *
+ * @param templateId — deliverable_template_id ciblé.
+ * @param submissions — submissions du Player (toutes templates confondus, le helper filtre).
+ * @param evaluations — evaluations du Player ORDONNÉES par recency DESC (latest first).
+ */
+export function getEngagementMilestones(
+  templateId: string,
+  submissions: Submission[],
+  evaluations: Evaluation[],
+): EngagementMilestones {
+  const templateSubmissions = submissions.filter(
+    (s) => s.deliverableTemplateId === templateId,
+  );
+  const submitted = templateSubmissions.length > 0;
+  if (!submitted) {
+    return { submitted: false, reviewed: false, validated: false };
+  }
+
+  const templateSubmissionIds = new Set(templateSubmissions.map((s) => s.id));
+  const templateEvaluations = evaluations.filter((e) =>
+    templateSubmissionIds.has(e.submissionId),
+  );
+  const reviewed = templateEvaluations.length > 0;
+  if (!reviewed) {
+    return { submitted: true, reviewed: false, validated: false };
+  }
+
+  // Latest evaluation = first in array (caller contract: ordered DESC by recency).
+  const latestVerdict = templateEvaluations[0]?.verdict;
+  const validated =
+    latestVerdict === "validate_v1" || latestVerdict === "validate_v2";
+
+  return { submitted: true, reviewed: true, validated };
+}
+
+/**
+ * Agrège la `score_engagement` d'un Player : somme des paliers atteints
+ * sur tous les templates qu'il a touchés. Miroir strict du trigger DB
+ * `public.recalc_player_engagement` (database/migrations/202605110007_phase14_engagement_trigger.sql).
+ *
+ * Usage : UI dual-mode demo (hasSupabaseEnv()===false). En mode Supabase,
+ * la valeur autoritative vient de `players.score_engagement` via trigger DB —
+ * ce helper sert pour cohérence d'affichage admin/preview.
+ *
+ * R1 : NE PAS rendre la valeur retournée côté Player.
+ *
+ * @param submissions — toutes les submissions du Player.
+ * @param evaluations — toutes les evaluations du Player ORDONNÉES par recency DESC.
+ */
+export function sumPlayerScoreEngagement(
+  submissions: Submission[],
+  evaluations: Evaluation[],
+): number {
+  const templateIds = new Set(submissions.map((s) => s.deliverableTemplateId));
+  let total = 0;
+  for (const templateId of templateIds) {
+    const m = getEngagementMilestones(templateId, submissions, evaluations);
+    if (m.submitted) total += SUBMITTED_POINTS;
+    if (m.reviewed) total += REVIEWED_POINTS;
+    if (m.validated) total += VALIDATED_POINTS;
+  }
+  return total;
+}
+
 /**
  * Apply bonus multiplier to a raw score for UI display purposes (Mentor/GM).
  *

@@ -6300,3 +6300,83 @@ tr:last-child td {
   margin: 0;
 }
 
+/* Phase 13 / G3 — mobile 390px topbar overflow fix.
+   À 390px, le topbar TopbarLite débordait de ~22px à cause de la
+   double pill (info + amber) + brand-sub + nav + logout. Sur petits
+   écrans on cache les pills et la tagline secondaire, et on resserre
+   le padding du topbar. R1/R2/R3 non concernés (purement visuel). */
+@media (max-width: 420px) {
+  .eic-topbar__brand-sub { display: none; }
+  .eic-topbar__pill--info,
+  .eic-topbar__pill--amber { display: none; }
+  .eic-topbar { padding-inline: 8px; gap: 4px; }
+}
+
+/* Phase 14 / W3 — Engagement milestones badges (Player surface, R1 strict :
+   ZERO numeric content). 3 pills horizontally aligned ; "reached" state =
+   filled EIC tones, "pending" = subtle muted outline. Reduced-motion safe :
+   no animations, only static state. */
+.eic-engagement-milestones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+.eic-engagement-milestones__kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--eic-muted, #64748b);
+}
+.eic-engagement-milestones__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.eic-engagement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.eic-engagement-badge__icon {
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+}
+/* "Reached" state — palier atteint. Couleur EIC selon ordre cumulatif :
+   submitted = navy, reviewed = pitch-blue, validated = succes-vert. */
+.eic-engagement-badge--submitted-reached {
+  background: rgba(61, 107, 149, 0.12);
+  color: #1f3a5f;
+  border-color: rgba(61, 107, 149, 0.35);
+}
+.eic-engagement-badge--reviewed-reached {
+  background: rgba(196, 69, 54, 0.12);
+  color: #8a3024;
+  border-color: rgba(196, 69, 54, 0.35);
+}
+.eic-engagement-badge--validated-reached {
+  background: rgba(34, 134, 70, 0.14);
+  color: #1d6738;
+  border-color: rgba(34, 134, 70, 0.4);
+}
+/* "Pending" state — palier en attente. Style sobre muted. */
+.eic-engagement-badge--submitted-pending,
+.eic-engagement-badge--reviewed-pending,
+.eic-engagement-badge--validated-pending {
+  background: #f8fafc;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+}
+
+
+

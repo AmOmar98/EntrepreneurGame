@@ -1,5 +1,5 @@
 // Phase 7 / Plan 07-04 - Revision V2 panel (PLR-07).
-// Replaces the legacy <SubmissionFeedbackCard> + <SubmissionForm V2> pair
+// Replaces the legacy SubmissionFeedbackCard + <SubmissionForm V2> pair (legacy file deleted, cf. ralph cleanup)
 // when a V1 submission has verdict=request_v2. Shows:
 //   - mentor message (avatar + tag + text)
 //   - checklist "passe / manque" parsed from feedback_text (best-effort)

@@ -50,6 +50,8 @@ Source de vérité design : `.planning/design-v2/` (bundle Claude Design export�
 | 9 | GameMaster + jury + replay + Pixel mascotte | implementation complete (9/9 GMR — 12 commits — VERIFICATION human_needed) |
 | 10 | T-3 Critical Gates + Design v2 Tail Sections | **in_progress** — B1-B4 fixés via quicks 260510-* ; B5 ops Omar ; sub-tâches design tail (sections 10/11/12/13/14) partiellement livrées via Phase 10 plan ; sections restantes à exécuter |
 | 11 | Design Audit Refinements (13 items, 4 waves) | **complete 2026-05-10** — 13/13 items shipped (15 commits atomiques pushed origin main). Build/typecheck clean, R1 audit clean. Tag `v0.2.1-pre-phase11` posé pour rollback. SUMMARY.md livré. |
+| 13 | Smoke Completion + Phase 11 Gates Closeout + Bug Annexes (9 plans, 4 waves) | **planned** — pré-pilote, à exécuter avant cutoff 2026-05-12 23h00 |
+| 14 | Scoring d'engagement livrables (paliers 100/25/50) | **🔓 unlocked pré-pilote 2026-05-11** — discuss/plan/execute à enchaîner après Phase 13, AVANT cutoff 2026-05-12 23h00. Q4 tranchée par owner. |
 
 ## Next Action — Pilot Operator Gates (Omar)
 
@@ -89,6 +91,9 @@ Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment d
 ## Roadmap Evolution
 
 - Phase 12 added: quick-260510-t3x
+- Phase 13 added 2026-05-10: smoke-completion-phase11-gates-bug-annexes (9 plans, 4 waves) — pré-pilote
+- Phase 14 added 2026-05-10: scoring-engagement-livrables (paliers 100/25/50) — initialement post-pilote
+- Phase 14 **délockée pré-pilote 2026-05-11** par owner (Q4 tranchée, exécution autorisée avant cutoff 2026-05-12 23h00)
 
 ## Decisions
 

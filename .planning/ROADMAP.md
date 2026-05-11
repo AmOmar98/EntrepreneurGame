@@ -508,9 +508,9 @@ Plans:
 
 ## Phase 14: Scoring d'engagement livrables (paliers 100/25/50)
 
-**Quand** : post-pilote AgreenTech (à confirmer en `/gsd-discuss-phase 14`) — défaut v0.3 sauf décision owner contraire
+**Quand** : **pré-pilote AgreenTech — délock owner 2026-05-11**, exécution autorisée avant cutoff `2026-05-12 23h00`. (Auparavant tagged post-pilote v0.3 ; décision owner 2026-05-11 = exécuter maintenant, risque T-2/T-1 assumé avec mitigations CONTEXT §Q4.)
 **Goal:** ajouter une couche de scoring d'engagement aux livrables, indépendante de la note rubric qualité (qui reste intacte). Trois paliers cumulatifs par livrable : **+100 soumis**, **+25 reviewed mentor**, **+50 validé**. Total max 175 pts d'engagement par livrable validé (en plus de la note qualité 0..25).
-**Depends on:** Phase 13 (smoke régression final clean), pilote 13-14 mai (validation de la pondération 80/20 actuelle en conditions réelles avant toute extension scoring).
+**Depends on:** Phase 13 (smoke régression final clean) — Phase 14 démarre dès Phase 13 closed, AVANT pilote.
 **UI hint** : oui (badges paliers côté Player + colonne admin GameMaster) — design à drafter en discuss.
 
 **Source** : conversation live owner ↔ Claude Code 2026-05-10 post-rétro T-3. CONTEXT initial : `.planning/phases/14-scoring-engagement-livrables/14-CONTEXT.md`.
@@ -521,7 +521,7 @@ Plans:
 - Q1 — Visibilité Player des paliers (R1)
 - Q2 — Entre-t-il dans `combined` ranking 80/20 ? (défaut recommandé : hors ranking, alimente `players.score_engagement`)
 - Q3 — Stockage (probable : colonne `players.score_engagement` existante + nouveau trigger DB)
-- Q4 — Timing : pré-pilote (risqué T-1) ou post-pilote (recommandé)
+- ~~Q4 — Timing~~ **TRANCHÉ 2026-05-11 : pré-pilote, exécution avant cutoff `2026-05-12 23h00`** (risque assumé, mitigations a-f CONTEXT §Q4)
 - Q5 — Réversibilité si livrable validé puis re-évalué `reject`
 
 **Success Criteria** (draft, à enrichir en discuss) :
@@ -533,10 +533,10 @@ Plans:
 
 **Plans:** à drafter via `/gsd-plan-phase 14` une fois discuss terminé. Aucun PLAN.md écrit à date.
 
-**Phase 14 status** : 📥 Created 2026-05-10. CONTEXT initial drafté, **discuss-phase non encore lancé**. À enchaîner via `/gsd-discuss-phase 14` après cutoff pilote.
+**Phase 14 status** : 📥 Created 2026-05-10 · 🔓 **Délockée pré-pilote 2026-05-11**. CONTEXT initial drafté + Q4 tranchée. À enchaîner immédiatement après Phase 13 closed via `/gsd-discuss-phase 14 --auto` → `/gsd-plan-phase 14` → `/gsd-execute-phase 14`, AVANT cutoff `2026-05-12 23h00`.
 
-**Risques acceptés** : (a) si owner décide exécution pré-pilote, risque régression scoring très élevé T-2/T-1 sans marge smoke ; (b) si visibilité Player mal cadrée (Q1), risque R1 contourné indirectement par déduction du rang.
+**Risques acceptés (owner 2026-05-11)** : (a) régression scoring T-2/T-1 — mitigée par commits atomiques + typecheck/lint/build clean avant chaque commit + tag `v0.2.2-pre-ralph-13` rollback distant ; (b) visibilité Player mal cadrée (Q1) → audit grep R1 obligatoire post-edit + spawn `eic-pedagogical-advisor` avant tout edit Player-facing.
 
 ---
 
-*Last updated: 2026-05-10 — Phase 14 (Scoring d'engagement livrables, paliers 100/25/50) ajoutée post-conversation owner. CONTEXT initial drafté, discuss-phase à lancer. Phase 13 (Smoke Completion + Phase 11 Gates Closeout + Bug Annexes) ajoutée post-smoke PROD T-3 (rapport `260510-smk-SUMMARY.md`, seed `SEED-002`). 9 plans en 4 waves (mentor/jury smoke → porteurs missing → Phase 11 gates → bugfixes). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss à lancer.*
+*Last updated: 2026-05-11 — **Phase 14 délockée pré-pilote** (décision owner 2026-05-11, Q4 tranchée). Exécution autorisée avant cutoff `2026-05-12 23h00`. Enchaînement : Phase 13 (9 plans, 4 waves) → Phase 14 (discuss → plan → execute). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss/plan/execute, tous pré-pilote.*
