@@ -2,7 +2,7 @@
 // Usage: node scripts/perf-baseline.mjs <output-path>
 // Lance Lighthouse mobile sur 2 URLs prod et concatène les métriques clés.
 import { spawnSync } from "node:child_process";
-import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { dirname } from "node:path";
 
 const URLS = [
@@ -31,9 +31,14 @@ for (const { name, url } of URLS) {
     "--output=json",
     `--output-path=${tmp}`,
   ], { stdio: "inherit", shell: true });
-  if (res.status !== 0) {
-    console.error(`[lighthouse] FAILED for ${name}`);
+  // Windows chrome-launcher cleanup can EPERM after report is written.
+  // Treat "report file exists and parses" as success regardless of exit code.
+  if (!existsSync(tmp)) {
+    console.error(`[lighthouse] FAILED for ${name} (no report file, exit=${res.status})`);
     process.exit(res.status ?? 1);
+  }
+  if (res.status !== 0) {
+    console.warn(`[lighthouse] ${name}: non-zero exit (${res.status}) but report exists — proceeding`);
   }
   const lhr = JSON.parse(readFileSync(tmp, "utf8"));
   results.push({
