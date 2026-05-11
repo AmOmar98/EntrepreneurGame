@@ -547,6 +547,18 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Adversarial hardening : idempotence trigger Phase 14 + RLS cross-cohort + adversarial inputs + concurrence mentors + audit R1 extension
 
+**Statut closeout 2026-05-11** : 3/5 audits exécutés via MCP Supabase par Claude Code (15-01 idempotence ALL PASS 8/8, 15-02 RLS cross-cohort ALL PASS 5/5, 15-05 advisor R1 PASS). 2/5 audits déférés en Phase 16 (15-03 adversarial inputs DevTools/curl + 15-04 concurrence 2-session psql — nécessitent vraie auth Player + 2 connexions psql parallèles, pas accessibles via MCP SQL mono-session).
+
+## Phase 16: Phase 15 Closeout — DevTools-side + concurrence audits
+
+**Goal:** Compléter les 2 audits Phase 15 non-exécutables via MCP : (a) checklist adversariale 20 vecteurs POST `submitDeliverable` / `evaluateSubmission` avec session P11 authentifiée DevTools/curl ; (b) test concurrence mentors via 2 sessions psql parallèles (vraies race conditions). Non-bloquant pilote 13-14/05 (Phase 15 ALL PASS sur 3 axes critiques). Cutoff souple : avant pilote idéalement, sinon post-pilote v0.3 absorbed.
+**Requirements**: ADVERSARIAL-INPUTS-VERDICT.md rempli, CONCURRENCE-VERDICT.md rempli, escalade D-16 si FAIL critique.
+**Depends on:** Phase 15 (artefacts `scripts/adversarial-inputs-checklist.md` + `scripts/test-concurrent-evaluations.sql` déjà committed `f4cf557`/`301ab43`).
+**Plans:** 0 plans (à drafter via `/gsd-plan-phase 16 --auto` ou exécution ops directe sans plan formel)
+
+Plans:
+- [ ] TBD — choix entre (a) plan formel `/gsd-plan-phase 16` si Omar veut traçabilité GSD, OU (b) exécution ops directe avec mini-update verdict markdowns post-run
+
 ---
 
-*Last updated: 2026-05-11 — **Phase 15 ajoutée** (Adversarial Hardening Pré-Pilote AgreenTech). **Phase 14 délockée pré-pilote** (décision owner 2026-05-11, Q4 tranchée). Exécution autorisée avant cutoff `2026-05-12 23h00`. Enchaînement : Phase 13 (9 plans, 4 waves) → Phase 14 (discuss → plan → execute) → Phase 15 (à drafter). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 13 plans 13-01..13-09 + Phase 14 discuss/plan/execute + Phase 15 plan, tous pré-pilote.*
+*Last updated: 2026-05-11 — **Phase 16 ajoutée** (Phase 15 closeout deferred audits). **Phase 15 partial-complete** : 3/5 audits PASS via MCP, 2/5 déférés Phase 16 (DevTools-side + 2-session psql). **Phase 14 délockée pré-pilote** (décision owner 2026-05-11, Q4 tranchée). Exécution Phase 13/14 autorisée avant cutoff `2026-05-12 23h00`. Enchaînement : Phase 13 (9 plans, 4 waves) → Phase 14 (discuss → plan → execute) → Phase 15 (1 plan, 3/5 audits PASS via MCP) → Phase 16 (2 audits restants). Phase 12 (T-3 Scope Expansion: MoSCoW Kanban + Bonus Events Recreate) imported via `/gsd-plan-phase 12 --auto`. v0.2 EIC Design v2 Refresh complete (Phases 6+7+8+9). v0.1 pilot-ready (Phases 1-5) préservé via tag `v0.1-pilot-ready`. Source design v0.2 : `.planning/design-v2/`. Pending operator gates : Phase 16 (non-bloquant pilote).*

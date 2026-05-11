@@ -1,15 +1,16 @@
 ---
-status: partial
+status: resolved
 phase: 15-adversarial-hardening-pre-pilote-agreentech
 source: ["15-VERIFICATION.md"]
 started: 2026-05-11T00:00:00Z
-updated: 2026-05-11T11:00:00Z
+updated: 2026-05-11T11:55:00Z
 cutoff: 2026-05-12T23:00:00+00:00
+deferred_to: phase-16
 ---
 
 ## Current Test
 
-[3 audits passed via MCP — 2 audits remain for Omar (curl/2-session psql)]
+[Phase 15 closed — 3/5 audits PASS, 2/5 audits déférés en Phase 16 (DevTools-side + 2-session psql)]
 
 ## Tests
 
@@ -29,17 +30,17 @@ observed: 5/5 PASS. S1=0, S2=0, S3=1=1 (sur 2 cohortes en base), S4=40 (is_mento
 artifact: `RLS-CROSS-COHORT-VERDICT.md` — rempli ALL PASS. Aucune escalade D-16. CONCERNS.md obsolescence documentée.
 result: **PASS**
 
-### 3. Exécuter scripts/adversarial-inputs-checklist.md [PENDING OMAR]
+### 3. Exécuter scripts/adversarial-inputs-checklist.md → **DÉFÉRÉ PHASE 16**
 expected: ≥15 PASS Zod refuse proprement. 4 KNOWN limitations documentés (SSRF V-05/V-06, transitions V-17, freeze V-18). 0 crash 500.
 artifact_to_fill: `ADVERSARIAL-INPUTS-VERDICT.md`
-why_human: nécessite session authentifiée P11 + DevTools/curl POST PROD — pas accessible via MCP SQL
-result: [pending]
+why_deferred: nécessite session authentifiée P11 + DevTools/curl POST PROD — pas accessible via MCP SQL mono-session. Moved to Phase 16 (`.planning/phases/16-phase-15-closeout-devtools-concurrence-audits/`).
+result: **deferred-to-phase-16**
 
-### 4. Exécuter scripts/test-concurrent-evaluations.sql [PENDING OMAR]
+### 4. Exécuter scripts/test-concurrent-evaluations.sql → **DÉFÉRÉ PHASE 16**
 expected: Scénario A — 2 evaluations distinctes coexistent OR UNIQUE constraint violation propre. Scénario B — V1+V2 sans duplicate palier. Scénario C — aucun deadlock.
 artifact_to_fill: `CONCURRENCE-VERDICT.md`
-why_human: vraie concurrence requiert 2 sessions psql parallèles — MCP est mono-session
-result: [pending]
+why_deferred: vraie concurrence requiert 2 sessions psql parallèles — MCP est mono-session. Moved to Phase 16.
+result: **deferred-to-phase-16**
 
 ### 5. Re-spawn /agent eic-pedagogical-advisor sur diff f4cf557 ✅ RATIFIED
 executed_by: Claude Code orchestrator (spawn `eic-pedagogical-advisor` post-hoc 2026-05-11)
@@ -54,10 +55,11 @@ result: **PASS**
 total: 5
 passed: 3
 issues: 0
-pending: 2
+pending: 0
 skipped: 0
 blocked: 0
+deferred: 2  (→ phase-16)
 
 ## Gaps
 
-- Tests 3 (adversarial inputs DevTools/curl) et 4 (concurrence 2-session psql) restent à exécuter par Omar dans la fenêtre 2026-05-11 → 2026-05-12 23h00. Non-bloquants pilote sauf si FAIL critique → escalade D-16/D-17.
+- (none — Phase 15 closed) Tests 3+4 déplacés en Phase 16 par décision owner 2026-05-11. Phase 16 = "Phase 15 Closeout — DevTools-side + concurrence audits" dans ROADMAP.md, dir `.planning/phases/16-phase-15-closeout-devtools-concurrence-audits/`. Non-bloquants pilote 13-14/05 (Phase 15 ALL PASS sur 3 axes critiques : trigger idempotence, RLS cross-cohort, audit R1 extension).
