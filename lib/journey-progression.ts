@@ -99,26 +99,28 @@ export function getLevelStates(currentLevel: LevelId): Map<LevelId, LevelState> 
   return map;
 }
 
-// XP earned per level: sum of validated deliverable max scores per level.
-// Pilot-grade: we use template.maxScore as proxy (real XP comes from
-// xp_ledger trigger in prod, but for the visual track we approximate).
+// XP earned per level — sums JourneyDeliverable.earnedXp computed in
+// lib/journey.ts:getJourneyData. Pre-aggregation lives there because the
+// rules need access to evaluations rows (score + verdict).
+// Rules (R1 revised 2026-05-11): +100 on first submit, +rubric total on
+// latest eval, +50 if validate_v1, +100 if validate_v2 (50 base + 50 V2).
 export function getLevelXp(missions: JourneyMission[], levelId: LevelId): number {
   let xp = 0;
   for (const m of missions) {
     if (m.mission.levelId !== levelId) continue;
     for (const d of m.deliverables) {
-      if (d.status === "validated") xp += d.template.maxScore;
+      xp += d.earnedXp;
     }
   }
   return xp;
 }
 
-// Total earned XP across the whole journey (validated only).
+// Total earned XP across the whole journey (sum of per-deliverable earnedXp).
 export function getTotalEarnedXp(missions: JourneyMission[]): number {
   let xp = 0;
   for (const m of missions) {
     for (const d of m.deliverables) {
-      if (d.status === "validated") xp += d.template.maxScore;
+      xp += d.earnedXp;
     }
   }
   return xp;
