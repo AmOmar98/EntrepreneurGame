@@ -81,19 +81,34 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - **Crédibilité partenaires** : aucune mention « démo » apparente, aucun seed (`atlas-soil` etc.) ne doit fuiter en prod. Branding EIC professionnel attendu.
 <!-- GSD:project-end -->
 
-## T-3 Critical Gates (rétro 2026-05-10 — statut au 2026-05-10 soir)
+## Pilote AgreenTech — READY AND OPERATIONAL (2026-05-11)
 
-> Voir `RETROSPECTIVE-T3-2026-05-10.md` pour la rétro complète (Worked / Didn't / How-to / Risks). **B1-B4 fixés** ; reste B5 (ops) + 6 gates humains.
+> **Milestone v0.2 archivé**, tag `v0.2-pilot-ready` (commit `ccdc2bc`) poussé sur `origin/main`. Voir `.planning/milestones/v0.2-MILESTONE-AUDIT.md` pour le rapport complet.
 
-- **B1 ✅ FIXÉ** — R1 percée `/results` colmatée. Scores + ranking gatés `isGameMaster`, Player voit annonce qualitative EIC-validated FR. Commits `c740d48` + `16aa0f7` + `5647606`.
-- **B2 ✅ FIXÉ** — Pondération 20/80 active. `lib/results.ts:30` `DEFAULT_PITCH_WEIGHT = 0.8`. Commit `8199fb1` + doc `33707b8`.
-- **B3 ✅ FIXÉ** — Migrations Phase 8 + 9 appliquées en PROD Supabase. RLS announcements vérifié. Commits `d7b3e80` (CLI scaffolding) + `cd8482f` (apply prod).
-- **B4 ✅ FIXÉ** — 7 missions AgreenTech + bonus B + rubric 5×5=25 en PROD. Commits `06624a3` (refactor seed) + `d8ca1cf` (align evaluationSchema) + `28a306d` (apply prod) + `26de6ab` (doc).
-- **B5 🟡 OPS** — `member_emails` à collecter par Fatimaezzahra avant 12/05 23h. Hors code.
+- **PROD vérifiée** : https://entrepreneur-game-six.vercel.app (région cdg1) — 20 auth.users provisionnés (11P + 2M + 3J + 4GM)
+- **Bloquants T-3 B1-B5** : **tous fermés** (voir rétro `RETROSPECTIVE-T3-2026-05-10.md` + memory `project_agreentech_pilot.md`)
+- **6 gates humains** : **tous validés** (visual review v0.2 phases 7/8/9 → frontmatter `status: verified` 2026-05-11)
+- **Smoke E2E PROD** : swarm 2026-05-10 — 27 livrables P01/P02/P04 + M01 mentor parcours validés
+- **Bug RLS evaluation_comments F-16-01** : fixé via quick `260511-sbt` (commit `2b78801`)
 
-**6 gates humains pendants** (cités `8ac2822`) : (1) visual review prod 3 phases v0.2 ; (2) smoke E2E régression v0.1 ; (3) reduced-motion + a11y check ; (4) Lighthouse ; (5) cleanup ; (6) RLS check post-grants service_role (`7bcf666`).
+**Ne pas re-fixer B1-B5 sans vérifier le SHA cité d'abord** — risque de double-fix / régression.
 
-**Ne pas re-fixer B1-B4 sans vérifier le SHA cité d'abord** — risque de double-fix / régression.
+**Hotfix protocol J1/J2 (13-14/05)** : commit hotfix + push + smoke prod Vercel + monitoring 30 min. Tag rollback disponible : `v0.2-pilot-ready` (rollback distant `git push origin --force HEAD:main` après reset, à utiliser uniquement avec accord explicite Omar).
+
+## Polish post-pilot-ready — branche locale isolée (NO MERGE)
+
+> **À partir du 2026-05-11**, `main` est **gelée à `v0.2-pilot-ready`** côté pilote AgreenTech. Tout travail de polish/refinement se fait sur **une branche locale dédiée**, **sans merge sur `main`** et **sans push vers `origin`** tant que le pilote 13-14/05 n'est pas terminé.
+
+**Règles strictes :**
+1. **Toute édition (composants, lib, design)** = checkout d'une branche feature locale (ex: `polish/<topic>` ou `wip/<topic>`) — ne JAMAIS commiter directement sur `main`.
+2. **Pas de `git push`** sur cette branche (sauf demande explicite Omar). `main` distante doit rester sur `ccdc2bc` / tag `v0.2-pilot-ready` jusqu'au pilote.
+3. **Pas de merge / rebase / fast-forward** vers `main` avant 14/05 soir (post-pilote).
+4. **Exception hotfix pilote** : un bug bloquant J1/J2 (R1/R2/R3 cardinaux) peut être committé directement sur `main` + push + redeploy Vercel, suivi du protocole hotfix ci-dessus. Tout le reste = branche locale.
+5. **Smoke régression obligatoire** avant tout merge éventuel post-pilote (`npm run typecheck && npm run lint && npm run build` + revue visuelle Player/Mentor/GM).
+
+**Why:** le tag `v0.2-pilot-ready` est l'état de référence partagé avec partenaires (Tamwilcom / BoA Academy / Innov Invest / Bluespace). Toute régression introduite par polish casserait la crédibilité institutionnelle. La branche locale isolée garantit le rollback gratuit.
+
+**How to apply:** Avant tout edit, vérifier `git branch --show-current`. Si `main`, créer une branche `polish/*` ou `wip/*` immédiatement. Si une trace de polish est nécessaire côté GSD, utiliser `.planning/quick/YYMMDD-XXX-slug/` (convention quick orchestrator) — les artefacts sont gitignorables côté branche feature.
 
 ## Pre-edit guards (zones sensibles)
 
