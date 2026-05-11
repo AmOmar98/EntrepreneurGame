@@ -1,0 +1,22 @@
+[
+  {
+    "name": "journey",
+    "url": "https://entrepreneur-game-six.vercel.app/journey",
+    "measuredAt": "2026-05-11T23:19:40.114Z",
+    "lcpMs": 560,
+    "fcpMs": 392,
+    "ttiMs": 560,
+    "tbtMs": 0,
+    "perfScore": 100
+  },
+  {
+    "name": "admin",
+    "url": "https://entrepreneur-game-six.vercel.app/admin",
+    "measuredAt": "2026-05-11T23:20:00.629Z",
+    "lcpMs": 532,
+    "fcpMs": 272,
+    "ttiMs": 552,
+    "tbtMs": 32,
+    "perfScore": 99
+  }
+]
