@@ -100,7 +100,10 @@ export default async function JourneyPage() {
             : t.journey_v2_hero_cta_resume,
         meta: {
           code: undefined as string | undefined,
-          xp: next.template.maxScore,
+          // R1 revised (2026-05-11) — display the GUARANTEED XP on submit
+          // (+100) rather than the rubric max. Aligns with the per-deliverable
+          // XP rules applied in lib/journey.ts (earnedXp).
+          xp: 100,
           due: undefined as string | undefined,
         },
       }
