@@ -34,9 +34,9 @@ function statusLabel(status: PlayerStatus | SubmissionStatus): string {
     case "active":
       return "Actif";
     case "eliminated":
-      return "Elimine";
+      return "Éliminé";
     case "completed":
-      return "Termine";
+      return "Terminé";
     case "draft":
       return t.journey_status_draft;
     case "submitted_v1":
