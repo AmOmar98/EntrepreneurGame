@@ -4,7 +4,7 @@
 // donnée score/rang/percentile manipulée), R2 (warn-only sur le mood inquiet —
 // la copie reste encourageante), R3 (aucun blocage de mission).
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const FIRST_DELIVERY_KEY = "eg_pixel_a_first_delivery";
 const STAGNATION_THRESHOLD_MS = 15 * 60 * 1000; // 15 min
@@ -114,7 +114,7 @@ export function useStagnationTrigger(): PixelTriggerState {
  */
 export function useVerbatimCountTrigger(): PixelTriggerState {
   const [triggered, setTriggered] = useState(false);
-  const [lastCount, setLastCount] = useState(0);
+  const lastCountRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -122,16 +122,18 @@ export function useVerbatimCountTrigger(): PixelTriggerState {
       const ce = e as CustomEvent<{ count?: number }>;
       const next = typeof ce.detail?.count === "number" ? ce.detail.count : 0;
       // Trigger uniquement au passage 1 → 2 (déterministe, jamais random)
-      if (lastCount === 1 && next === 2) {
+      if (lastCountRef.current === 1 && next === 2) {
         setTriggered(true);
       }
-      setLastCount(next);
+      lastCountRef.current = next;
     };
     window.addEventListener("pixel:verbatim-count", handler as EventListener);
     return () => {
       window.removeEventListener("pixel:verbatim-count", handler as EventListener);
+      // Reset ref on unmount so re-mount starts fresh
+      lastCountRef.current = 0;
     };
-  }, [lastCount]);
+  }, []);
 
   const dismiss = useCallback(() => setTriggered(false), []);
   return { triggered, dismiss };
