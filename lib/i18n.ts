@@ -353,7 +353,7 @@ export const dictionaries = {
     admin_status_a_l_heure: "A l'heure",
     admin_status_retard: "En retard",
     admin_empty_cohort: "Aucun Player dans la cohorte. Importez un CSV pour demarrer.",
-    admin_demo_disabled: "Mode demo : configurez Supabase pour piloter la cohorte.",
+    admin_demo_disabled: "Données indisponibles — contactez le support.",
     admin_action_import: "Importer un CSV",
     admin_action_export: "Exporter players.csv",
     admin_action_view_player: "Voir le detail",
@@ -410,7 +410,7 @@ export const dictionaries = {
     jury_saved_at: "Note enregistree",
     jury_already_scored: "Notes deja saisies (modifiables)",
     jury_empty: "Aucun Player dans la cohorte.",
-    jury_demo_disabled: "Mode demo : connectez-vous a Supabase pour noter les pitchs.",
+    jury_demo_disabled: "Données indisponibles — contactez le support.",
     jury_back: "Retour",
     jury_unauthorized: "Acces reserve aux Mentors",
     results_title: "Classement final",
@@ -427,7 +427,7 @@ export const dictionaries = {
     results_publishing: "Publication en cours...",
     results_publish_confirm: "Publier les resultats ? Tous les Players y auront acces immediatement.",
     results_already_published: "Republier (deja publie)",
-    results_demo_disabled: "Mode demo : connectez-vous a Supabase pour voir les resultats.",
+    results_demo_disabled: "Données indisponibles — contactez le support.",
     results_empty: "Aucun PitchScore enregistre pour le moment.",
     // ---- Admin /deliverables (Phase 9 — GMR-06) ------------------------------
     admin_deliverables_title: "Activer / désactiver les livrables",
@@ -758,6 +758,9 @@ export const dictionaries = {
     moscow_submit_warn_must: "Recommandation : >=2 cartes MUST.",
     moscow_submit_warn_wont: "Recommandation : >=1 carte WONT (anti scope-creep).",
     moscow_submit_success: "Kanban MoSCoW soumis V1. Le Mentor va le valider.",
+    // ---- Results replay polish (SWARM-C 260511) --------------------------------
+    results_replay_ranking_announcement_title: "Reconnaissance des équipes",
+    results_replay_weighting_caption: "Pondération : pitch 80 % · projet 20 %",
   },
   en: {
     brand_name: "Entrepreneur Game",
@@ -1003,7 +1006,7 @@ export const dictionaries = {
     admin_status_a_l_heure: "On time",
     admin_status_retard: "Behind",
     admin_empty_cohort: "No Player in the cohort. Import a CSV to start.",
-    admin_demo_disabled: "Demo mode: configure Supabase to pilot the cohort.",
+    admin_demo_disabled: "Data unavailable — please contact support.",
     admin_action_import: "Import a CSV",
     admin_action_export: "Export players.csv",
     admin_action_view_player: "View details",
@@ -1060,7 +1063,7 @@ export const dictionaries = {
     jury_saved_at: "Scores saved",
     jury_already_scored: "Scores already saved (editable)",
     jury_empty: "No Player in the cohort.",
-    jury_demo_disabled: "Demo mode: connect to Supabase to score pitches.",
+    jury_demo_disabled: "Data unavailable — please contact support.",
     jury_back: "Back",
     jury_unauthorized: "Mentors only",
     results_title: "Final ranking",
@@ -1077,7 +1080,7 @@ export const dictionaries = {
     results_publishing: "Publishing...",
     results_publish_confirm: "Publish results? All Players will have access immediately.",
     results_already_published: "Republish (already published)",
-    results_demo_disabled: "Demo mode: connect to Supabase to view results.",
+    results_demo_disabled: "Data unavailable — please contact support.",
     results_empty: "No PitchScore recorded yet.",
     // ---- Pixel mascot — Player triggers (T3 A5 / quick 260510-jm8) -----------
     pixel_player_first_delivery_quote: "First hypothesis logged.",
@@ -1088,6 +1091,9 @@ export const dictionaries = {
     pitch_order_first: "You open the pitches! Be ready 5 min before 1:30 PM.",
     pitch_order_window: "Approximate window: {start} - {end} (depends on jury pace).",
     pitch_order_explainer: "The order was drawn at random. No connection with your preselection or scores.",
+    // ---- Results replay polish (SWARM-C 260511) --------------------------------
+    results_replay_ranking_announcement_title: "Team recognition",
+    results_replay_weighting_caption: "Weighting: pitch 80% · project 20%",
   },
 } as const;
 

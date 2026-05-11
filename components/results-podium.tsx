@@ -41,29 +41,21 @@ export function ResultsPodium({ entries, isGameMaster }: Props) {
   const byRank = new Map<1 | 2 | 3, PodiumEntry>();
   for (const e of entries.slice(0, 3)) byRank.set(e.rank, e);
 
+  // Only render ranks that have a matching entry — center the row when <3.
+  const filledOrder = ORDER.filter((rank) => byRank.has(rank));
+
   return (
     <section
       aria-label={t.results_replay_podium_title}
       className="eic-results-replay__podium"
     >
       <h2 className="eic-results-replay__podium-title">{t.results_replay_podium_title}</h2>
-      <div className="eic-results-replay__podium-row">
-        {ORDER.map((rank) => {
-          const entry = byRank.get(rank);
-          if (!entry) {
-            return (
-              <div className="eic-results-replay__podium-step" key={rank}>
-                <div
-                  className={`eic-results-replay__podium-block eic-results-replay__podium-block--empty ${HEIGHT_CLASS[rank]}`}
-                  style={{ height: HEIGHTS[rank], background: COLOR[rank] }}
-                  aria-hidden="true"
-                >
-                  <span className="eic-results-replay__podium-rank">{rank}</span>
-                </div>
-                <p className="eic-results-replay__podium-label">{LABEL[rank]}</p>
-              </div>
-            );
-          }
+      <div
+        className="eic-results-replay__podium-row"
+        style={{ justifyContent: filledOrder.length < 3 ? "center" : undefined }}
+      >
+        {filledOrder.map((rank) => {
+          const entry = byRank.get(rank)!
           return (
             <div className="eic-results-replay__podium-step" key={rank}>
               <p className="eic-results-replay__podium-team">{entry.teamName}</p>
