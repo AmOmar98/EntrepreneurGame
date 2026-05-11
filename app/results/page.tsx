@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ResultsReplay } from "@/components/results-replay";
@@ -182,12 +183,23 @@ export default async function ResultsPage() {
       <AppShell role={role ?? "game_master"} variant="staff">
         <main className="eic-results-replay-shell">
           {isGm ? (
-            <div className="eic-results-replay-shell__gm-bar">
+            <div
+              className="eic-results-replay-shell__gm-bar"
+              style={{ display: "flex", gap: 12, alignItems: "center" }}
+            >
               <PublishButton
                 eventId={ranking.eventId}
                 alreadyPublished={isPublished}
                 dict={t}
               />
+              {/* V8 — GM-only ceremony reveal screen launcher. */}
+              <Link
+                href="/results/ceremony"
+                className="wf-btn is-success"
+                style={{ padding: "10px 18px", fontSize: 13 }}
+              >
+                {t.results_ceremony_enter}
+              </Link>
             </div>
           ) : null}
           <ResultsReplay
