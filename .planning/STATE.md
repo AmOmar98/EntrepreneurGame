@@ -29,7 +29,7 @@ Phase: 16
 Plan: Not started
 Milestone v0.2 : implementation complete — pending human verification.
 All 4 phases (6, 7, 8, 9) implementation completed 2026-05-10.
-Last activity: 2026-05-11
+Last activity: 2026-05-11 - Completed quick task 260511-sbt: fix RLS evaluation_comments bug F-16-01
 
 ## Active Milestone
 
@@ -160,6 +160,7 @@ _None_
 | 260510-l68 | **B4 RÉTRO** — refonte seed_event_hackdays.sql AgreenTech 2026 (6 missions + 9 livrables relabelés, rubric 5×5=25 uniforme, idempotent slugs préservés, +1 patch evaluationSchema .max(25)) | 2026-05-10 | d8ca1cf | [260510-l68-b4retro-seed-agreentech-7-missions-l1-l2](./quick/260510-l68-b4retro-seed-agreentech-7-missions-l1-l2/) |
 | 260510-lu5 | **B3 RÉTRO** — migrations Phase 8+9 appliquées en PROD Supabase via supabase CLI (npx, toolchain wired, supabase/migrations/ + config.toml committés, 4 entries aligned local↔remote) | 2026-05-10 | d7b3e80 | [260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr](./quick/260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr/) |
 | 260510-rxa | Patch BLOCK dim 8 PLAN-CHECK phase 12 — insertion Plan 12-04 `apply-migrations-gate` (Wave 1.5 blocking, depends_on [12-02, 12-03]) entre creation des fichiers SQL et consommation TS — verdict READY-WITH-NOTES → READY | 2026-05-10 | 8f03c68 | [260510-rxa-patcher-block-dim-8-schema-apply-gate-ph](./quick/260510-rxa-patcher-block-dim-8-schema-apply-gate-ph/) |
+| 260511-sbt | **F-16-01 RLS fix** — GRANT select+insert sur `evaluation_comments` à authenticated (table-level GRANT manquant après migration 08, appliqué PROD + ALTER DEFAULT PRIVILEGES pour futures tables) | 2026-05-11 | f6a30e1 | [260511-sbt-fix-rls-evaluation-comments-bug-f-16-01](./quick/260511-sbt-fix-rls-evaluation-comments-bug-f-16-01/) |
 
 ### Seeds Planted
 
