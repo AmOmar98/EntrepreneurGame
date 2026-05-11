@@ -8,12 +8,21 @@
 # (.claude/ralph-mission.md §règles transverses) sur les surfaces
 # Player-facing. Exit 0 si clean, exit 1 si match suspect non-whitelisted.
 #
+# Phase 15-05 extension : audit étendu post-Phase 14 (engagement milestones
+# qualitatifs + cohort pulse bar). Cardinal R1 Q5=A : palier Validé recalculé
+# côté DB mais badge qualitatif FR côté Player, jamais de chiffre brut.
+# Ajout du glob `components/cohort-*` pour couvrir components/cohort-pulse.tsx
+# (Quick 260510-k1f, B1 Cohort Pulse Bar anonymisée /journey).
+#
 # Surfaces auditées :
-#   - app/journey/             (Player route)
-#   - app/results/             (Player + GM ; GM gates par isGameMaster)
-#   - components/results-*     (rendu /results, gated isGameMaster)
-#   - components/submission-*  (rendu Player submissions)
-#   - components/engagement-*  (Phase 14 badges qualitatifs)
+#   - app/journey/                 (Player route)
+#   - app/results/                 (Player + GM ; GM gates par isGameMaster)
+#   - components/results-*         (rendu /results, gated isGameMaster)
+#   - components/submission-*      (rendu Player submissions)
+#   - components/engagement-*      (Phase 14 badges qualitatifs ; couvre
+#                                   engagement-milestones-badges.tsx)
+#   - components/cohort-*          (Phase 15-05 extension ; couvre
+#                                   cohort-pulse.tsx, anonymisé R1 by design)
 #
 # Whitelist (matches autorisés, gamification XP / data layer / comments) :
 #   - `rewardXp={tpl.max_score}` et `<span>+{rewardXp} XP</span>` :
@@ -45,6 +54,7 @@ COMPONENT_GLOBS=(
   "components/results-*"
   "components/submission-*"
   "components/engagement-*"
+  "components/cohort-*"
 )
 
 MODE="${1:-text}"
