@@ -215,6 +215,13 @@ export default async function ResultsPage() {
 
   // GameMaster, results not yet published — keep the legacy preview table so
   // they can sanity-check the data before publication.
+  // Fix D (defensive pre-pilot, 2026-05-11) : detect porteurs without any
+  // jury pitch score and surface a red banner so the GM can chase missing
+  // votes before clicking publish. Complementary to the server guard in
+  // publishResultsFlow (Fix B) which hard-blocks the publish.
+  const missingPitchPlayers = ranking.rows
+    .filter((r) => r.pitchJurorCount === 0)
+    .map((r) => r.player.name);
   return (
     <AppShell role={role ?? "game_master"} variant="staff">
       <main style={{ padding: 24, maxWidth: 1100 }}>
@@ -240,6 +247,33 @@ export default async function ResultsPage() {
             dict={t}
           />
         </header>
+
+        {missingPitchPlayers.length > 0 ? (
+          <div
+            role="alert"
+            style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#991b1b",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 16,
+              fontSize: 14,
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ display: "block", marginBottom: 4 }}>
+              {missingPitchPlayers.length} porteur
+              {missingPitchPlayers.length > 1 ? "s" : ""} sans note jury
+            </strong>
+            <span>
+              {missingPitchPlayers.slice(0, 6).join(", ")}
+              {missingPitchPlayers.length > 6 ? "…" : ""}. Verifiez que les
+              jures ont vote avant de publier — la publication sera bloquee
+              sinon.
+            </span>
+          </div>
+        ) : null}
 
         {ranking.rows.length === 0 ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.results_empty}</p>
