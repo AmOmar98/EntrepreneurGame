@@ -134,38 +134,20 @@ export default async function JourneyPage() {
         totalEarnedXp={totalEarnedXp}
       />
       {/* T3X-EXPANSION wave 3 / plan 12-10 — Bonus rail (D-02 / D-03). R3 : optionnel. */}
-      <section style={{ padding: "16px 32px", maxWidth: 960, margin: "0 auto" }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+      <section className="eic-bonus-rail">
+        <h2 className="eic-bonus-rail__title">
           {t.bonus_section_title}
+          <span className="eic-bonus-rail__kicker">BONUS</span>
         </h2>
-        <p style={{ margin: "4px 0 16px", fontSize: 13, color: "#475569" }}>
+        <p className="eic-bonus-rail__subtitle">
           {t.bonus_section_subtitle}
         </p>
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: 0,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 12,
-          }}
-        >
+        <ul className="eic-bonus-rail__list">
           {bonusEntries.map((entry) => (
             <li key={entry.type}>
               <a
                 href={`/journey/bonus/${entry.type}`}
-                style={{
-                  display: "block",
-                  padding: 12,
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 8,
-                  textDecoration: "none",
-                  color: "#0f172a",
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
+                className="eic-bonus-card"
               >
                 {entry.label}
               </a>
