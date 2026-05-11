@@ -111,7 +111,10 @@ export function OnboardingStepper({
             />
           ))}
         </div>
-        <span className="eic-onboarding__step-counter">
+        <span className="eic-onboarding__step-counter" aria-hidden="true">
+          {t.onboarding_v2_step_label} {step} / {TOTAL_STEPS}
+        </span>
+        <span className="sr-only">
           {t.onboarding_v2_step_label} {step} / {TOTAL_STEPS}
         </span>
       </div>

@@ -6378,5 +6378,103 @@ tr:last-child td {
   border-color: #e2e8f0;
 }
 
+/* === Swarm E — responsive polish === */
+
+/* PLY-08 — Public profile back-link positioned above the article header */
+.eic-profile__back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* PLY-12 — Journey grid: stack vertical below 768px */
+@media (max-width: 767px) {
+  .eic-journey__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 16px 16px 40px;
+    gap: 16px;
+    align-items: start;
+  }
+  .eic-journey__hero-col {
+    grid-column: 1;
+    grid-row: 1;
+    padding-right: 0;
+    justify-content: flex-start;
+  }
+  .eic-journey__track-col {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: center;
+  }
+  .eic-journey__tip-col {
+    display: none;
+  }
+  .eic-journey__progress-label {
+    position: static;
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: 0;
+    text-align: center;
+  }
+}
+
+/* PLY-13 — Onboarding topbar: hide step counter text below 480px (dots suffice) */
+@media (max-width: 479px) {
+  .eic-onboarding__step-counter[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/* MNT-06 — Mentor score cell muted style (applied via inline style on td, no extra rule needed) */
+
+/* MNT-09 — Mentor players table: card layout below 768px */
+.eic-mentor-players-table {
+  overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+  .eic-mentor-players-table table,
+  .eic-mentor-players-table thead,
+  .eic-mentor-players-table tbody,
+  .eic-mentor-players-table th,
+  .eic-mentor-players-table td,
+  .eic-mentor-players-table tr {
+    display: block;
+  }
+  .eic-mentor-players-table thead {
+    display: none;
+  }
+  .eic-mentor-players-table tr {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #fff;
+  }
+  .eic-mentor-players-table td {
+    padding: 4px 0;
+    font-size: 14px;
+    border: none;
+  }
+  .eic-mentor-players-table td:first-child {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  .eic-mentor-players-table td:last-child {
+    margin-top: 8px;
+  }
+}
+
+/* JRY-03 — Jury form warn-only banner (R2 compliant — submit not blocked) */
+.eic-jury-form__warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 
 
