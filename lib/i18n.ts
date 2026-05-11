@@ -496,6 +496,8 @@ export const dictionaries = {
     jury_pitch_grid_comment_label: "Commentaire",
     jury_pitch_grid_comment_placeholder: "Notes pour le débrief…",
     jury_pitch_jurors_voted: "{n}/5 jurés ont noté",
+    jury_pitch_score_anonymous: "Score anonyme jusqu'à la cérémonie",
+    jury_pitch_lock_vote: "Verrouiller mon vote ✓",
     jury_pitch_theater_intro: "Pitch en cours",
     jury_pitch_theater_team_idea: "Idée",
     jury_pitch_theater_no_team: "Aucune équipe sélectionnée.",

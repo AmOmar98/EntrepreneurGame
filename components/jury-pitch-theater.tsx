@@ -1,9 +1,18 @@
 "use client";
-// Phase 9 / GMR-04 — Jury pitch theater wrapper. Owns the current-team index
-// and orchestrates timer + queue + grid for the whole pitch session.
+// Design v2 (polish/design-v2-match V4) — Jury pitch theater refactored with
+// V3 Dials variant. The grid /5 component is swapped for <JuryPitchDials>
+// (4 × /20 rotary dials), and the topbar/hero get the .wf-* design v2 look.
+//
+// Original behaviour preserved:
+// - currentIndex state + prev/next stepper
+// - queue panel (clic libre sur n'importe quelle équipe)
+// - timer
+// - scoredPlayerIds derivation
+//
+// Phase 9 / GMR-04 lineage retained.
 import { useMemo, useState } from "react";
 import { JuryPassageQueue } from "@/components/jury-passage-queue";
-import { JuryPitchGrid } from "@/components/jury-pitch-grid";
+import { JuryPitchDials } from "@/components/jury-pitch-dials";
 import { JuryPitchTimer } from "@/components/jury-pitch-timer";
 import { dictionaries } from "@/lib/i18n";
 import type { JuryPlayerRow } from "@/lib/jury";
@@ -29,12 +38,28 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
   const current = rows[currentIndex];
 
   return (
-    <div className="eic-jury-theater">
-      <header className="eic-jury-theater__topbar">
-        <p className="eic-jury-theater__kicker">{t.jury_pitch_theater_intro}</p>
-        <p className="eic-jury-theater__count">
-          {Math.min(currentIndex + 1, rows.length)} / {rows.length}
-        </p>
+    <div className="eic-jury-theater eic-jury-theater--v3">
+      <header
+        className="wf-row eic-jury-theater__topbar"
+        style={{
+          padding: "12px 20px",
+          gap: 14,
+          background: "var(--wf-paper)",
+          borderBottom: "1px solid var(--wf-line)",
+        }}
+      >
+        <div className="wf-brand">
+          <div className="wf-brand-mark">E</div>
+          <div className="wf-stack" style={{ gap: 2 }}>
+            <div className="wf-brand-name">{t.jury_pitch_theater_intro}</div>
+            <div className="wf-brand-sub">
+              EIC · UEMF · Hack-Days · {Math.min(currentIndex + 1, rows.length)} /{" "}
+              {rows.length}
+            </div>
+          </div>
+        </div>
+        <span className="wf-grow" />
+        <JuryPitchTimer />
       </header>
 
       <div className="eic-jury-theater__layout">
@@ -45,23 +70,73 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
             </p>
           ) : (
             <>
-              <div className="eic-jury-theater__hero">
-                <h1 className="eic-jury-theater__team-name">{current.player.name}</h1>
-                {current.player.idea ? (
-                  <p className="eic-jury-theater__team-idea">
-                    <span className="eic-jury-theater__idea-label">
-                      {t.jury_pitch_theater_team_idea} ·{" "}
-                    </span>
-                    {current.player.idea}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="eic-jury-theater__meta">
-                <JuryPitchTimer />
-                <div className="eic-jury-theater__stepper">
+              <div
+                className="wf-row eic-jury-theater__hero"
+                style={{
+                  padding: "16px 20px",
+                  gap: 14,
+                  borderBottom: "1px solid var(--wf-line)",
+                  background: "var(--wf-paper)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 12,
+                    background: "var(--wf-blue-tint)",
+                    color: "var(--wf-blue)",
+                    display: "grid",
+                    placeItems: "center",
+                    fontFamily: "var(--font-heading, Baskervville, serif)",
+                    fontSize: 26,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                >
+                  {current.player.name.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="wf-stack wf-grow" style={{ gap: 4, minWidth: 0 }}>
+                  <div className="wf-kicker">
+                    {t.jury_pitch_theater_intro} ·{" "}
+                    {Math.min(currentIndex + 1, rows.length)} / {rows.length}
+                  </div>
+                  <h1
+                    className="eic-jury-theater__team-name"
+                    style={{
+                      fontFamily: "var(--font-heading, Baskervville, serif)",
+                      fontSize: 22,
+                      fontWeight: 600,
+                      margin: 0,
+                      color: "var(--wf-ink)",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {current.player.name}
+                  </h1>
+                  {current.player.idea ? (
+                    <p
+                      className="eic-jury-theater__team-idea"
+                      style={{
+                        fontSize: 13,
+                        color: "var(--wf-ink-soft)",
+                        margin: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span className="wf-faint">
+                        {t.jury_pitch_theater_team_idea} ·{" "}
+                      </span>
+                      {current.player.idea}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="wf-row" style={{ gap: 6, flexShrink: 0 }}>
                   <button
-                    className="eic-button eic-button--ghost"
+                    className="wf-btn"
                     disabled={currentIndex === 0}
                     onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
                     type="button"
@@ -69,7 +144,7 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
                     {t.jury_pitch_theater_select_prev}
                   </button>
                   <button
-                    className="eic-button eic-button--primary"
+                    className="wf-btn is-primary"
                     disabled={currentIndex >= rows.length - 1}
                     onClick={() =>
                       setCurrentIndex((i) => Math.min(rows.length - 1, i + 1))
@@ -81,12 +156,14 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
                 </div>
               </div>
 
-              <JuryPitchGrid
-                eventId={eventId}
-                existing={current.existing}
-                jurorVotedCount={current.existing ? 1 : 0}
-                player={current.player}
-              />
+              <div style={{ padding: "16px 20px" }}>
+                <JuryPitchDials
+                  eventId={eventId}
+                  existing={current.existing}
+                  jurorVotedCount={current.existing ? 1 : 0}
+                  player={current.player}
+                />
+              </div>
             </>
           )}
         </section>
