@@ -52,6 +52,9 @@ export default async function PlayerDetailPage({
   return (
     <main className="main">
       <article className="eic-profile">
+        <Link className="eic-button eic-button--ghost eic-profile__back" href="/journey">
+          ← Retour
+        </Link>
         <header className="eic-profile__header">
           <p className="eic-profile__kicker">{t.profile_kicker}</p>
           <h1 className="eic-profile__title">{profile.name}</h1>
