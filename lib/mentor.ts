@@ -243,3 +243,16 @@ export async function getMentorPlayersOverview(
   }
   return rows;
 }
+
+// ============================================================================
+// MNT-04 — ordered pending queue helper
+// Returns the flat antichrono list of pending submission IDs for prev/next nav.
+// ============================================================================
+
+export async function getPendingSubmissionQueue(): Promise<string[]> {
+  const rows = await getMentorPlayersOverview();
+  return rows
+    .flatMap((r) => r.pendingSubmissions)
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+    .map((s) => s.submissionId);
+}

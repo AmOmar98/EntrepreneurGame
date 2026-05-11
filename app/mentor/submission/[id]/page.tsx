@@ -24,6 +24,7 @@ import {
 } from "@/components/mentor-comments-list";
 import { MentorEvaluationPanel } from "@/components/mentor-evaluation-panel";
 import { MentorLinkCard } from "@/components/mentor-link-card";
+import { MentorSubNav } from "@/components/mentor-sub-nav";
 import {
   MentorSubmissionHistory,
   type MentorSubmissionHistoryEntry,
@@ -32,6 +33,7 @@ import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { levelLabel } from "@/lib/journey";
+import { getPendingSubmissionQueue } from "@/lib/mentor";
 import type {
   LevelId,
   RubricCriterion,
@@ -197,6 +199,13 @@ export default async function MentorSubmissionPage({
 
   const submissionVersion: 1 | 2 = submission.version === 2 ? 2 : 1;
 
+  // MNT-04 — ordered pending queue for prev/next nav.
+  const queue = await getPendingSubmissionQueue();
+  const queueIdx = queue.indexOf(id);
+  const prevId = queueIdx > 0 ? (queue[queueIdx - 1] ?? null) : null;
+  const nextId = queueIdx !== -1 && queueIdx < queue.length - 1 ? (queue[queueIdx + 1] ?? null) : null;
+  const queuePosition = queueIdx !== -1 ? queueIdx + 1 : null;
+
   // Phase 8 / MNT-02 — full submission history for (player, template).
   const { data: historyRows } = await supabase
     .from("submissions")
@@ -309,6 +318,16 @@ export default async function MentorSubmissionPage({
     <AppShell role={role ?? "mentor"} variant="staff">
       <main style={SHELL_MAIN_STYLE}>
         <BackLink />
+
+        {/* MNT-04 — prev/next queue nav */}
+        {queue.length > 0 ? (
+          <MentorSubNav
+            prevId={prevId}
+            nextId={nextId}
+            position={queuePosition ?? queue.length}
+            total={queue.length}
+          />
+        ) : null}
 
         {/* Brief reminder + player meta */}
         <header className="eic-mentor-page" style={{ marginBottom: 8 }}>
