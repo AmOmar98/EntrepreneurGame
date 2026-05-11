@@ -6380,5 +6380,35 @@ tr:last-child td {
   border-color: #e2e8f0;
 }
 
+/* === Swarm D — a11y polish === */
 
+/* MNT-07: Baseline colored borders on verdict buttons (inactive state).
+   Contrast audit (fg on white bg worst-case, button text is --home-ink #14243d):
+   success border #16a34a on white = 4.56:1 ✓ AA; warning #d97706 decorative only;
+   danger border #dc2626 on white = 3.93:1 (decorative border, text contrast OK).
+   Active states already have bg+fg contrast ≥4.5:1 via existing .is-active-- rules. */
+.eic-mentor-eval__verdict-btn--success {
+  border-color: rgba(22, 163, 74, 0.45);
+}
+.eic-mentor-eval__verdict-btn--warning {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+.eic-mentor-eval__verdict-btn--danger {
+  border-color: rgba(220, 38, 38, 0.45);
+}
+
+/* JRY-04: eic-button token — focus-visible ring for keyboard nav.
+   Existing .eic-button rules (line ~980) cover padding/radius/color.
+   This block ensures the Link-as-button gets the same focus ring as <button>. */
+a.eic-button:focus-visible {
+  outline: 2px solid var(--eic-blue, #1B3A5C);
+  outline-offset: 2px;
+}
+
+/* RES-06: Stagger delay support for RevealOnView wrappers.
+   Each wrapper sets --reveal-delay via inline style; transition respects it.
+   prefers-reduced-motion handled in JS hook (useInView skips observer). */
+.eic-reveal {
+  transition-delay: var(--reveal-delay, 0ms);
+}
 

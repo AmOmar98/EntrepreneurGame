@@ -82,16 +82,11 @@ export default async function JuryPage({
             <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 4px" }}>{t.jury_subtitle}</p>
             <p style={{ color: "#94a3b8", fontSize: 12, margin: 0 }}>{t.jury_each_max_20}</p>
           </div>
+          {/* JRY-04 a11y: was a plain <Link> styled as button without role/focus-ring.
+              Now uses eic-button token class which includes focus-visible outline. */}
           <Link
+            className="eic-button eic-button--primary"
             href="/jury?theater=1"
-            style={{
-              padding: "8px 14px",
-              borderRadius: 6,
-              background: "#0f172a",
-              color: "#fff",
-              fontSize: 13,
-              textDecoration: "none",
-            }}
           >
             {t.jury_pitch_theater_toggle_on}
           </Link>

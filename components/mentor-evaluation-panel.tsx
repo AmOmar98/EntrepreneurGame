@@ -11,6 +11,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, RotateCw, X } from "lucide-react";
 import { evaluateSubmission, type WorkflowState } from "@/app/actions";
 import {
   MentorConfirmationBanner,
@@ -68,16 +69,18 @@ export function MentorEvaluationPanel({
     setScores((prev) => ({ ...prev, [key]: n }));
   };
 
-  const verdictOptions: { value: Verdict; label: string; tone: "success" | "warning" | "danger" }[] =
+  // MNT-07 a11y: icons added for faster visual differentiation, reduced mis-click risk.
+  // Baseline border colors on inactive state (not just active) so contrast is always visible.
+  const verdictOptions: { value: Verdict; label: string; tone: "success" | "warning" | "danger"; icon: React.ReactNode }[] =
     version === 1
       ? [
-          { value: "validate_v1", label: t.evaluation_verdict_validate_v1, tone: "success" },
-          { value: "request_v2", label: t.evaluation_verdict_request_v2, tone: "warning" },
-          { value: "reject", label: t.evaluation_verdict_reject, tone: "danger" },
+          { value: "validate_v1", label: t.evaluation_verdict_validate_v1, tone: "success", icon: <Check aria-hidden="true" size={14} /> },
+          { value: "request_v2", label: t.evaluation_verdict_request_v2, tone: "warning", icon: <RotateCw aria-hidden="true" size={14} /> },
+          { value: "reject", label: t.evaluation_verdict_reject, tone: "danger", icon: <X aria-hidden="true" size={14} /> },
         ]
       : [
-          { value: "validate_v2", label: t.evaluation_verdict_validate_v2, tone: "success" },
-          { value: "reject", label: t.evaluation_verdict_reject, tone: "danger" },
+          { value: "validate_v2", label: t.evaluation_verdict_validate_v2, tone: "success", icon: <Check aria-hidden="true" size={14} /> },
+          { value: "reject", label: t.evaluation_verdict_reject, tone: "danger", icon: <X aria-hidden="true" size={14} /> },
         ];
 
   const expectedActionRequired = verdict === "request_v2";
@@ -159,12 +162,13 @@ export function MentorEvaluationPanel({
                 <button
                   aria-checked={active}
                   aria-label={opt.label}
-                  className={`eic-mentor-eval__verdict-btn${active ? ` is-active--${opt.tone}` : ""}`}
+                  className={`eic-mentor-eval__verdict-btn eic-mentor-eval__verdict-btn--${opt.tone}${active ? ` is-active--${opt.tone}` : ""}`}
                   key={opt.value}
                   onClick={() => setVerdict(opt.value)}
                   role="radio"
                   type="button"
                 >
+                  {opt.icon}
                   {opt.label}
                 </button>
               );

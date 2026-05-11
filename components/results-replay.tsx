@@ -81,13 +81,15 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         ) : null}
       </header>
 
+      {/* RES-06 a11y: stagger 200ms between sections via CSS var --reveal-delay.
+          prefers-reduced-motion handled in useInView hook (observer skipped, isInView=true immediately). */}
       {podium.length > 0 ? (
-        <RevealOnView>
+        <RevealOnView style={{ "--reveal-delay": "0ms" } as React.CSSProperties}>
           <ResultsPodium entries={podium} isGameMaster={isGameMaster} />
         </RevealOnView>
       ) : null}
 
-      <RevealOnView>
+      <RevealOnView style={{ "--reveal-delay": "200ms" } as React.CSSProperties}>
         <ResultsStatsStrip stats={stats} />
       </RevealOnView>
 
