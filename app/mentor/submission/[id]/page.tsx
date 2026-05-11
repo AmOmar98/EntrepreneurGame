@@ -14,6 +14,7 @@
 // <MentorEvaluationPanel /> is shown with the required expected_action gate
 // when verdict=request_v2 (MNT-04).
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { EvaluationForm } from "@/components/evaluation-form";
@@ -213,34 +214,44 @@ export default async function MentorSubmissionPage({
     .eq("player_id", submission.player_id)
     .eq("deliverable_template_id", submission.deliverable_template_id)
     .order("version", { ascending: false });
-  const history: MentorSubmissionHistoryEntry[] = (
-    historyRows as
-      | {
-          id: string;
-          version: number;
-          proof_url: string | null;
-          proof_text: string | null;
-          submitted_at: string;
-        }[]
-      | null
-  )
-    ? (
-        historyRows as {
-          id: string;
-          version: number;
-          proof_url: string | null;
-          proof_text: string | null;
-          submitted_at: string;
-        }[]
-      ).map((r) => ({
-        id: r.id,
-        version: r.version,
-        submittedAt: r.submitted_at,
-        proofUrl: r.proof_url,
-        proofText: r.proof_text,
-        isCurrent: r.id === submission.id,
-      }))
-    : [];
+
+  type HistoryRow = {
+    id: string;
+    version: number;
+    proof_url: string | null;
+    proof_text: string | null;
+    submitted_at: string;
+  };
+  const typedHistoryRows = (historyRows ?? []) as HistoryRow[];
+
+  // MNT-05 — fetch mentor's own evaluations for all history submission IDs.
+  const historySubIds = typedHistoryRows.map((r) => r.id);
+  type EvalHistRow = { submission_id: string; verdict: string; expected_action: string | null };
+  const evalsBySubId = new Map<string, EvalHistRow>();
+  if (historySubIds.length > 0) {
+    const { data: evalHistRows } = await supabase
+      .from("evaluations")
+      .select("submission_id, verdict, expected_action")
+      .eq("evaluator_id", user!.id)
+      .in("submission_id", historySubIds);
+    for (const row of (evalHistRows ?? []) as EvalHistRow[]) {
+      evalsBySubId.set(row.submission_id, row);
+    }
+  }
+
+  const history: MentorSubmissionHistoryEntry[] = typedHistoryRows.map((r) => {
+    const eval_ = evalsBySubId.get(r.id);
+    return {
+      id: r.id,
+      version: r.version,
+      submittedAt: r.submitted_at,
+      proofUrl: r.proof_url,
+      proofText: r.proof_text,
+      isCurrent: r.id === submission.id,
+      evalVerdict: eval_?.verdict ?? null,
+      evalExpectedAction: eval_?.expected_action ?? null,
+    };
+  });
 
   // Phase 8 / MNT-03 — async tagged comments tied to the current submission.
   const { data: commentRows } = await supabase
@@ -436,8 +447,12 @@ export default async function MentorSubmissionPage({
                     border: "1px solid #fde68a",
                     borderRadius: 6,
                     fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
+                  <Lock size={14} aria-hidden="true" />
                   {t.evaluation_already_evaluated}
                 </p>
                 <h3 className="eic-mentor-eval__title">
@@ -505,6 +520,55 @@ export default async function MentorSubmissionPage({
                     </p>
                   </aside>
                 ) : null}
+
+                {/* MNT-10: locked state CTAs */}
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {/* GM revision mailto */}
+                  <a
+                    href={`mailto:omar.ameur98@gmail.com?subject=${encodeURIComponent(
+                      `[Revision GM] ${template?.title ?? "Livrable"} — ${player?.name ?? "Player"}`
+                    )}&body=${encodeURIComponent(
+                      `Bonjour GameMaster,\n\nJe souhaite demander une revision pour l'evaluation suivante :\n- Player : ${player?.name ?? ""}\n- Livrable : ${template?.title ?? ""}\n- Submission ID : ${submission.id}\n- Verdict rendu : ${verdictLabel(existing.verdict)}\n\nRaison de la demande de revision :\n[Votre message ici]\n\nCordialement,\nMentor`
+                    )}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "7px 14px",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#92400e",
+                      background: "#fef3c7",
+                      border: "1px solid #fde68a",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Demander revision GameMaster ✉
+                  </a>
+
+                  {/* Next pending submission */}
+                  {nextId ? (
+                    <Link
+                      href={`/mentor/submission/${nextId}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "7px 14px",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: "#1e40af",
+                        background: "#eff6ff",
+                        border: "1px solid #bfdbfe",
+                        borderRadius: 6,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Prochaine soumission en attente →
+                    </Link>
+                  ) : null}
+                </div>
               </section>
             ) : (
               <MentorEvaluationPanel
