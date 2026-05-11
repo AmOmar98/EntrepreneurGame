@@ -99,6 +99,9 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
           <h2 className="eic-results-replay__ranking-title">
             {t.results_replay_ranking_title}
           </h2>
+          <p className="eic-results-replay__ranking-weighting">
+            {t.results_replay_weighting_caption}
+          </p>
           {rows.length === 0 ? (
             <p className="eic-results-replay__ranking-empty">{t.results_empty}</p>
           ) : (
@@ -155,11 +158,11 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         </section>
       ) : (
         <section
-          aria-label={t.results_replay_ranking_title}
+          aria-label={t.results_replay_ranking_announcement_title}
           className="eic-results-replay__ranking"
         >
           <h2 className="eic-results-replay__ranking-title">
-            {t.results_replay_ranking_title}
+            {t.results_replay_ranking_announcement_title}
           </h2>
           <p className="eic-results-replay__ranking-empty">
             {t.results_replay_ranking_hidden_player}
@@ -171,22 +174,22 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         <ResultsTimelineMoments />
       </RevealOnView>
 
-      <footer className="eic-results-replay__exports">
-        <h2 className="eic-results-replay__exports-title">
-          {t.results_replay_exports_label}
-        </h2>
-        <div className="eic-results-replay__exports-row">
-          {isGameMaster ? (
+      {isGameMaster ? (
+        <footer className="eic-results-replay__exports">
+          <h2 className="eic-results-replay__exports-title">
+            {t.results_replay_exports_label}
+          </h2>
+          <div className="eic-results-replay__exports-row">
             <a
               className="eic-button eic-button--primary"
               href="/admin/export/players.csv"
             >
               {t.results_replay_export_players}
             </a>
-          ) : null}
-          {/* TODO Agent 9B / v0.3: dedicated /api/export/ranking.csv route. */}
-        </div>
-      </footer>
+            {/* TODO Agent 9B / v0.3: dedicated /api/export/ranking.csv route. */}
+          </div>
+        </footer>
+      ) : null}
     </div>
   );
 }
