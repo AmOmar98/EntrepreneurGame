@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Baskervville, Montserrat } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import "./eic-tokens.css";
 import "./wf-components.css";
@@ -32,7 +33,10 @@ export default function RootLayout({
 }>) {
   return (
     <html className={`${baskervville.variable} ${montserrat.variable}`} lang="fr">
-      <body>{children}</body>
+      <body>
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
