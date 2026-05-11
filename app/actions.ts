@@ -156,6 +156,11 @@ export async function saveOnboarding(
       idea: parsed.data.idea,
       onboarded_at: new Date().toISOString(),
       score_engagement: currentEngagement + 10,
+      // Onboarding completion bumps the Player off L0_diagnostic (the default)
+      // onto L1_problem so the journey track shows L0=done, L1=current.
+      // Without this, the L0 node stays "current/À rendre" forever even after
+      // the KYC form is filled. See memory project_onboarding_level_bump_sql.
+      current_level: "L1_problem",
     })
     .eq("id", player.id);
   if (updateError) {
