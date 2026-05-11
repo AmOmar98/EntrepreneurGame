@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { MentorPlayersTable } from "@/components/mentor-players-table";
 import { MentorPendingFilter } from "@/components/mentor-pending-filter";
+import { MentorInboxView } from "@/components/mentor-inbox-view";
+import { MentorViewToggle } from "@/components/mentor-view-toggle";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
-import { getMentorPlayersOverview } from "@/lib/mentor";
+import { getMentorPlayersOverview, type MentorPendingSubmission } from "@/lib/mentor";
 import { getPendingBonusEventsForMentor } from "@/lib/bonus";
 
 const t = dictionaries.fr;
@@ -14,7 +16,7 @@ const t = dictionaries.fr;
 export default async function MentorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pending?: string }>;
+  searchParams: Promise<{ pending?: string; view?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -24,11 +26,19 @@ export default async function MentorPage({
     redirect(pathForRole(role));
   }
 
-  const { pending } = await searchParams;
+  const { pending, view } = await searchParams;
   const onlyPending = pending === "1";
+  const activeView: "inbox" | "team" = view === "inbox" ? "inbox" : "team";
 
   const rows = hasSupabaseEnv() ? await getMentorPlayersOverview({ onlyPending }) : [];
   const pendingBonuses = hasSupabaseEnv() ? await getPendingBonusEventsForMentor() : [];
+
+  // Flatten all pending submissions across players, antichrono, for the inbox.
+  const inboxItems: MentorPendingSubmission[] = rows
+    .flatMap((r) => r.pendingSubmissions)
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
+  const totalPending = inboxItems.length;
 
   return (
     <AppShell role={role ?? "mentor"} variant="staff">
@@ -37,11 +47,21 @@ export default async function MentorPage({
           {t.mentor_title}
         </h1>
         <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 16px" }}>{t.mentor_subtitle}</p>
-        <MentorPendingFilter active={onlyPending} />
-        {!hasSupabaseEnv() ? (
-          <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.mentor_demo_disabled}</p>
+
+        {hasSupabaseEnv() ? (
+          <>
+            <MentorViewToggle activeView={activeView} pendingCount={totalPending} />
+            {activeView === "inbox" ? (
+              <MentorInboxView items={inboxItems} />
+            ) : (
+              <>
+                <MentorPendingFilter active={onlyPending} />
+                <MentorPlayersTable rows={rows} />
+              </>
+            )}
+          </>
         ) : (
-          <MentorPlayersTable rows={rows} />
+          <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.mentor_demo_disabled}</p>
         )}
         {hasSupabaseEnv() && pendingBonuses.length > 0 ? (
           <section style={{ marginTop: 32 }} aria-labelledby="mentor-pending-bonus-heading">
