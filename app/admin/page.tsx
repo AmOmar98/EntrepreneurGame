@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Download } from "lucide-react";
 import { AdminLiveToggle } from "@/components/admin-live-toggle";
 import { AdminLiveView } from "@/components/admin-live-view";
 import { AdminStatusBanner } from "@/components/admin-status-banner";
@@ -80,10 +81,11 @@ export default async function AdminPage({
               style={{
                 padding: "8px 12px",
                 borderRadius: 6,
-                background: "#0f172a",
-                color: "#fff",
+                border: "1px solid #cbd5e1",
+                color: "#0f172a",
                 fontSize: 13,
                 textDecoration: "none",
+                background: "transparent",
               }}
             >
               {t.admin_action_import}
@@ -91,14 +93,19 @@ export default async function AdminPage({
             <a
               href="/admin/export/players.csv"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
                 padding: "8px 12px",
                 borderRadius: 6,
-                border: "1px solid #cbd5e1",
-                color: "#0f172a",
+                background: "#0f172a",
+                color: "#fff",
                 fontSize: 13,
                 textDecoration: "none",
+                fontWeight: 600,
               }}
             >
+              <Download size={16} aria-hidden />
               {t.admin_action_export}
             </a>
           </div>
