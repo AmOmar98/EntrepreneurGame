@@ -11,12 +11,23 @@ import type { LevelId, Player, SubmissionStatus } from "@/lib/types";
 // Public types
 // ============================================================================
 
+export type MentorPendingSubmission = {
+  submissionId: string;
+  playerId: string;
+  playerName: string;
+  playerSlug: string;
+  missionTitle: string | null;
+  submittedAt: string;
+};
+
 export type MentorPlayerOverview = {
   player: Player;
   levelLabel: string;
   submittedCount: number;
   totalDeliverables: number;
   pendingSubmissionIds: string[];
+  /** Flat list of pending submissions with metadata, for the inbox view. */
+  pendingSubmissions: MentorPendingSubmission[];
 };
 
 // ============================================================================
@@ -142,14 +153,34 @@ export async function getMentorPlayersOverview(
   const playerIds = players.map((p) => p.id);
   const { data: subRows, error: subErr } = await supabase
     .from("submissions")
-    .select("id, player_id, status")
-    .in("player_id", playerIds);
+    .select("id, player_id, status, submitted_at, deliverable_template_id")
+    .in("player_id", playerIds)
+    .order("submitted_at", { ascending: false });
   if (subErr) {
     console.error("[mentor] submissions query failed", subErr);
     return [];
   }
-  type SubRow = { id: string; player_id: string; status: SubmissionStatus };
+  type SubRow = {
+    id: string;
+    player_id: string;
+    status: SubmissionStatus;
+    submitted_at: string;
+    deliverable_template_id: string;
+  };
   const submissions = (subRows ?? []) as SubRow[];
+
+  // Resolve deliverable template titles for inbox display.
+  const tplIds = Array.from(new Set(submissions.map((s) => s.deliverable_template_id)));
+  const tplTitleById = new Map<string, string>();
+  if (tplIds.length > 0) {
+    const { data: tplRows } = await supabase
+      .from("deliverable_templates")
+      .select("id, title")
+      .in("id", tplIds);
+    for (const r of (tplRows ?? []) as { id: string; title: string }[]) {
+      tplTitleById.set(r.id, r.title);
+    }
+  }
 
   // 5. Fetch evaluations authored by the connected user (to know which subs are
   //    already reviewed by ME). Scope by submission ids we just loaded.
@@ -173,12 +204,28 @@ export async function getMentorPlayersOverview(
   // Aggregate per-player counters and pending submission ids.
   const submittedByPlayer = new Map<string, number>();
   const pendingByPlayer = new Map<string, string[]>();
+  const pendingSubsByPlayer = new Map<string, MentorPendingSubmission[]>();
+  const playerById = new Map(players.map((p) => [p.id, p]));
   for (const s of submissions) {
     submittedByPlayer.set(s.player_id, (submittedByPlayer.get(s.player_id) ?? 0) + 1);
     if (PENDING_STATUSES.includes(s.status) && !evaluatedByMe.has(s.id)) {
       const arr = pendingByPlayer.get(s.player_id) ?? [];
       arr.push(s.id);
       pendingByPlayer.set(s.player_id, arr);
+
+      const player = playerById.get(s.player_id);
+      if (player) {
+        const subs = pendingSubsByPlayer.get(s.player_id) ?? [];
+        subs.push({
+          submissionId: s.id,
+          playerId: s.player_id,
+          playerName: player.name,
+          playerSlug: player.slug,
+          missionTitle: tplTitleById.get(s.deliverable_template_id) ?? null,
+          submittedAt: s.submitted_at,
+        });
+        pendingSubsByPlayer.set(s.player_id, subs);
+      }
     }
   }
 
@@ -188,10 +235,24 @@ export async function getMentorPlayersOverview(
     submittedCount: submittedByPlayer.get(player.id) ?? 0,
     totalDeliverables,
     pendingSubmissionIds: pendingByPlayer.get(player.id) ?? [],
+    pendingSubmissions: pendingSubsByPlayer.get(player.id) ?? [],
   }));
 
   if (opts?.onlyPending) {
     return rows.filter((r) => r.pendingSubmissionIds.length > 0);
   }
   return rows;
+}
+
+// ============================================================================
+// MNT-04 — ordered pending queue helper
+// Returns the flat antichrono list of pending submission IDs for prev/next nav.
+// ============================================================================
+
+export async function getPendingSubmissionQueue(): Promise<string[]> {
+  const rows = await getMentorPlayersOverview();
+  return rows
+    .flatMap((r) => r.pendingSubmissions)
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+    .map((s) => s.submissionId);
 }

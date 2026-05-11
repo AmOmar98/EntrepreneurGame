@@ -63,9 +63,17 @@ export function MentorEvaluationPanel({
     }
   }, [state.ok, router]);
 
-  const updateScore = (key: string, raw: string, max: number) => {
-    const n = Math.max(0, Math.min(max, Math.round(Number(raw) || 0)));
-    setScores((prev) => ({ ...prev, [key]: n }));
+  const updateScore = (key: string, val: number) => {
+    setScores((prev) => ({ ...prev, [key]: val }));
+  };
+
+  // MNT-02: segmented 0..max radio buttons with keyboard 0-5 shortcut
+  // when the criterion row is focused.
+  const handleSegmentKey = (e: React.KeyboardEvent, key: string, max: number) => {
+    const n = Number(e.key);
+    if (!Number.isNaN(n) && n >= 0 && n <= max) {
+      updateScore(key, n);
+    }
   };
 
   const verdictOptions: { value: Verdict; label: string; tone: "success" | "warning" | "danger" }[] =
@@ -101,30 +109,70 @@ export function MentorEvaluationPanel({
         disabled={locked}
         style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}
       >
+        {/* MNT-02: segmented rubric (0..max radio buttons per criterion) */}
         <div>
           <p className="eic-mentor-eval__legend">{t.evaluation_scores_legend}</p>
           <div className="eic-mentor-eval__rubric">
             {rubric.length === 0 ? (
               <p style={{ margin: 0, fontSize: 13, color: "#5e5849" }}>—</p>
             ) : (
-              rubric.map((c) => (
-                <label className="eic-mentor-eval__rubric-row" key={c.key}>
-                  <span className="eic-mentor-eval__rubric-label">
-                    <strong>{c.label}</strong>
-                    <span className="eic-mentor-eval__rubric-max">(max {c.max})</span>
-                  </span>
-                  <input
-                    aria-label={`${c.label} (max ${c.max})`}
-                    className="eic-mentor-eval__rubric-input"
-                    max={c.max}
-                    min={0}
-                    onChange={(e) => updateScore(c.key, e.target.value, c.max)}
-                    step={1}
-                    type="number"
-                    value={scores[c.key] ?? 0}
-                  />
-                </label>
-              ))
+              rubric.map((c) => {
+                const current = scores[c.key] ?? 0;
+                const steps = Array.from({ length: c.max + 1 }, (_, i) => i);
+                return (
+                  <div
+                    className="eic-mentor-eval__rubric-row"
+                    key={c.key}
+                    onKeyDown={(e) => handleSegmentKey(e, c.key, c.max)}
+                  >
+                    <span className="eic-mentor-eval__rubric-label">
+                      <strong>{c.label}</strong>
+                      <span className="eic-mentor-eval__rubric-max">(/{c.max})</span>
+                    </span>
+                    <fieldset
+                      role="radiogroup"
+                      aria-label={`${c.label} (max ${c.max})`}
+                      style={{ border: "none", padding: 0, margin: 0, display: "flex", gap: 4, flexWrap: "wrap" }}
+                    >
+                      {steps.map((n) => {
+                        const isActive = current === n;
+                        return (
+                          <label
+                            key={n}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 32,
+                              height: 32,
+                              borderRadius: 6,
+                              border: isActive ? "2px solid #1e40af" : "1px solid #e2e8f0",
+                              background: isActive ? "#1e40af" : "#f8fafc",
+                              color: isActive ? "#fff" : "#334155",
+                              fontWeight: isActive ? 700 : 400,
+                              fontSize: 13,
+                              cursor: locked ? "default" : "pointer",
+                              userSelect: "none",
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name={`rubric-${c.key}`}
+                              value={n}
+                              checked={isActive}
+                              onChange={() => updateScore(c.key, n)}
+                              style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+                              tabIndex={isActive ? 0 : -1}
+                              aria-label={`${n}`}
+                            />
+                            {n}
+                          </label>
+                        );
+                      })}
+                    </fieldset>
+                  </div>
+                );
+              })
             )}
             <p className="eic-mentor-eval__total">
               {t.evaluation_total_score}: {total}
@@ -148,28 +196,6 @@ export function MentorEvaluationPanel({
             placeholder={t.evaluation_feedback_placeholder}
             rows={5}
           />
-        </div>
-
-        <div>
-          <p className="eic-mentor-eval__legend">{t.evaluation_verdict_legend}</p>
-          <div className="eic-mentor-eval__verdict-group" role="radiogroup">
-            {verdictOptions.map((opt) => {
-              const active = verdict === opt.value;
-              return (
-                <button
-                  aria-checked={active}
-                  aria-label={opt.label}
-                  className={`eic-mentor-eval__verdict-btn${active ? ` is-active--${opt.tone}` : ""}`}
-                  key={opt.value}
-                  onClick={() => setVerdict(opt.value)}
-                  role="radio"
-                  type="button"
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {expectedActionRequired ? (
@@ -214,17 +240,53 @@ export function MentorEvaluationPanel({
           </div>
         ) : null}
 
-        <button
-          className="eic-mentor-eval__submit"
-          disabled={submitDisabled}
-          type="submit"
+        {/* MNT-03: sticky footer — verdict selector + submit button */}
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            background: "#fff",
+            borderTop: "1px solid #e2e8f0",
+            padding: "12px 0 4px",
+            marginTop: 4,
+            zIndex: 10,
+          }}
         >
-          {pending
-            ? t.evaluation_submitting
-            : locked
-              ? t.mentor_evaluation_locked
-              : t.evaluation_submit}
-        </button>
+          <div>
+            <p className="eic-mentor-eval__legend" style={{ marginBottom: 8 }}>{t.evaluation_verdict_legend}</p>
+            <div className="eic-mentor-eval__verdict-group" role="radiogroup">
+              {verdictOptions.map((opt) => {
+                const active = verdict === opt.value;
+                return (
+                  <button
+                    aria-checked={active}
+                    aria-label={opt.label}
+                    className={`eic-mentor-eval__verdict-btn${active ? ` is-active--${opt.tone}` : ""}`}
+                    key={opt.value}
+                    onClick={() => setVerdict(opt.value)}
+                    role="radio"
+                    type="button"
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            className="eic-mentor-eval__submit"
+            disabled={submitDisabled}
+            style={{ marginTop: 10 }}
+            type="submit"
+          >
+            {pending
+              ? t.evaluation_submitting
+              : locked
+                ? t.mentor_evaluation_locked
+                : t.evaluation_submit}
+          </button>
+        </div>
       </fieldset>
 
       {state.message && !state.ok ? (
