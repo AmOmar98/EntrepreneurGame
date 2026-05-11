@@ -18,6 +18,11 @@ type Props = {
 const ORDER: (1 | 2 | 3)[] = [2, 1, 3];
 
 const HEIGHTS: Record<1 | 2 | 3, number> = { 1: 220, 2: 170, 3: 140 };
+const HEIGHT_CLASS: Record<1 | 2 | 3, string> = {
+  1: "eic-podium-h-220",
+  2: "eic-podium-h-170",
+  3: "eic-podium-h-140",
+};
 
 const COLOR: Record<1 | 2 | 3, string> = {
   1: "#C9A227", // EIC gold
@@ -49,7 +54,7 @@ export function ResultsPodium({ entries, isGameMaster }: Props) {
             return (
               <div className="eic-results-replay__podium-step" key={rank}>
                 <div
-                  className="eic-results-replay__podium-block eic-results-replay__podium-block--empty"
+                  className={`eic-results-replay__podium-block eic-results-replay__podium-block--empty ${HEIGHT_CLASS[rank]}`}
                   style={{ height: HEIGHTS[rank], background: COLOR[rank] }}
                   aria-hidden="true"
                 >
@@ -68,7 +73,7 @@ export function ResultsPodium({ entries, isGameMaster }: Props) {
                 </p>
               ) : null}
               <div
-                className="eic-results-replay__podium-block"
+                className={`eic-results-replay__podium-block ${HEIGHT_CLASS[rank]}`}
                 style={{ height: HEIGHTS[rank], background: COLOR[rank] }}
               >
                 <span className="eic-results-replay__podium-rank">{rank}</span>
