@@ -60,20 +60,11 @@ export function SubmissionForm({
       {/* A4 — Field completion counter: header of form, above the proof-kind fieldset. */}
       <FieldCompletionCounter formRef={formRef} />
 
-      <fieldset
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 8,
-          padding: 12,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
-        <legend style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", padding: "0 4px" }}>
+      <fieldset className="eic-form-fieldset">
+        <legend className="eic-form-fieldset__legend">
           {t.submission_kind_label}
         </legend>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+        <label className="eic-form-fieldset__radio">
           <input
             type="radio"
             name="kind"
@@ -83,7 +74,7 @@ export function SubmissionForm({
           />
           {t.submission_kind_proof_url}
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+        <label className="eic-form-fieldset__radio">
           <input
             type="radio"
             name="kind"
@@ -96,39 +87,26 @@ export function SubmissionForm({
       </fieldset>
 
       {kind === "proof_url" ? (
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
-          <span style={{ fontWeight: 600, color: "#0f172a" }}>{t.submission_url_label}</span>
+        <label className="eic-form-field">
+          <span className="eic-form-field__label">{t.submission_url_label}</span>
           <input
             type="url"
             name="proofUrl"
             placeholder={t.submission_url_placeholder}
             required
-            pattern="https://.*"
-            style={{
-              padding: "8px 12px",
-              border: "1px solid #cbd5e1",
-              borderRadius: 6,
-              fontSize: 14,
-            }}
+            className="eic-form-input"
           />
         </label>
       ) : (
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
-          <span style={{ fontWeight: 600, color: "#0f172a" }}>{t.submission_text_label}</span>
+        <label className="eic-form-field">
+          <span className="eic-form-field__label">{t.submission_text_label}</span>
           <textarea
             name="proofText"
             placeholder={t.submission_text_placeholder}
             required
             rows={10}
             maxLength={4000}
-            style={{
-              padding: "8px 12px",
-              border: "1px solid #cbd5e1",
-              borderRadius: 6,
-              fontSize: 14,
-              fontFamily: "inherit",
-              resize: "vertical",
-            }}
+            className="eic-form-textarea"
           />
         </label>
       )}
@@ -136,17 +114,7 @@ export function SubmissionForm({
       <button
         type="submit"
         disabled={pending}
-        style={{
-          padding: "10px 16px",
-          background: pending ? "#94a3b8" : "#1d4ed8",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: pending ? "wait" : "pointer",
-          alignSelf: "flex-start",
-        }}
+        className="eic-button--submit"
       >
         {pending ? t.submission_submitting : submitLabel}
       </button>

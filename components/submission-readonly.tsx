@@ -31,59 +31,25 @@ export function SubmissionReadonly({ submission }: { submission: Submission }) {
   return (
     <section
       aria-label={t.submission_readonly_title}
-      style={{
-        marginTop: 16,
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-      }}
+      className="eic-submission-readonly"
     >
       {locked ? (
-        <div
-          role="status"
-          style={{
-            background: "#dbeafe",
-            color: "#1d4ed8",
-            border: "1px solid #93c5fd",
-            borderRadius: 8,
-            padding: "10px 14px",
-            fontSize: 13,
-            fontWeight: 500,
-          }}
-        >
+        <div role="status" className="eic-submission-readonly__locked-banner">
           {t.submission_locked_banner}
         </div>
       ) : null}
 
-      <div
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 8,
-          padding: 16,
-          background: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "#0f172a" }}>
+      <div className="eic-submission-readonly__card">
+        <h2 className="eic-submission-readonly__title">
           {t.submission_readonly_title} V{submission.version}
         </h2>
-        <dl
-          style={{
-            margin: 0,
-            display: "grid",
-            gridTemplateColumns: "auto 1fr",
-            gap: "6px 12px",
-            fontSize: 13,
-          }}
-        >
-          <dt style={{ color: "#64748b" }}>{t.submission_readonly_status}</dt>
-          <dd style={{ margin: 0, color: "#0f172a" }}>{STATUS_LABEL[submission.status]}</dd>
-          <dt style={{ color: "#64748b" }}>{t.submission_readonly_submitted_at}</dt>
-          <dd style={{ margin: 0, color: "#0f172a" }}>{formatDateFr(submission.submittedAt)}</dd>
-          <dt style={{ color: "#64748b" }}>{t.submission_readonly_kind}</dt>
-          <dd style={{ margin: 0, color: "#0f172a" }}>
+        <dl className="eic-submission-readonly__dl">
+          <dt className="eic-submission-readonly__dt">{t.submission_readonly_status}</dt>
+          <dd className="eic-submission-readonly__dd">{STATUS_LABEL[submission.status]}</dd>
+          <dt className="eic-submission-readonly__dt">{t.submission_readonly_submitted_at}</dt>
+          <dd className="eic-submission-readonly__dd">{formatDateFr(submission.submittedAt)}</dd>
+          <dt className="eic-submission-readonly__dt">{t.submission_readonly_kind}</dt>
+          <dd className="eic-submission-readonly__dd">
             {submission.kind === "proof_url"
               ? t.submission_kind_proof_url
               : t.submission_kind_proof_text}
@@ -92,19 +58,14 @@ export function SubmissionReadonly({ submission }: { submission: Submission }) {
 
         {submission.kind === "proof_url" && submission.proofUrl ? (
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>
+            <p className="eic-submission-readonly__proof-label">
               {t.submission_readonly_proof_url}
             </p>
             <a
               href={submission.proofUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                fontSize: 14,
-                color: "#1d4ed8",
-                textDecoration: "underline",
-                wordBreak: "break-all",
-              }}
+              className="eic-submission-readonly__proof-link"
             >
               {submission.proofUrl}
             </a>
@@ -113,23 +74,10 @@ export function SubmissionReadonly({ submission }: { submission: Submission }) {
 
         {submission.kind === "proof_text" && submission.proofText ? (
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>
+            <p className="eic-submission-readonly__proof-label">
               {t.submission_readonly_proof_text}
             </p>
-            <pre
-              style={{
-                margin: 0,
-                padding: 12,
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: 6,
-                fontSize: 13,
-                fontFamily: "inherit",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                color: "#0f172a",
-              }}
-            >
+            <pre className="eic-submission-readonly__pre">
               {submission.proofText}
             </pre>
           </div>
