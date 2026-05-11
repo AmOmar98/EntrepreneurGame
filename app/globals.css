@@ -1652,12 +1652,12 @@ tr:last-child td {
   white-space: nowrap;
 }
 .eic-track__crown--top {
-  top: -2px;
+  top: -14px;
   transform: translate(-50%, -100%);
   color: var(--wf-amber);
 }
 .eic-track__crown--bottom {
-  bottom: -2px;
+  bottom: -14px;
   transform: translate(-50%, 100%);
   color: var(--wf-ink-faint);
   font-weight: 600;
