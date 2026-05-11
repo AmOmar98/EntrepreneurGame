@@ -109,6 +109,23 @@ export function JuryForm({ player, existing, eventId, dict }: Props) {
           {pending ? dict.jury_saving : dict.jury_save}
         </button>
       </div>
+      {total === 0 && (
+        <p
+          className="eic-jury-form__warn"
+          role="status"
+          style={{
+            marginTop: 8,
+            fontSize: 13,
+            color: "#92400e",
+            background: "#fef3c7",
+            border: "1px solid #fde68a",
+            borderRadius: 6,
+            padding: "6px 10px",
+          }}
+        >
+          &#9888; Verifie : tous les criteres sont a 0
+        </p>
+      )}
       {state.message ? (
         <p
           style={{
