@@ -6476,5 +6476,355 @@ tr:last-child td {
   gap: 6px;
 }
 
+/* ==========================================================================
+   === Swarm A — design migration (260511-ups-ui-polish-swarm) ===
+   Items: PLY-01/04, PLY-02, PLY-03, PLY-09/10, MNT-08 partial,
+          ADM-03, JRY-01, RES-08
+   Append-only block — do NOT edit lines above.
+   ========================================================================== */
 
+/* --- PLY-02 / PLY-03 — Submission form + readonly shared tokens --- */
+.eic-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.eic-form-field__label {
+  font-weight: 600;
+  color: var(--home-ink);
+}
+.eic-form-input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--home-ink);
+}
+.eic-form-input:focus {
+  outline: 3px solid rgba(27, 58, 92, 0.2);
+  border-color: var(--eic-blue);
+}
+.eic-form-textarea {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  background: #fff;
+  color: var(--home-ink);
+}
+.eic-form-textarea:focus {
+  outline: 3px solid rgba(27, 58, 92, 0.2);
+  border-color: var(--eic-blue);
+}
+.eic-form-fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.eic-form-fieldset__legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--home-ink);
+  padding: 0 4px;
+}
+.eic-form-fieldset__radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+/* PLY-02 — Submit button: corrected from hardcoded #1d4ed8 → EIC blue */
+.eic-button--submit {
+  padding: 10px 16px;
+  background: var(--eic-blue);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: opacity 120ms ease;
+}
+.eic-button--submit:disabled {
+  background: #94a3b8;
+  cursor: wait;
+  opacity: 1;
+}
+.eic-button--submit:focus-visible {
+  outline: 3px solid rgba(27, 58, 92, 0.3);
+  outline-offset: 2px;
+}
+/* PLY-10: focus-visible token inherited by .eic-form-input/.eic-form-textarea above */
 
+/* --- PLY-03 — Submission readonly BEM classes --- */
+.eic-submission-readonly {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eic-submission-readonly__locked-banner {
+  background: #dbeafe;
+  color: var(--eic-blue);
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.eic-submission-readonly__card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.eic-submission-readonly__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--home-ink);
+}
+.eic-submission-readonly__dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 13px;
+}
+.eic-submission-readonly__dt { color: #64748b; }
+.eic-submission-readonly__dd { margin: 0; color: var(--home-ink); }
+.eic-submission-readonly__proof-label {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #64748b;
+}
+.eic-submission-readonly__proof-link {
+  font-size: 14px;
+  color: var(--eic-blue);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.eic-submission-readonly__pre {
+  margin: 0;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--home-ink);
+}
+
+/* --- PLY-01 / PLY-04 — Bonus rail + welcome strip --- */
+.eic-bonus-rail {
+  padding: 32px 32px 16px;
+  max-width: 960px;
+  margin: 0 auto;
+  border-top: 1px solid var(--home-border);
+}
+.eic-bonus-rail__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--home-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.eic-bonus-rail__kicker {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-warning);
+  background: rgba(217, 119, 6, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.eic-bonus-rail__subtitle {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  color: #475569;
+}
+.eic-bonus-rail__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.eic-bonus-card {
+  display: block;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--home-ink);
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.eic-bonus-card:hover {
+  border-color: var(--eic-blue);
+  box-shadow: 0 2px 8px rgba(27, 58, 92, 0.1);
+}
+.eic-bonus-card:focus-visible {
+  outline: 3px solid rgba(27, 58, 92, 0.25);
+  outline-offset: 2px;
+}
+
+/* --- ADM-03 — CohortTable sticky header + scroll container --- */
+.eic-cohort-table-wrap {
+  overflow-x: auto;
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.eic-cohort-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.eic-cohort-table-wrap thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+}
+.eic-cohort-table-wrap thead tr {
+  text-align: left;
+}
+
+/* --- JRY-01 — Jury cards responsive grid --- */
+.eic-jury-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 640px) {
+  .eic-jury-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+.eic-jury-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+.eic-jury-card__header {
+  margin-bottom: 12px;
+}
+.eic-jury-card__name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--home-ink);
+}
+.eic-jury-card__idea {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0;
+}
+.eic-jury-card__already-scored {
+  color: #0ea5e9;
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+/* --- RES-08 — Podium responsive heights --- */
+@media (max-width: 479px) {
+  .eic-results-replay__podium-block[style*="height: 220"] {
+    height: 154px !important;
+  }
+  .eic-results-replay__podium-block[style*="height: 170"] {
+    height: 119px !important;
+  }
+  .eic-results-replay__podium-block[style*="height: 140"] {
+    height: 98px !important;
+  }
+}
+/* Better: CSS custom property approach for podium heights */
+.eic-results-replay__podium-block {
+  transition: height 0.3s ease;
+}
+@media (max-width: 479px) {
+  .eic-podium-h-220 { height: 154px !important; }
+  .eic-podium-h-170 { height: 119px !important; }
+  .eic-podium-h-140 { height: 98px !important; }
+}
+
+/* --- MNT-08 partial — Mentor page header + brief BEM migration --- */
+.eic-mentor-page__header {
+  margin-bottom: 8px;
+}
+.eic-mentor-page__title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--home-ink);
+}
+.eic-mentor-page__brief {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.eic-mentor-page__brief-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.eic-mentor-page__brief-item {
+  font-size: 13px;
+  color: var(--home-ink);
+}
+.eic-mentor-page__back-link {
+  font-size: 13px;
+  color: var(--eic-blue);
+  text-decoration: none;
+}
+.eic-mentor-page__back-link:hover { text-decoration: underline; }
+.eic-mentor-page__eval-banner {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.eic-mentor-page__feedback-pre {
+  margin: 0;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  font-family: inherit;
+  color: var(--home-ink);
+}
+
+/* === End Swarm A block === */

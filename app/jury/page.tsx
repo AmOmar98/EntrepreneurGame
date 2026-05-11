@@ -101,35 +101,16 @@ export default async function JuryPage({
         ) : rows.length === 0 || !eventId ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_empty}</p>
         ) : (
-          <div style={{ display: "grid", gap: 16 }}>
+          <div className="eic-jury-grid">
             {rows.map((row) => (
-              <article
-                key={row.player.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 8,
-                  padding: 16,
-                }}
-              >
-                <header style={{ marginBottom: 12 }}>
-                  <h2
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                      margin: "0 0 4px",
-                      color: "#0f172a",
-                    }}
-                  >
-                    {row.player.name}
-                  </h2>
+              <article key={row.player.id} className="eic-jury-card">
+                <header className="eic-jury-card__header">
+                  <h2 className="eic-jury-card__name">{row.player.name}</h2>
                   {row.player.idea ? (
-                    <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{row.player.idea}</p>
+                    <p className="eic-jury-card__idea">{row.player.idea}</p>
                   ) : null}
                   {row.existing ? (
-                    <p style={{ color: "#0ea5e9", fontSize: 12, margin: "4px 0 0" }}>
-                      {t.jury_already_scored}
-                    </p>
+                    <p className="eic-jury-card__already-scored">{t.jury_already_scored}</p>
                   ) : null}
                 </header>
                 <JuryForm

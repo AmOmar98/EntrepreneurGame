@@ -190,10 +190,10 @@ function CounterCard({ label, value }: { label: string; value: string }) {
 
 function CohortTable({ rows }: { rows: CohortRow[] }) {
   return (
-    <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", borderRadius: 8 }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+    <div className="eic-cohort-table-wrap">
+      <table>
         <thead>
-          <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+          <tr>
             <th style={th}>{t.admin_col_team}</th>
             <th style={th}>{t.admin_col_level}</th>
             <th style={th}>{t.admin_col_score}</th>
