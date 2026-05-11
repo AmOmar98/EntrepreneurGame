@@ -8,6 +8,8 @@
 // Player tries to access another Player's deliverable URL.
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+// PLY-11: ExternalLink icon ready for OneDrive/external links when they land (main branch dbbb28a).
+// import { ExternalLink } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { EngagementMilestonesBadges } from "@/components/engagement-milestones-badges";
 import { MentorCommentComposer } from "@/components/mentor-comment-composer";

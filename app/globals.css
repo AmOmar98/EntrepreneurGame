@@ -2541,7 +2541,9 @@ tr:last-child td {
 }
 .eic-onboarding-stat__d {
   font-size: 12px;
-  color: var(--wf-ink-soft);
+  /* PLY-05 a11y: hardened from --wf-ink-soft (#4F5A6E ~6.5:1) to #475569
+     (slate-600) to stay WCAG AA on glass worst-case white bg. */
+  color: #475569;
   margin-top: 2px;
 }
 .eic-onboarding-mentor {

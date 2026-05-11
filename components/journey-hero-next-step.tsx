@@ -51,8 +51,9 @@ export function JourneyHeroNextStep({
         <h1 className="eic-hero__title">{title}</h1>
         <p className="eic-hero__subtitle">{subtitle}</p>
       </div>
+      {/* PLY-06 a11y: removed redundant aria-label (identical to visible text child).
+          AT was reading ctaLabel twice. Visible text is sufficient. Arrow stays aria-hidden. */}
       <Link
-        aria-label={ctaLabel}
         className="eic-hero__cta"
         href={ctaHref}
       >

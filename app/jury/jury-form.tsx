@@ -49,12 +49,12 @@ export function JuryForm({ player, existing, eventId, dict }: Props) {
 
   const total = clamp(c1) + clamp(c2) + clamp(c3) + clamp(c4) + clamp(c5);
 
-  const fields: { key: "c1" | "c2" | "c3" | "c4" | "c5"; label: string; value: number; setter: (n: number) => void }[] = [
-    { key: "c1", label: dict.jury_c1_label, value: c1, setter: setC1 },
-    { key: "c2", label: dict.jury_c2_label, value: c2, setter: setC2 },
-    { key: "c3", label: dict.jury_c3_label, value: c3, setter: setC3 },
-    { key: "c4", label: dict.jury_c4_label, value: c4, setter: setC4 },
-    { key: "c5", label: dict.jury_c5_label, value: c5, setter: setC5 },
+  const fields: { key: "c1" | "c2" | "c3" | "c4" | "c5"; label: string; help: string; value: number; setter: (n: number) => void }[] = [
+    { key: "c1", label: dict.jury_c1_label, help: dict.jury_c1_help, value: c1, setter: setC1 },
+    { key: "c2", label: dict.jury_c2_label, help: dict.jury_c2_help, value: c2, setter: setC2 },
+    { key: "c3", label: dict.jury_c3_label, help: dict.jury_c3_help, value: c3, setter: setC3 },
+    { key: "c4", label: dict.jury_c4_label, help: dict.jury_c4_help, value: c4, setter: setC4 },
+    { key: "c5", label: dict.jury_c5_label, help: dict.jury_c5_help, value: c5, setter: setC5 },
   ];
 
   return (
@@ -65,6 +65,8 @@ export function JuryForm({ player, existing, eventId, dict }: Props) {
         {fields.map((f) => (
           <label key={f.key} style={labelStyle}>
             <span>{f.label}</span>
+            {/* JRY-02 a11y: aria-describedby links to help text; aria-label removed
+                (input is inside <label> so visible text is already its accessible name). */}
             <input
               type="number"
               name={f.key}
@@ -75,8 +77,14 @@ export function JuryForm({ player, existing, eventId, dict }: Props) {
               value={f.value}
               onChange={(e) => f.setter(clamp(Number(e.target.value)))}
               style={inputStyle}
-              aria-label={f.label}
+              aria-describedby={`${f.key}-help`}
             />
+            <span
+              id={`${f.key}-help`}
+              style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3 }}
+            >
+              {f.help}
+            </span>
           </label>
         ))}
         <div
