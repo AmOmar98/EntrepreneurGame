@@ -8,15 +8,18 @@
 // Used for staged reveals on /results (podium → stats → timeline).
 
 import { useInView } from "@/hooks/use-in-view";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 type Props = {
   children: ReactNode;
   className?: string;
   threshold?: number;
+  // RES-06 a11y: stagger delay via CSS custom property --reveal-delay.
+  // Pass e.g. style={{ "--reveal-delay": "200ms" } as CSSProperties}.
+  style?: CSSProperties;
 };
 
-export function RevealOnView({ children, className, threshold }: Props) {
+export function RevealOnView({ children, className, threshold, style }: Props) {
   const { ref, isInView } = useInView<HTMLDivElement>({ threshold });
   const cls = [
     "eic-reveal",
@@ -26,7 +29,7 @@ export function RevealOnView({ children, className, threshold }: Props) {
     .filter(Boolean)
     .join(" ");
   return (
-    <div className={cls} ref={ref}>
+    <div className={cls} ref={ref} style={style}>
       {children}
     </div>
   );
