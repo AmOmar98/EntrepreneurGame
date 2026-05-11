@@ -26,7 +26,7 @@ type Role = {
 const ROLES: Role[] = [
   {
     k: "player",
-    href: "/login",
+    href: "/login?role=player",
     kicker: t.landing_role_player_kicker,
     title: t.landing_role_player_title,
     desc: t.landing_role_player_desc,
@@ -35,7 +35,7 @@ const ROLES: Role[] = [
   },
   {
     k: "mentor",
-    href: "/login",
+    href: "/login?role=mentor",
     kicker: t.landing_role_mentor_kicker,
     title: t.landing_role_mentor_title,
     desc: t.landing_role_mentor_desc,
@@ -44,7 +44,7 @@ const ROLES: Role[] = [
   },
   {
     k: "gm",
-    href: "/login",
+    href: "/login?role=gm",
     kicker: t.landing_role_gm_kicker,
     title: t.landing_role_gm_title,
     desc: t.landing_role_gm_desc,

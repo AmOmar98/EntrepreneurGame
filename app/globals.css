@@ -6862,3 +6862,236 @@ a.eic-button:focus-visible {
 }
 
 /* === End Swarm A block === */
+
+/* ==========================================================================
+   Login v2 — split-screen 3 rôles (joueur/bleu, mentor/vert, GM/rouge)
+   Source: .planning/quick/260511-l3p-login-3-portes/
+   Pre-auth — hors zone R1/R2/R3 (cf ADVISOR-VERDICT.md).
+   ========================================================================== */
+
+.eic-login-v2-shell {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--home-ivory);
+  color: var(--home-ink);
+  font-family: var(--font-body), Montserrat, system-ui, sans-serif;
+}
+
+.eic-login-v2-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 48px;
+  color: #fff;
+  overflow: hidden;
+  isolation: isolate;
+}
+.eic-login-v2-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 110%, rgba(255, 255, 255, 0.18), transparent 60%),
+    radial-gradient(circle at 110% -10%, rgba(255, 255, 255, 0.12), transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+.eic-login-v2-hero > * { position: relative; z-index: 1; }
+
+.eic-login-v2-hero--player {
+  background: var(--gradient-blue);
+}
+.eic-login-v2-hero--mentor {
+  background: var(--gradient-green);
+}
+.eic-login-v2-hero--gm {
+  background: linear-gradient(135deg, #A23B3B 0%, #C44536 50%, #8E2F2F 100%);
+}
+
+.eic-login-v2-hero__top {
+  display: flex;
+  align-items: center;
+}
+
+.eic-login-v2-hero__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+}
+
+.eic-login-v2-hero__pill {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+
+.eic-login-v2-hero__title {
+  margin: 0;
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+.eic-login-v2-hero__title span { display: inline; }
+
+.eic-login-v2-hero__quote {
+  margin: 0;
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 420px;
+}
+
+.eic-login-v2-hero__foot {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Right panel — form */
+.eic-login-v2-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px 56px;
+  background: var(--home-surface, #fff);
+}
+
+.eic-login-v2-back {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  font-size: 13px;
+  color: var(--home-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--transition-fast);
+}
+.eic-login-v2-back:hover { color: var(--home-ink); }
+
+.eic-login-v2-panel__title {
+  margin: 0 0 8px;
+  font-family: var(--font-heading), Baskervville, Georgia, serif;
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.1;
+  color: var(--home-ink);
+  max-width: 420px;
+}
+
+.eic-login-v2-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.eic-login-v2-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.eic-login-v2-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--home-muted-strong);
+  letter-spacing: 0.02em;
+}
+.eic-login-v2-field__input {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--home-border);
+  background: var(--home-surface, #fff);
+  font-size: 15px;
+  color: var(--home-ink);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.eic-login-v2-field__input:focus {
+  outline: none;
+  border-color: var(--eic-blue);
+  box-shadow: 0 0 0 3px rgba(27, 58, 92, 0.16);
+}
+
+.eic-login-v2--mentor .eic-login-v2-field__input:focus {
+  border-color: var(--eic-green);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.16);
+}
+.eic-login-v2--gm .eic-login-v2-field__input:focus {
+  border-color: #A23B3B;
+  box-shadow: 0 0 0 3px rgba(162, 59, 59, 0.16);
+}
+
+.eic-login-v2-submit { display: flex; }
+.eic-login-v2-submit > .eic-button { width: 100%; }
+
+.eic-login-v2--player .eic-login-v2-submit__btn--player,
+.eic-login-v2--mentor .eic-login-v2-submit__btn--mentor,
+.eic-login-v2--gm .eic-login-v2-submit__btn--gm {
+  background: var(--_role-color);
+  color: #fff;
+  border-color: transparent;
+}
+.eic-login-v2-submit__btn--player { --_role-color: var(--eic-blue); background: var(--eic-blue); color: #fff; border-color: transparent; }
+.eic-login-v2-submit__btn--mentor { --_role-color: var(--eic-green); background: var(--eic-green); color: #fff; border-color: transparent; }
+.eic-login-v2-submit__btn--gm { --_role-color: #A23B3B; background: #A23B3B; color: #fff; border-color: transparent; }
+.eic-login-v2-submit__btn--player:hover:not(:disabled) { background: var(--eic-blue-light, #2A5A8C); }
+.eic-login-v2-submit__btn--mentor:hover:not(:disabled) { background: var(--eic-green-light, #4CAF50); }
+.eic-login-v2-submit__btn--gm:hover:not(:disabled) { background: #C44536; }
+
+.eic-login-v2-legal {
+  margin: 0;
+  font-size: 12px;
+  color: var(--home-muted);
+  text-align: center;
+  max-width: 420px;
+}
+.eic-login-v2-legal a {
+  color: inherit;
+  text-decoration: none;
+}
+.eic-login-v2-legal a:hover { color: var(--home-ink); }
+
+/* Mobile: stack hero above form, shrink hero */
+@media (max-width: 900px) {
+  .eic-login-v2-shell {
+    grid-template-columns: 1fr;
+  }
+  .eic-login-v2-hero {
+    min-height: 280px;
+    padding: 24px 24px 32px;
+  }
+  .eic-login-v2-hero__title { font-size: clamp(32px, 9vw, 48px); }
+  .eic-login-v2-hero__quote { font-size: 16px; }
+  .eic-login-v2-panel {
+    padding: 56px 24px 32px;
+  }
+  .eic-login-v2-back {
+    top: 16px;
+    left: 20px;
+  }
+  .eic-login-v2-panel__title { font-size: 28px; }
+}
+
