@@ -82,6 +82,19 @@ begin
 end;
 $$;
 
+-- 260512-msu P0 pilote fix: propagate evaluation verdict -> submission status.
+-- Before this fix, app/actions.ts:reviewSubmissionFlow tried to UPDATE
+-- submissions.status from the mentor's auth context, but RLS policy
+-- submissions_member_self_update does NOT include is_mentor(). Supabase
+-- swallows 0-rows-update silently, so the submission stayed on submitted_v1
+-- forever — Player never saw feedback panel, recalc_player_score (filters
+-- s.status='validated') always returned 0. Trigger runs as SECURITY DEFINER
+-- (owner=postgres) and bypasses RLS cleanly.
+--
+-- Caveat learned the hard way: PL/pgSQL `row IS NOT NULL` returns TRUE only
+-- when ALL columns of the row are non-null (SQL standard). For evaluations
+-- where expected_action is null (every verdict except request_v2), that
+-- check evaluated FALSE and silently skipped the branch. Use TG_OP only.
 create or replace function public.on_evaluation_change()
 returns trigger
 language plpgsql
@@ -91,11 +104,33 @@ as $$
 declare
   v_player_id uuid;
   v_submission_id uuid;
+  v_verdict text;
+  v_next_status submission_status;
 begin
   v_submission_id := coalesce(new.submission_id, old.submission_id);
   select s.player_id into v_player_id
     from public.submissions s
    where s.id = v_submission_id;
+
+  if tg_op in ('INSERT', 'UPDATE') then
+    v_verdict := new.verdict::text;
+    if v_verdict = 'validate_v1' or v_verdict = 'validate_v2' then
+      v_next_status := 'validated'::submission_status;
+    elsif v_verdict = 'request_v2' then
+      v_next_status := 'feedback_received'::submission_status;
+    elsif v_verdict = 'reject' then
+      v_next_status := 'rejected'::submission_status;
+    else
+      v_next_status := null;
+    end if;
+
+    if v_next_status is not null then
+      update public.submissions
+         set status = v_next_status
+       where id = v_submission_id
+         and status is distinct from v_next_status;
+    end if;
+  end if;
 
   if v_player_id is not null then
     perform public.recalc_player_score(v_player_id);
