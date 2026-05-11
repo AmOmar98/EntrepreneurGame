@@ -92,10 +92,7 @@ type ExistingEvalRow = {
 function BackLink() {
   return (
     <p style={{ margin: "0 0 16px" }}>
-      <Link
-        href="/mentor"
-        style={{ fontSize: 13, color: "#1d4ed8", textDecoration: "none" }}
-      >
+      <Link href="/mentor" className="eic-mentor-page__back-link">
         {"← "}
         {t.mentor_back}
       </Link>
@@ -311,45 +308,26 @@ export default async function MentorSubmissionPage({
         <BackLink />
 
         {/* Brief reminder + player meta */}
-        <header className="eic-mentor-page" style={{ marginBottom: 8 }}>
-          <h1
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              margin: "0 0 12px",
-              color: "#0f172a",
-            }}
-          >
+        <header className="eic-mentor-page__header">
+          <h1 className="eic-mentor-page__title">
             {template?.title ?? t.evaluation_title}
           </h1>
 
           {player ? (
-            <section
-              aria-label="Equipe"
-              className="eic-mentor-brief"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                padding: 12,
-                border: "1px solid #e2e8f0",
-                borderRadius: 8,
-                background: "#f8fafc",
-              }}
-            >
-              <div className="eic-mentor-brief__meta">
-                <span className="eic-mentor-brief__meta-item">
+            <section aria-label="Equipe" className="eic-mentor-page__brief">
+              <div className="eic-mentor-page__brief-meta">
+                <span className="eic-mentor-page__brief-item">
                   <strong>{t.evaluation_team}</strong> · {player.name}
                 </span>
                 {player.idea ? (
-                  <span className="eic-mentor-brief__meta-item">
+                  <span className="eic-mentor-page__brief-item">
                     <strong>{t.evaluation_idea}</strong> · {player.idea}
                   </span>
                 ) : null}
-                <span className="eic-mentor-brief__meta-item">
+                <span className="eic-mentor-page__brief-item">
                   <strong>{t.evaluation_level}</strong> · {levelLabel(player.current_level)}
                 </span>
-                <span className="eic-mentor-brief__meta-item">
+                <span className="eic-mentor-page__brief-item">
                   <strong>{t.evaluation_score_project}</strong> ·{" "}
                   {String(
                     typeof player.score_project === "string"
@@ -407,18 +385,7 @@ export default async function MentorSubmissionPage({
                 aria-label={t.evaluation_existing_summary}
                 className="eic-mentor-eval eic-mentor-eval__locked"
               >
-                <p
-                  role="status"
-                  style={{
-                    margin: "0 0 12px",
-                    padding: "10px 14px",
-                    background: "#fef3c7",
-                    color: "#92400e",
-                    border: "1px solid #fde68a",
-                    borderRadius: 6,
-                    fontSize: 13,
-                  }}
-                >
+                <p role="status" className="eic-mentor-page__eval-banner">
                   {t.evaluation_already_evaluated}
                 </p>
                 <h3 className="eic-mentor-eval__title">
@@ -448,19 +415,7 @@ export default async function MentorSubmissionPage({
                     <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600 }}>
                       {t.evaluation_existing_feedback}
                     </p>
-                    <pre
-                      style={{
-                        margin: 0,
-                        padding: 10,
-                        background: "#fff",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: 6,
-                        fontSize: 13,
-                        whiteSpace: "pre-wrap",
-                        fontFamily: "inherit",
-                        color: "#0f172a",
-                      }}
-                    >
+                    <pre className="eic-mentor-page__feedback-pre">
                       {existing.feedback}
                     </pre>
                   </div>
