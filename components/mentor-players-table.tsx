@@ -18,7 +18,7 @@ export function MentorPlayersTable({ rows }: { rows: MentorPlayerOverview[] }) {
   }
 
   return (
-    <div style={{ marginTop: 16, overflowX: "auto" }}>
+    <div className="eic-mentor-players-table" style={{ marginTop: 16 }}>
       <table
         style={{
           width: "100%",
@@ -63,7 +63,9 @@ export function MentorPlayersTable({ rows }: { rows: MentorPlayerOverview[] }) {
                   {truncate(row.player.idea, 60) || "-"}
                 </td>
                 <td style={{ padding: "10px 12px" }}>{row.levelLabel}</td>
-                <td style={{ padding: "10px 12px" }}>{row.player.scoreProject.toFixed(2)}</td>
+                <td style={{ padding: "10px 12px", color: "#64748b" }}>
+                  {Math.round(row.player.scoreProject)} pts
+                </td>
                 <td style={{ padding: "10px 12px" }}>
                   {row.submittedCount}/{row.totalDeliverables}
                 </td>
@@ -72,17 +74,20 @@ export function MentorPlayersTable({ rows }: { rows: MentorPlayerOverview[] }) {
                     <Link
                       href={`/mentor/submission/${firstPending}`}
                       style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: 999,
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: "4px 12px",
+                        borderRadius: 8,
                         background: "#fef3c7",
                         color: "#92400e",
                         textDecoration: "none",
-                        fontWeight: 600,
+                        gap: 1,
                       }}
                       aria-label={`${t.mentor_review_action} (${pendingCount})`}
                     >
-                      {pendingCount} - {t.mentor_review_action}
+                      <span style={{ fontSize: "1.25rem", fontWeight: 600, lineHeight: 1.2 }}>{pendingCount}</span>
+                      <span style={{ fontSize: 11, fontWeight: 400, color: "#b45309" }}>{t.mentor_review_action}</span>
                     </Link>
                   ) : (
                     <span style={{ color: "#94a3b8" }}>-</span>
