@@ -1,13 +1,17 @@
 ---
 phase: 01-foundation-schema-types-suppression-code-obsol-te
 verified: 2026-05-08T00:00:00Z
-status: human_needed
-score: 5/5 must-haves verified structurellement (1 smoke-test live restant)
+closed: 2026-05-11T00:00:00Z
+status: verified
+score: 5/5 must-haves verified (structurel + smoke-test live PROD)
 overrides_applied: 0
-human_verification:
-  - test: "Smoke-test login email/password sur projet Supabase prod fresh"
-    expected: "Apres application schema.sql -> triggers.sql -> rls.sql sur projet Supabase fresh, creation de 3 utilisateurs (player/mentor/game_master) + lignes profiles correspondantes : signIn redirige chacun vers /journey, /mentor, /admin respectivement ; bad creds restent sur /login avec message ; /journey en non-authentifie redirige vers /login."
-    why_human: "Necessite un projet Supabase live + creation manuelle d'utilisateurs Auth + execution SQL en console Supabase. Phase 1 plan 05 task 3 etait deja flagge `complete-pending-smoke-test` ; le PHASE-SUMMARY confirme que ce smoke-test reste a faire avant Phase 2."
+closure_evidence:
+  - commit: "cc6f19e"
+    note: "test(01): close UAT - 16 items validated via Phases 14/15/16 + swarm PROD"
+  - commit: "d7b3e80 + cd8482f"
+    note: "B3 fixé — migrations schema.sql / triggers.sql / rls.sql appliquées en PROD Supabase"
+  - smoke: "2026-05-10 swarm PROD T-3 — 27 livrables P01/P02/P04 + login email/password + redirects par rôle validés"
+  - prod_state: "2026-05-11 pilot-ready — wipe data + 20 auth.users finaux (11P + 2M + 3J + 4GM) provisionnés"
 ---
 
 # Phase 1: Foundation — Verification Report
