@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { AdminLiveToggle } from "@/components/admin-live-toggle";
 import { AdminLiveView } from "@/components/admin-live-view";
+import { AdminPitchOrderEditor } from "@/components/admin-pitch-order-editor";
 import { AdminStatusBanner } from "@/components/admin-status-banner";
 import { AppShell } from "@/components/app-shell";
 import { Kpi } from "@/components/wf/kpi";
@@ -15,7 +16,9 @@ import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { computeHackStatus } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
 import { levelOrd } from "@/lib/journey";
+import type { PitchOrder } from "@/lib/pitch-order";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
+import { createClient } from "@/utils/supabase/server";
 import { getCohortOverview, getGlobalCounters, type CohortRow } from "@/lib/admin";
 
 const t = dictionaries.fr;
@@ -53,6 +56,26 @@ export default async function AdminPage({
         { totalSubmissions: 0, pendingReview: 0, validated: 0, totalDeliverableSlots: 0 },
         emptySnapshot,
       ];
+
+  // V10 — fetch current event + pitch_order_json for the GM order editor.
+  let currentEventId: string | null = null;
+  let pitchOrder: PitchOrder | null = null;
+  if (hasSupabaseEnv()) {
+    const supabase = await createClient();
+    if (supabase) {
+      const { data: eventRow } = await supabase
+        .from("events")
+        .select("id, pitch_order_json")
+        .order("starts_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const r = eventRow as
+        | { id: string; pitch_order_json: PitchOrder | null }
+        | null;
+      currentEventId = r?.id ?? null;
+      pitchOrder = r?.pitch_order_json ?? null;
+    }
+  }
 
   const hackStatus = computeHackStatus(
     snapshot.teams.map((team) => ({ state: team.state })),
@@ -120,7 +143,13 @@ export default async function AdminPage({
           {liveMode ? (
             <AdminLiveView snapshot={snapshot} hackStatus={hackStatus} />
           ) : (
-            <StandardView rows={rows} counters={counters} leaderboard={leaderboard} />
+            <StandardView
+              rows={rows}
+              counters={counters}
+              leaderboard={leaderboard}
+              currentEventId={currentEventId}
+              pitchOrder={pitchOrder}
+            />
           )}
         </div>
       </main>
@@ -132,10 +161,14 @@ function StandardView({
   rows,
   counters,
   leaderboard,
+  currentEventId,
+  pitchOrder,
 }: {
   rows: CohortRow[];
   counters: { totalSubmissions: number; pendingReview: number; validated: number; totalDeliverableSlots: number };
   leaderboard: CohortRow[];
+  currentEventId: string | null;
+  pitchOrder: PitchOrder | null;
 }) {
   return (
     <>
@@ -181,6 +214,19 @@ function StandardView({
         />
         <Kpi label="Équipes en jeu" value={rows.length} accent="blue" />
       </section>
+
+      {/* V10 — Pitch order editor (GM only). */}
+      {currentEventId && rows.length > 0 ? (
+        <AdminPitchOrderEditor
+          eventId={currentEventId}
+          players={rows.map((r) => ({
+            id: r.player.id,
+            name: r.player.name,
+            idea: r.player.idea,
+          }))}
+          initialOrder={pitchOrder}
+        />
+      ) : null}
 
       {/* Pre-pitch leaderboard */}
       {leaderboard.length === 0 ? (

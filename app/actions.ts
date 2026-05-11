@@ -1786,3 +1786,100 @@ export async function submitMoscowDeliverableFlow(
     severity: warns.length > 0 ? "warn" : "ok",
   };
 }
+
+// ============================================================================
+// Pitch order (polish/design-v2-match V10) — GameMaster reorders the pitch
+// passage order. Persisted in events.pitch_order_json as {playerId: slot}.
+// Slots are 1-indexed and contiguous. R1 gate: pitch_order_published_at must
+// stay set so Player /journey/pitch-prep can read its slot once published.
+// ============================================================================
+
+const setPitchOrderSchema = z.object({
+  eventId: z.string().uuid(),
+  // JSON-stringified Array<string> of player UUIDs in target order.
+  orderedPlayerIds: z.string().min(2).max(8192),
+  publish: z.coerce.boolean().optional().default(true),
+});
+
+export async function setPitchOrderFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const parsed = setPitchOrderSchema.safeParse({
+    eventId: formData.get("eventId"),
+    orderedPlayerIds: formData.get("orderedPlayerIds"),
+    publish: formData.get("publish"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  let ids: unknown;
+  try {
+    ids = JSON.parse(parsed.data.orderedPlayerIds);
+  } catch {
+    return { ok: false, message: "orderedPlayerIds doit etre un JSON Array." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { ok: false, message: "Liste d'IDs vide ou invalide." };
+  }
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const playerIds = (ids as unknown[]).filter(
+    (v): v is string => typeof v === "string" && uuidRe.test(v),
+  );
+  if (playerIds.length !== (ids as unknown[]).length) {
+    return { ok: false, message: "IDs invalides detectes." };
+  }
+  const dedup = Array.from(new Set(playerIds));
+  if (dedup.length !== playerIds.length) {
+    return { ok: false, message: "IDs en double dans la liste." };
+  }
+
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  // Role gate: game_master only.
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Reserve au GameMaster." };
+  }
+
+  const orderJson: Record<string, number> = {};
+  playerIds.forEach((pid, i) => {
+    orderJson[pid] = i + 1;
+  });
+
+  const patch: Record<string, unknown> = { pitch_order_json: orderJson };
+  if (parsed.data.publish) {
+    patch.pitch_order_published_at = new Date().toISOString();
+  }
+
+  const { error: updErr } = await supabase
+    .from("events")
+    .update(patch)
+    .eq("id", parsed.data.eventId);
+  if (updErr) {
+    return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/jury");
+  revalidatePath("/journey/pitch-prep");
+  return { ok: true, message: `Ordre de passage enregistre (${playerIds.length} equipes).` };
+}
