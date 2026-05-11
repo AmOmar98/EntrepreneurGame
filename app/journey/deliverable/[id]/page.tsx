@@ -31,6 +31,10 @@ import type {
   SubmissionStatus,
   Verdict,
 } from "@/lib/types";
+import {
+  EXAMPLES_FOLDER_URL,
+  getTemplateLink,
+} from "@/lib/template-links";
 import { createClient } from "@/utils/supabase/server";
 
 const t = dictionaries.fr;
@@ -336,6 +340,64 @@ export default async function DeliverableDetailPage({
             </p>
           </section>
         ) : null}
+
+        {/* Ressources EIC AgreenTech : template OneDrive (par slug) + dossier
+            exemples completes (global). Liens externes, ouverture nouvel onglet.
+            Si slug sans mapping (livrables demo, futurs slugs), seul l'exemple
+            global s'affiche. */}
+        {(() => {
+          const link = getTemplateLink(tpl.slug);
+          return (
+            <section style={{ marginTop: 16 }}>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: "#475569", margin: "0 0 6px" }}>
+                Ressources EIC
+              </h2>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {link ? (
+                  <a
+                    href={link.templateUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      background: "#1B3A5C",
+                      color: "#ffffff",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Ouvrir le template OneDrive
+                  </a>
+                ) : null}
+                <a
+                  href={EXAMPLES_FOLDER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "#ffffff",
+                    color: "#1B3A5C",
+                    border: "1px solid #1B3A5C",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                  }}
+                >
+                  Voir un exemple complete
+                </a>
+              </div>
+            </section>
+          );
+        })()}
 
         {rubric.length > 0 ? (
           <section style={{ marginTop: 16 }}>

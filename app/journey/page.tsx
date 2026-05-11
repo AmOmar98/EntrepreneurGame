@@ -15,6 +15,7 @@ import { getCohortPulse } from "@/lib/cohort-pulse";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJourneyData } from "@/lib/journey";
+import { WELCOME_GUIDE_URL } from "@/lib/template-links";
 import {
   getLevelStates,
   getNextStep,
@@ -62,6 +63,7 @@ export default async function JourneyPage() {
             <div style={{ padding: 32, maxWidth: 720, margin: "0 auto" }}>
               <h1 className="eic-hero__title">{t.journey_title}</h1>
               <p className="eic-hero__subtitle">{t.journey_empty_account}</p>
+              <WelcomeGuideStrip />
             </div>
           </div>
         </main>
@@ -124,6 +126,7 @@ export default async function JourneyPage() {
   return (
     <AppShell role="player" variant="player">
       <PlayerAnnouncementStrip announcements={announcements} />
+      <WelcomeGuideStrip />
       <CohortPulse entries={cohortPulse} />
       <JourneyClient
         currentLevel={data.player.currentLevel}
@@ -174,5 +177,50 @@ export default async function JourneyPage() {
         </ul>
       </section>
     </AppShell>
+  );
+}
+
+// Bandeau discret pointant vers le Welcome Guide AgreenTech sur OneDrive UEMF.
+// Visible une fois en haut du parcours porteur (branche non-empty) et juste
+// sous le titre de bienvenue (branche empty). Lien externe nouvel onglet.
+function WelcomeGuideStrip() {
+  return (
+    <div
+      style={{
+        maxWidth: 960,
+        margin: "12px auto 0",
+        padding: "10px 16px",
+        background: "#f1f5f9",
+        border: "1px solid #cbd5e1",
+        borderRadius: 8,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+        fontSize: 13,
+        color: "#0f172a",
+      }}
+    >
+      <span>
+        <strong>Welcome Guide AgreenTech</strong> &mdash; brief porteur, regles du
+        bootcamp, checklist 13-14 mai.
+      </span>
+      <a
+        href={WELCOME_GUIDE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          padding: "6px 12px",
+          borderRadius: 6,
+          background: "#1B3A5C",
+          color: "#ffffff",
+          textDecoration: "none",
+          fontWeight: 500,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Ouvrir le guide
+      </a>
+    </div>
   );
 }
