@@ -195,8 +195,15 @@ export default async function DeliverableDetailPage({
   const isLocked = latest !== null && lockedStatuses.includes(latest.status);
   const isFeedbackPendingV2 = latest !== null && latest.status === "feedback_received";
 
-  // When V1 has feedback_received, load the latest evaluation to display the
-  // verdict, scores, and feedback to the Player (SUBMIT-03).
+  // R1 revised (2026-05-11) — surface the latest mentor evaluation to the
+  // Player on the deliverable detail page for every status where a review
+  // exists. Score remains invisible everywhere else on Player UI.
+  const statusesWithEvaluation: SubmissionStatus[] = [
+    "feedback_received",
+    "submitted_v2",
+    "validated",
+    "rejected",
+  ];
   let latestEvaluation: {
     scores: Record<string, number>;
     totalScore: number;
@@ -204,7 +211,7 @@ export default async function DeliverableDetailPage({
     verdict: Verdict;
     expectedAction: string | null;
   } | null = null;
-  if (latestRow && latestRow.status === "feedback_received") {
+  if (latestRow && statusesWithEvaluation.includes(latestRow.status)) {
     const { data: evalRow } = await supabase
       .from("evaluations")
       .select("scores, total_score, feedback, verdict, expected_action")
@@ -442,7 +449,12 @@ export default async function DeliverableDetailPage({
             submission={latest}
           />
         ) : isLocked && latest ? (
-          <SubmissionReadonly submission={latest} />
+          <SubmissionReadonly
+            evaluation={latestEvaluation}
+            maxScore={tpl.max_score}
+            rubric={rubric}
+            submission={latest}
+          />
         ) : isFeedbackPendingV2 && latestEvaluation && latestRow ? (
           // PLR-07 — pedagogical revision panel for verdict request_v2.
           <RevisionPanel

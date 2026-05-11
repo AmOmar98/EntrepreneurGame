@@ -22,6 +22,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { DeliverableScoreBlock } from "@/components/deliverable-score-block";
 import { SubmissionForm } from "@/components/submission-form";
 import { dictionaries } from "@/lib/i18n";
 import type { RubricCriterion, Submission, Verdict } from "@/lib/types";
@@ -92,6 +93,7 @@ export function RevisionPanel({
   deliverableTemplateId,
   deliverableTitle,
   evaluation,
+  rubric,
   rewardXp,
   previousSubmission,
   commentsSlot,
@@ -129,6 +131,13 @@ export function RevisionPanel({
           <p className="eic-revision__mentor-quote">{mentorQuote}</p>
         </div>
       </div>
+
+      <DeliverableScoreBlock
+        maxScore={rewardXp}
+        rubric={rubric}
+        scores={evaluation.scores}
+        totalScore={evaluation.totalScore}
+      />
 
       {checklist.length > 0 ? (
         <div className="eic-revision__checklists">
