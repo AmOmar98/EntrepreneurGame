@@ -45,37 +45,43 @@ export default async function AdminPage({
     recentValidatedEvents: [],
   };
 
-  const [rows, counters, snapshot] = hasSupabaseEnv()
+  // V10 — fetch current event + pitch_order_json for the GM order editor.
+  // Quick 260511-spd / A2 — folded into the Promise.all below for one fewer
+  // round-trip on GM cockpit load.
+  async function fetchCurrentEvent(): Promise<{
+    id: string | null;
+    pitchOrder: PitchOrder | null;
+  }> {
+    const supabase = await createClient();
+    if (!supabase) return { id: null, pitchOrder: null };
+    const { data: eventRow } = await supabase
+      .from("events")
+      .select("id, pitch_order_json")
+      .order("starts_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const r = eventRow as
+      | { id: string; pitch_order_json: PitchOrder | null }
+      | null;
+    return { id: r?.id ?? null, pitchOrder: r?.pitch_order_json ?? null };
+  }
+
+  const [rows, counters, snapshot, eventInfo] = hasSupabaseEnv()
     ? await Promise.all([
         getCohortOverview(),
         getGlobalCounters(),
         getAdminLiveSnapshot(),
+        fetchCurrentEvent(),
       ])
     : [
         [] as CohortRow[],
         { totalSubmissions: 0, pendingReview: 0, validated: 0, totalDeliverableSlots: 0 },
         emptySnapshot,
+        { id: null as string | null, pitchOrder: null as PitchOrder | null },
       ];
 
-  // V10 — fetch current event + pitch_order_json for the GM order editor.
-  let currentEventId: string | null = null;
-  let pitchOrder: PitchOrder | null = null;
-  if (hasSupabaseEnv()) {
-    const supabase = await createClient();
-    if (supabase) {
-      const { data: eventRow } = await supabase
-        .from("events")
-        .select("id, pitch_order_json")
-        .order("starts_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const r = eventRow as
-        | { id: string; pitch_order_json: PitchOrder | null }
-        | null;
-      currentEventId = r?.id ?? null;
-      pitchOrder = r?.pitch_order_json ?? null;
-    }
-  }
+  const currentEventId = eventInfo.id;
+  const pitchOrder = eventInfo.pitchOrder;
 
   const hackStatus = computeHackStatus(
     snapshot.teams.map((team) => ({ state: team.state })),
