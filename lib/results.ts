@@ -70,6 +70,10 @@ function mapPlayer(row: PlayerRow): Player {
 type PitchScoreLite = {
   player_id: string;
   total_score: number | string;
+  // Design v2 (polish/design-v2-match): 4-criteria submissions force c5=0.
+  // c5 is selected solely to normalise pitchAvg back to /100 (legacy 5-crit
+  // total_score is /100; new 4-crit total_score is /80 → *1.25).
+  c5: number | string;
 };
 
 // ============================================================================
@@ -225,7 +229,10 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
 
   // 3. Pitch scores for this event. Same fallback strategy as above.
   async function fetchPitchScores(client: NonNullable<typeof rlsClient>) {
-    return client.from("pitch_scores").select("player_id, total_score").eq("event_id", eventId);
+    return client
+      .from("pitch_scores")
+      .select("player_id, total_score, c5")
+      .eq("event_id", eventId);
   }
 
   let scoreRowsResolved: PitchScoreLite[] = [];
@@ -251,12 +258,19 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
   }
 
   // 4. Aggregate pitch scores per player (mean + count).
+  // Design v2 backward-compat: when a vote was cast under the 4-criteria
+  // design (c5=0), total_score is /80 → scale to /100 by *1.25. Legacy
+  // 5-criteria votes (c5>0) keep their /100 total as-is. Result: pitchAvg
+  // is always on the /100 scale and rankings stay comparable across mixed
+  // historical data.
   const sumByPlayer = new Map<string, number>();
   const countByPlayer = new Map<string, number>();
   for (const r of scoreRowsResolved) {
-    const total = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
-    if (Number.isNaN(total)) continue;
-    sumByPlayer.set(r.player_id, (sumByPlayer.get(r.player_id) ?? 0) + total);
+    const totalRaw = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
+    const c5Raw = typeof r.c5 === "string" ? Number(r.c5) : r.c5;
+    if (Number.isNaN(totalRaw)) continue;
+    const normalized = c5Raw > 0 ? totalRaw : totalRaw * 1.25;
+    sumByPlayer.set(r.player_id, (sumByPlayer.get(r.player_id) ?? 0) + normalized);
     countByPlayer.set(r.player_id, (countByPlayer.get(r.player_id) ?? 0) + 1);
   }
 

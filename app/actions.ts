@@ -988,6 +988,11 @@ export async function importPlayersCsv(
 // juror_id is forced server-side from auth.uid() (T-05-03 mitigation).
 // ============================================================================
 
+// Design v2 (polish/design-v2-match): only c1..c4 are presented to jurors
+// (Innovation / Faisabilite technique / Modele economique / Equipe). c5 is
+// kept in the DB for backward-compat with the 5-criteria schema (legacy
+// scores). New submissions force c5=0; lib/results.ts normalises pitchAvg
+// to /100 regardless of the column count (c5>0 ? sum : sum * 5/4).
 const pitchScoreSchema = z.object({
   playerId: z.string().uuid(),
   eventId: z.string().uuid(),
@@ -995,7 +1000,7 @@ const pitchScoreSchema = z.object({
   c2: z.coerce.number().int().min(0).max(20),
   c3: z.coerce.number().int().min(0).max(20),
   c4: z.coerce.number().int().min(0).max(20),
-  c5: z.coerce.number().int().min(0).max(20),
+  c5: z.coerce.number().int().min(0).max(20).optional().default(0),
 });
 
 export async function savePitchScoreFlow(
