@@ -6,6 +6,7 @@
 // three sections fade-in via IntersectionObserver. The R1 gate on
 // `combined.toFixed(1)` (results-podium.tsx:65-67) is preserved INSIDE the
 // reveal wrapper — wrapping does not change conditional rendering.
+import { PartnerBanner } from "@/components/partner-banner";
 import { ResultsPodium, type PodiumEntry } from "@/components/results-podium";
 import {
   ResultsStatsStrip,
@@ -60,6 +61,7 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
   return (
     <div className="eic-results-replay">
       <header className="eic-results-replay__hero">
+        <PartnerBanner />
         <p className="eic-results-replay__hero-kicker">
           {t.results_replay_hero_kicker}
         </p>
