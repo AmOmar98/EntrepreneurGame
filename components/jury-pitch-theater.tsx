@@ -53,7 +53,7 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
           <div className="wf-stack" style={{ gap: 2 }}>
             <div className="wf-brand-name">{t.jury_pitch_theater_intro}</div>
             <div className="wf-brand-sub">
-              EIC · UEMF · Hack-Days · {Math.min(currentIndex + 1, rows.length)} /{" "}
+              EIC · UEMF · AgreenTech · {Math.min(currentIndex + 1, rows.length)} /{" "}
               {rows.length}
             </div>
           </div>

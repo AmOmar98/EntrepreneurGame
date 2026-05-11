@@ -92,7 +92,7 @@ export default async function AdminPage({
             <div className="wf-brand-mark">E</div>
             <div className="wf-stack" style={{ gap: 2 }}>
               <div className="wf-brand-name">{t.admin_title}</div>
-              <div className="wf-brand-sub">EIC · UEMF · Régie Hack-Days</div>
+              <div className="wf-brand-sub">EIC · UEMF · Régie AgreenTech</div>
             </div>
           </div>
           <span className="wf-grow" />

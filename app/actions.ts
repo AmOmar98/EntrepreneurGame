@@ -669,7 +669,7 @@ const importSchema = z.object({
   cohortSlug: z.string().min(2).max(64).default("hack-days-mai-2026"),
 });
 
-const DEFAULT_COHORT_NAME = "Hack-Days Mai 2026";
+const DEFAULT_COHORT_NAME = "AgreenTech Mai 2026";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 

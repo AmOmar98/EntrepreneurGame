@@ -9,7 +9,7 @@ const MOMENTS: { time: string; label: string; body: string }[] = [
   {
     time: "Jour 1 · 09:00",
     label: "Coup d'envoi",
-    body: "Ouverture officielle des Hack-Days par les partenaires (Tamwilcom, BoA Academy, Innov Invest, Bluespace). Les équipes découvrent leur mentor.",
+    body: "Ouverture officielle de l'AgreenTech par les partenaires (Tamwilcom, BoA Academy, Innov Invest, Bluespace). Les équipes découvrent leur mentor.",
   },
   {
     time: "Jour 1 · 11:30",
@@ -34,7 +34,7 @@ const MOMENTS: { time: string; label: string; body: string }[] = [
   {
     time: "Jour 2 · 17:30",
     label: "Cérémonie",
-    body: "Publication des résultats, podium et remise des distinctions. La cohorte clôture les Hack-Days 2026.",
+    body: "Publication des résultats, podium et remise des distinctions. La cohorte clôture l'AgreenTech 2026.",
   },
 ];
 
