@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation";
 // PLY-11: ExternalLink icon ready for OneDrive/external links when they land (main branch dbbb28a).
 // import { ExternalLink } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { Pill } from "@/components/ui";
 import { EngagementMilestonesBadges } from "@/components/engagement-milestones-badges";
 import { MentorCommentComposer } from "@/components/mentor-comment-composer";
 import {
@@ -48,6 +49,7 @@ type DeliverableTemplateRow = {
   description: string;
   rubric: RubricCriterion[] | null;
   max_score: number;
+  is_bonus?: boolean | null;
 };
 
 // T3X-EXPANSION wave 3 / plan 12-10 — MoSCoW Kanban surfacing slug.
@@ -157,7 +159,7 @@ export default async function DeliverableDetailPage({
   // Fetch the deliverable template by id.
   const { data: tplRow } = await supabase
     .from("deliverable_templates")
-    .select("id, slug, title, description, rubric, max_score")
+    .select("id, slug, title, description, rubric, max_score, is_bonus")
     .eq("id", id)
     .maybeSingle();
   if (!tplRow) {
@@ -318,8 +320,11 @@ export default async function DeliverableDetailPage({
       <main style={SHELL_MAIN_STYLE}>
         <BackLink />
 
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px", color: "#0f172a" }}>
-          {tpl.title}
+        <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px", color: "#0f172a", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span>{tpl.title}</span>
+          {tpl.is_bonus ? (
+            <Pill tone="amber">{t.deliverable_bonus_badge}</Pill>
+          ) : null}
         </h1>
 
         {/* Phase 14 / W3 — Engagement milestones (qualitative R1).

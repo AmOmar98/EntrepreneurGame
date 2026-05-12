@@ -143,8 +143,8 @@ on conflict (event_id, level_id, ord) do update
 --    cf .planning/quick/260510-t3x-scope-expansion-moscow-kanban-bonus-events/BRIEF.md
 -- -----------------------------------------------------------------------------
 
--- 5.1 — Mission 1 (L1) : Persona AgriTech [REFONTE T-3 polish 2026-05-10]
-insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
+-- 5.1 — Mission 1 (L1) : Persona AgriTech [REFONTE T-3 polish 2026-05-10 ; v3 2026-05-12 : ord=2 + is_bonus=true]
+insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord, is_bonus)
 select m.id,
        'personae-v1',
        'Persona AgriTech (fiche tableau sourcee)',
@@ -167,7 +167,7 @@ select m.id,
           {"key":"evidence","label":"Triangulation sources (>=2 sources distinctes en colonne Source)","max":5},
           {"key":"quality","label":"Qualite fiche (lisibilite, structuration tableau)","max":5}
         ]'::jsonb,
-       25, 1
+       25, 2, true
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
@@ -178,9 +178,10 @@ on conflict (mission_id, slug) do update
       description = excluded.description,
       rubric = excluded.rubric,
       max_score = excluded.max_score,
-      ord = excluded.ord;
+      ord = excluded.ord,
+      is_bonus = excluded.is_bonus;
 
--- 5.2 — Mission 1 (L1) : Hypothese VP cible [REFONTE T-3 polish 2026-05-10 — completion-based]
+-- 5.2 — Mission 1 (L1) : Hypothese VP cible [REFONTE T-3 polish 2026-05-10 — completion-based ; v3 2026-05-12 : ord=1 livrable principal]
 insert into public.deliverable_templates (mission_id, slug, title, description, rubric, max_score, ord)
 select m.id,
        'probleme-v1',
@@ -197,7 +198,7 @@ select m.id,
        '[
           {"key":"completion","label":"Hypothese soumise + pitch 1min realise (0 = a refaire, 25 = complet)","max":25}
         ]'::jsonb,
-       25, 2
+       25, 1
 from public.missions m
 join public.events e on e.id = m.event_id
 where e.slug = 'hack-days-fes-meknes-mai-2026'
