@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { HelpInbox } from "@/components/help/HelpInbox";
+import { HelpInboxBell } from "@/components/help/HelpInboxBell";
 import { MentorPlayersTable } from "@/components/mentor-players-table";
 import { MentorPendingFilter } from "@/components/mentor-pending-filter";
 import { MentorInboxView } from "@/components/mentor-inbox-view";
@@ -47,6 +49,12 @@ export default async function MentorPage({
           {t.mentor_title}
         </h1>
         <p style={{ color: "#64748b", fontSize: 14, margin: "0 0 16px" }}>{t.mentor_subtitle}</p>
+
+        {/* quick-260512-24v: in-app help requests inbox (Player FAB target) */}
+        <div className="eic-mentor-helpbar">
+          <HelpInboxBell />
+        </div>
+        <HelpInbox />
 
         {hasSupabaseEnv() ? (
           <>

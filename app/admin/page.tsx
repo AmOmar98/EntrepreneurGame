@@ -6,6 +6,8 @@ import { AdminLiveView } from "@/components/admin-live-view";
 import { AdminPitchOrderEditor } from "@/components/admin-pitch-order-editor";
 import { AdminStatusBanner } from "@/components/admin-status-banner";
 import { AppShell } from "@/components/app-shell";
+import { HelpInbox } from "@/components/help/HelpInbox";
+import { HelpInboxBell } from "@/components/help/HelpInboxBell";
 import { Kpi } from "@/components/wf/kpi";
 import { TeamBar } from "@/components/wf/team-bar";
 import {
@@ -145,6 +147,12 @@ export default async function AdminPage({
 
         <div style={{ padding: "20px 28px" }}>
           <AdminStatusBanner result={hackStatus} />
+
+          {/* quick-260512-24v: in-app help requests inbox (Player FAB target) */}
+          <div className="eic-admin-helpbar">
+            <HelpInboxBell />
+          </div>
+          <HelpInbox />
 
           {liveMode ? (
             <AdminLiveView snapshot={snapshot} hackStatus={hackStatus} />
