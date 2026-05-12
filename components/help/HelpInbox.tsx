@@ -59,6 +59,11 @@ export async function HelpInbox() {
           <li key={r.id} className="eic-help-inbox__item">
             <header className="eic-help-inbox__header">
               <StatusBadge status={r.status} />
+              {r.missionContext ? (
+                <span className="eic-help-inbox__mission-chip">
+                  <span aria-hidden="true">📍</span> {r.missionContext}
+                </span>
+              ) : null}
               <span className="eic-help-inbox__time">
                 {formatRelative(r.createdAt)}
               </span>

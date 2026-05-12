@@ -6,6 +6,13 @@ import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type { HelpRequest, HelpRequestStatus } from "@/lib/types";
 
+// quick-260512-24v deferred #3 + #5: extend HelpRequest with optional
+// fields without touching the locked lib/types.ts (pilot bypass deny list).
+export type HelpRequestExtended = HelpRequest & {
+  missionContext: string | null;
+  assignedMentorId: string | null;
+};
+
 type RawHelpRequest = {
   id: string;
   player_id: string;
@@ -18,9 +25,11 @@ type RawHelpRequest = {
   resolved_at: string | null;
   resolved_by: string | null;
   updated_at: string;
+  mission_context: string | null;
+  assigned_mentor_id: string | null;
 };
 
-function mapRow(row: RawHelpRequest): HelpRequest {
+function mapRow(row: RawHelpRequest): HelpRequestExtended {
   return {
     id: row.id,
     playerId: row.player_id,
@@ -33,12 +42,14 @@ function mapRow(row: RawHelpRequest): HelpRequest {
     resolvedAt: row.resolved_at,
     resolvedBy: row.resolved_by,
     updatedAt: row.updated_at,
+    missionContext: row.mission_context,
+    assignedMentorId: row.assigned_mentor_id,
   };
 }
 
 export async function listHelpRequests(opts?: {
   onlyUnresolved?: boolean;
-}): Promise<HelpRequest[]> {
+}): Promise<HelpRequestExtended[]> {
   if (!hasSupabaseEnv()) return [];
   const supabase = await createClient();
   if (!supabase) return [];

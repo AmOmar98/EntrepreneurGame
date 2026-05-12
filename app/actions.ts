@@ -1949,7 +1949,14 @@ export async function setPitchOrderFlow(
 
 const helpRequestSchema = z.object({
   message: z.string().min(1).max(500),
+  // quick-260512-24v deferred #5: optional mission context detected client-side.
+  mission_context: z.string().max(120).optional().nullable(),
 });
+
+// quick-260512-24v deferred #1: rate-limit — at most 1 open request per Player
+// per RATE_LIMIT_WINDOW_SECONDS. Keeps J1/J2 mentor pool from being saturated
+// by accidental double-clicks or anxious Players spamming the FAB.
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 
 export async function createHelpRequestFlow(
   _prev: WorkflowState,
@@ -1957,6 +1964,7 @@ export async function createHelpRequestFlow(
 ): Promise<WorkflowState> {
   const parsed = helpRequestSchema.safeParse({
     message: formData.get("message"),
+    mission_context: formData.get("mission_context"),
   });
   if (!parsed.success) {
     return {
@@ -1997,10 +2005,33 @@ export async function createHelpRequestFlow(
     };
   }
 
+  // Deferred #1 — rate limit: refuse if a Player already has an unresolved
+  // request OR if their latest request was created in the last 60s. Idempotent
+  // on accidental double-submit. Mentor still sees the original request.
+  const windowStart = new Date(
+    Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000,
+  ).toISOString();
+  const { data: recent } = await supabase
+    .from("help_requests")
+    .select("id, status, created_at")
+    .eq("player_id", playerId)
+    .or(
+      `status.in.(open,acknowledged),created_at.gte.${windowStart}`,
+    )
+    .limit(1);
+  if (recent && recent.length > 0) {
+    return {
+      ok: true,
+      message: "Un mentor a déjà ta dernière demande — patiente un instant.",
+      severity: "warn",
+    };
+  }
+
   const { error } = await supabase.from("help_requests").insert({
     player_id: playerId,
     requested_by: user.id,
     message: parsed.data.message,
+    mission_context: parsed.data.mission_context ?? null,
   });
   if (error) {
     return { ok: false, message: error.message, severity: "error" };

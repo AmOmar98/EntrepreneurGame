@@ -7,8 +7,29 @@
 // No conditional on level, mission, status, or stuck-state.
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createHelpRequestFlow, type WorkflowState } from "@/app/actions";
 import { dictionaries } from "@/lib/i18n";
+
+// quick-260512-24v deferred #5: derive a short mission context from the
+// pathname. Keeps the chip readable in the mentor inbox without leaking
+// raw UUIDs.
+function deriveMissionContext(pathname: string | null): string | null {
+  if (!pathname) return null;
+  if (pathname.startsWith("/journey/deliverable/")) {
+    const id = pathname.split("/")[3] ?? "";
+    return id ? `Livrable ${id.slice(0, 8)}` : "Livrable";
+  }
+  if (pathname.startsWith("/journey/bonus/")) {
+    const type = pathname.split("/")[3] ?? "";
+    return type ? `Bonus ${type}` : "Bonus";
+  }
+  if (pathname.startsWith("/journey/pitch-prep")) return "Pitch prep";
+  if (pathname.startsWith("/journey/help")) return "Coup de pouce";
+  if (pathname.startsWith("/journey")) return "Parcours";
+  if (pathname.startsWith("/onboarding")) return "Onboarding";
+  return null;
+}
 
 const t = dictionaries.fr;
 const initialState: WorkflowState = { ok: false, message: "" };
@@ -21,6 +42,8 @@ export function HelpRequestComposer({ onClose }: { onClose: () => void }) {
   );
   const [message, setMessage] = useState("");
   const dialogRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const missionContext = deriveMissionContext(pathname);
 
   // Close on success after 1.5s so user sees feedback.
   useEffect(() => {
@@ -60,6 +83,14 @@ export function HelpRequestComposer({ onClose }: { onClose: () => void }) {
         </h2>
         <p className="eic-help-modal__subtitle">{t.help_composer_subtitle}</p>
         <form action={formAction} className="eic-help-modal__form">
+          {missionContext ? (
+            <input type="hidden" name="mission_context" value={missionContext} />
+          ) : null}
+          {missionContext ? (
+            <p className="eic-help-modal__mission-chip" aria-live="polite">
+              <span aria-hidden="true">📍</span> {missionContext}
+            </p>
+          ) : null}
           <label className="eic-help-modal__label">
             <textarea
               name="message"
