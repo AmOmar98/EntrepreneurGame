@@ -2,7 +2,63 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+
+      "Bash(curl -s*:*entrepreneur-game-six.vercel.app/*)",
+      "Bash(curl -sf*:*entrepreneur-game-six.vercel.app/*)",
+      "Bash(curl -sI*:*entrepreneur-game-six.vercel.app/*)",
+      "mcp__claude_ai_Vercel__get_runtime_logs",
+      "mcp__claude_ai_Vercel__get_deployment_build_logs",
+      "mcp__claude_ai_Vercel__get_deployment",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__plugin_supabase_supabase__get_logs",
+      "mcp__plugin_supabase_supabase__get_advisors",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Write(.planning/pilot-alerts/**)",
+      "Write(.planning/quick/night-queue/**)",
+
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git stash*)",
+      "Bash(git checkout main*)",
+      "Bash(git pull origin main*)",
+      "Bash(git pull --rebase origin main*)",
+      "Bash(git fetch origin*)",
+      "Bash(git add*)",
+      "Bash(git commit -m*)",
+      "Bash(git push origin main*)",
+      "Bash(git revert HEAD --no-edit*)",
+      "Bash(npm run typecheck*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run build*)",
+      "Bash(sleep *)",
+      "Edit(app/**)",
+      "Edit(components/**)",
+      "Edit(lib/**)",
+      "Edit(utils/**)",
+      "Edit(middleware.ts)",
+      "Write(.planning/pilot-alerts/**)",
+      "Write(.planning/quick/night-queue/**)",
+
+      "PushNotification"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf*)",
+      "Bash(git checkout --*)",
+      "Bash(git clean -f*)",
+      "Bash(git commit --amend*)",
+      "Edit(database/**)",
+      "Edit(.env*)",
+      "Edit(vercel.json)",
+      "Edit(CLAUDE.md)",
+      "Edit(lib/types.ts)",
+      "Write(database/**)",
+      "Write(.env*)"
     ]
   }
 }
