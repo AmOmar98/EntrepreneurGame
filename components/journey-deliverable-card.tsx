@@ -128,7 +128,15 @@ export function JourneyDeliverableCard({
         <span className="eic-deliverable-card__grow" />
         <Pill tone={meta.tone}>{meta.label}</Pill>
       </header>
-      <h3 className="eic-deliverable-card__title">{template.title}</h3>
+      <h3 className="eic-deliverable-card__title">
+        {template.title}
+        {template.isBonus ? (
+          <>
+            {" "}
+            <Pill tone="amber">{t.deliverable_bonus_badge}</Pill>
+          </>
+        ) : null}
+      </h3>
       {hint ? <p className="eic-deliverable-card__hint">{hint}</p> : null}
       <div className="eic-deliverable-card__meta">
         <span>{formatRewardXp(template.maxScore)}</span>
