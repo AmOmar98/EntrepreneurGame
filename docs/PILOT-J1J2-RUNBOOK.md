@@ -31,6 +31,20 @@ ls .claude/agents/pilot-*.md
 #   pilot-hotfix-prepper.md
 ```
 
+### ⚠️ Important — fresh Claude Code session
+
+Les agents `pilot-health-watcher` et `pilot-hotfix-prepper` ont été ajoutés au repo le 12/05 nuit. Claude Code lit `.claude/agents/` **au démarrage de session uniquement**.
+
+→ Si tu avais une session Claude Code déjà ouverte avant `git pull`, **ferme-la et ouvre une session fraîche** avant le `/loop`. Sinon Claude Code répondra `Agent type 'pilot-health-watcher' not found`.
+
+Pour vérifier rapidement que les agents sont enregistrés dans ta session :
+
+```
+list available agents
+```
+
+Tu dois voir `pilot-health-watcher` et `pilot-hotfix-prepper` dans la réponse.
+
 Vérifie que les dossiers d'alerte existent :
 
 ```bash
