@@ -7184,6 +7184,9 @@ a.eic-button:focus-visible {
 }
 .eic-help-modal__success { color: #15803d; font-weight: 600; margin: 0; }
 .eic-help-modal__error { color: #b91c1c; font-weight: 600; margin: 0; }
+.eic-help-modal__mailto { display: inline-flex; align-items: center; gap: 0.4rem; align-self: flex-start; padding: 0.5rem 0.85rem; border-radius: 0.4rem; background: #fff7ed; color: #c2410c; font-weight: 600; font-size: 0.85rem; text-decoration: none; border: 1px solid #fed7aa; }
+.eic-help-modal__mailto:hover { background: #ffedd5; }
+.eic-help-modal__mailto:focus-visible { outline: 2px solid #f97316; outline-offset: 1px; }
 .eic-help-modal__actions {
   display: flex;
   gap: 0.5rem;

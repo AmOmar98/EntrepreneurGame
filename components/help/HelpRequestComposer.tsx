@@ -94,6 +94,16 @@ export function HelpRequestComposer({ onClose }: { onClose: () => void }) {
               {state.message}
             </p>
           ) : null}
+          {state.ok && state.mailto ? (
+            <a
+              className="eic-help-modal__mailto"
+              href={state.mailto}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t.help_composer_mailto}
+            </a>
+          ) : null}
           <div className="eic-help-modal__actions">
             <button
               type="button"

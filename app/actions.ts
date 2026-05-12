@@ -28,6 +28,9 @@ export type WorkflowState = {
   // without coupling on French substring matches. Backwards-compatible —
   // existing callers/consumers ignore this field.
   severity?: "ok" | "warn" | "error";
+  // quick-260512-24v deferred #4: optional mailto: draft for fallback email
+  // channel after a successful in-app insert (help_requests).
+  mailto?: string;
 };
 
 const credentialsSchema = z.object({
@@ -2005,10 +2008,37 @@ export async function createHelpRequestFlow(
   revalidatePath("/mentor");
   revalidatePath("/admin");
   revalidatePath("/journey");
+
+  // Deferred #4 — mailto fallback: build draft addressed to mentor pool + EIC
+  // admins. Failure to query emails MUST NOT fail the action — in-app insert
+  // already succeeded. mailto: stays optional ("Aussi envoyer par email" button).
+  let mailto: string | undefined;
+  try {
+    const { data: staff } = await supabase
+      .from("profiles")
+      .select("email, app_role")
+      .in("app_role", ["mentor", "game_master", "eic_admin"]);
+    const recipients = Array.from(
+      new Set(
+        (staff ?? [])
+          .map((r) => (r as { email: string | null }).email)
+          .filter((e): e is string => Boolean(e)),
+      ),
+    );
+    if (recipients.length > 0) {
+      const subject = "[EIC Aide] Demande de coup de pouce";
+      const body = `${parsed.data.message}\n\n---\nEnvoyé via l'app EIC Venture Journey (in-app + email fallback).`;
+      mailto = `mailto:${recipients.join(",")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+  } catch {
+    // Silent: mailto is a fallback, in-app insert is the canonical path.
+  }
+
   return {
     ok: true,
     message: "Message envoyé. Un mentor te rejoint.",
     severity: "ok",
+    mailto,
   };
 }
 
