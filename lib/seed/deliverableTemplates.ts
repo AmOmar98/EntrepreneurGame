@@ -21,6 +21,7 @@ export const demoDeliverableTemplates: DeliverableTemplate[] = [
     ],
     maxScore: 100,
     ord: 1,
+    isBonus: false,
   },
   {
     id: "00000000-0000-0000-0000-0000000000d2",
@@ -34,5 +35,6 @@ export const demoDeliverableTemplates: DeliverableTemplate[] = [
     ],
     maxScore: 100,
     ord: 1,
+    isBonus: false,
   },
 ];

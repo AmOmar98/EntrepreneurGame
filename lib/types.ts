@@ -79,6 +79,10 @@ export type DeliverableTemplate = {
   rubric: RubricCriterion[];
   maxScore: number;
   ord: number;
+  // Visual "Bonus" badge in Player UI. Label-only — does NOT affect scoring
+  // (recalc_player_score / sumPlayerScoreProject ignore it) and MUST NOT be
+  // used to gate / disable any sibling deliverable (R3). Polish v3 2026-05-12.
+  isBonus: boolean;
 };
 
 export type Cohort = {

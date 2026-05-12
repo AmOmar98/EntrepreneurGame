@@ -177,6 +177,7 @@ type DeliverableTemplateRow = {
   rubric: RubricCriterion[] | null;
   max_score: number;
   ord: number;
+  is_bonus?: boolean | null;
 };
 
 function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplate {
@@ -189,6 +190,7 @@ function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplat
     rubric: Array.isArray(row.rubric) ? row.rubric : [],
     maxScore: row.max_score,
     ord: row.ord,
+    isBonus: Boolean(row.is_bonus),
   };
 }
 
@@ -280,7 +282,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   // as `true` server-side.
   const { data: tplRows } = await supabase
     .from("deliverable_templates")
-    .select("id, mission_id, slug, title, description, rubric, max_score, ord, is_active")
+    .select("id, mission_id, slug, title, description, rubric, max_score, ord, is_active, is_bonus")
     .in("mission_id", missionIds)
     .order("ord", { ascending: true });
   const templates = ((tplRows ?? []) as (DeliverableTemplateRow & { is_active?: boolean | null })[])
