@@ -7095,3 +7095,208 @@ a.eic-button:focus-visible {
   .eic-login-v2-panel__title { font-size: 28px; }
 }
 
+/* ============================================================================
+ * quick-260512-24v : help FAB + composer modal + inbox/bell
+ * Additive only -- no modification of existing classes.
+ * ============================================================================ */
+
+.eic-help-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5rem; /* above MobileTabBar */
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background: var(--eic-orange, #f97316);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  border: none;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.eic-help-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+.eic-help-fab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .eic-help-fab__label { display: none; }
+  .eic-help-fab { padding: 0.85rem; bottom: 5.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-help-fab { transition: none; }
+}
+
+.eic-help-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.eic-help-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+.eic-help-modal__panel {
+  position: relative;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+.eic-help-modal__title { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem; color: #0f172a; }
+.eic-help-modal__subtitle { font-size: 0.9rem; color: #64748b; margin: 0 0 1rem; }
+.eic-help-modal__form { display: flex; flex-direction: column; gap: 0.75rem; }
+.eic-help-modal__label { display: block; }
+.eic-help-modal__textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  font: inherit;
+  resize: vertical;
+  min-height: 96px;
+  box-sizing: border-box;
+}
+.eic-help-modal__textarea:focus {
+  outline: 2px solid var(--eic-orange, #f97316);
+  outline-offset: 1px;
+}
+.eic-help-modal__counter {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+.eic-help-modal__success { color: #15803d; font-weight: 600; margin: 0; }
+.eic-help-modal__error { color: #b91c1c; font-weight: 600; margin: 0; }
+.eic-help-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+.eic-help-modal__cancel,
+.eic-help-modal__submit {
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.875rem;
+}
+.eic-help-modal__cancel { background: #e2e8f0; color: #0f172a; }
+.eic-help-modal__submit { background: var(--eic-orange, #f97316); color: #fff; }
+.eic-help-modal__submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.eic-help-modal__cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Inbox + bell (used on /mentor and /admin -- Task 4) */
+.eic-help-bell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  background: #fff7ed;
+  color: #c2410c;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  position: relative;
+}
+.eic-help-bell__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #d97706; /* ambre discret -- pas red-600 agressif (cf. advisor cond 5) */
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.eic-help-inbox {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+.eic-help-inbox--empty { background: #f8fafc; }
+.eic-help-inbox__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.eic-help-inbox__empty { margin: 0; color: #64748b; font-size: 0.9rem; }
+.eic-help-inbox__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.eic-help-inbox__item {
+  padding: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fefefe;
+}
+.eic-help-inbox__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.eic-help-inbox__status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.eic-help-inbox__status--open { background: #fef3c7; color: #92400e; }
+.eic-help-inbox__status--acknowledged { background: #dbeafe; color: #1e40af; }
+.eic-help-inbox__status--resolved { background: #dcfce7; color: #166534; }
+.eic-help-inbox__time { font-size: 0.75rem; color: #64748b; }
+.eic-help-inbox__message {
+  margin: 0 0 0.6rem;
+  color: #0f172a;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+.eic-help-inbox__actions { display: flex; gap: 0.5rem; }
+.eic-help-inbox__btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.4rem;
+  border: none;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.eic-help-inbox__btn--ack { background: #fef3c7; color: #92400e; }
+.eic-help-inbox__btn--resolve { background: #dcfce7; color: #166534; }
+.eic-mentor-helpbar,
+.eic-admin-helpbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}

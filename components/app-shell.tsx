@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HelpCallFab } from "@/components/help/HelpCallFab";
 import { LogoutButton } from "@/components/logout-button";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { TopbarLite } from "@/components/topbar-lite";
@@ -52,6 +53,7 @@ export function AppShell({
         />
         <main className="eic-shell__main">{children}</main>
         {hideTabBar ? null : <MobileTabBar items={playerTabs} />}
+        <HelpCallFab />
       </div>
     );
   }
