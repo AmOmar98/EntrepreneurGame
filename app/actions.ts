@@ -2085,15 +2085,42 @@ export async function acknowledgeHelpRequest(formData: FormData): Promise<void> 
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
+  // Deferred #3 — mentor self-claim: also assign the mentor to the request
+  // so the inbox can render an "assignée à moi" badge. Idempotent: if
+  // assigned_mentor_id was already set (another mentor claimed first), this
+  // update is a no-op because of the `is null` filter below.
   await supabase
     .from("help_requests")
     .update({
       status: "acknowledged",
       acknowledged_at: new Date().toISOString(),
       acknowledged_by: user.id,
+      assigned_mentor_id: user.id,
     })
     .eq("id", parsed.data.id)
-    .eq("status", "open"); // idempotent -- only transitions open -> acknowledged
+    .eq("status", "open")
+    .is("assigned_mentor_id", null); // idempotent — first-clicker wins
+  revalidatePath("/mentor");
+  revalidatePath("/admin");
+}
+
+export async function assignHelpRequest(formData: FormData): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const parsed = helpIdSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  // Deferred #3 — explicit "Je prends" without changing status. First-clicker
+  // wins via `is null` filter. Mentor can still ack/resolve afterwards.
+  await supabase
+    .from("help_requests")
+    .update({ assigned_mentor_id: user.id })
+    .eq("id", parsed.data.id)
+    .is("assigned_mentor_id", null);
   revalidatePath("/mentor");
   revalidatePath("/admin");
 }
