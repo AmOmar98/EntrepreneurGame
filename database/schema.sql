@@ -106,11 +106,13 @@ create table public.deliverable_templates (
   rubric jsonb not null default '[]'::jsonb,
   max_score int not null default 100,
   ord smallint not null default 0,
+  is_bonus boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (mission_id, slug)
 );
 comment on table public.deliverable_templates is 'Template for an expected deliverable from a mission (with rubric).';
+comment on column public.deliverable_templates.is_bonus is 'Visual "Bonus" badge for the Player UI (label only — does NOT affect scoring or gating). Polish v3 2026-05-12.';
 
 -- cohorts: a cohort scoped to an event
 create table public.cohorts (
