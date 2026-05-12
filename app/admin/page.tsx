@@ -43,6 +43,7 @@ export default async function AdminPage({
     teams: [],
     gameFlow: [],
     recentValidatedEvents: [],
+    pendingQueue: [],
   };
 
   // V10 — fetch current event + pitch_order_json for the GM order editor.

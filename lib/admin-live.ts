@@ -48,10 +48,27 @@ export type GameFlowEntry = {
   tone: "green" | "amber" | "red" | "blue";
 };
 
+// design-v3 Mockup 1 — global review queue surfaced to all mentors + GM/admin.
+// Not filtered by mentor assignment (cf. user spec 2026-05-12).
+export type PendingReviewEntry = {
+  submissionId: string;
+  playerId: string;
+  playerName: string;
+  playerSlug: string;
+  missionTitle: string | null;
+  missionCode: string | null; // best-effort short tag (M3.2 style) when derivable
+  memberInitials: string[];
+  submittedAt: string;
+  minutesAgo: number;
+  isV2: boolean;
+};
+
 export type AdminLiveSnapshot = {
   teams: AdminLiveTeam[];
   gameFlow: GameFlowEntry[];
   recentValidatedEvents: HackStatusEvent[];
+  // design-v3 Mockup 1 — file de revue card (col droite cockpit live).
+  pendingQueue: PendingReviewEntry[];
 };
 
 // ============================================================================
@@ -114,6 +131,7 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
     teams: [],
     gameFlow: [],
     recentValidatedEvents: [],
+    pendingQueue: [],
   };
 
   const supabase = await createClient();
@@ -157,6 +175,30 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
     .order("submitted_at", { ascending: false })
     .limit(200);
   const submissions = (subRows ?? []) as SubmissionRow[];
+
+  // 3.b — design-v3 Mockup 1 — resolve deliverable template titles for the
+  // global review queue card. Single round-trip on the templates touched by
+  // pending submissions (set is small in practice).
+  const pendingSubsRaw = submissions.filter(
+    (s) => s.status === "submitted_v1" || s.status === "submitted_v2",
+  );
+  const pendingTplIds = Array.from(
+    new Set(pendingSubsRaw.map((s) => s.deliverable_template_id)),
+  );
+  const tplTitleById = new Map<string, string>();
+  if (pendingTplIds.length > 0) {
+    const { data: tplRows } = await supabase
+      .from("deliverable_templates")
+      .select("id, title, slug")
+      .in("id", pendingTplIds);
+    for (const r of (tplRows ?? []) as {
+      id: string;
+      title: string;
+      slug: string | null;
+    }[]) {
+      tplTitleById.set(r.id, r.title);
+    }
+  }
 
   // 4. Evaluations for these submissions (recent first).
   const submissionIds = submissions.map((s) => s.id);
@@ -337,7 +379,49 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
       kind: "submission_validated" as const,
     }));
 
-  return { teams, gameFlow, recentValidatedEvents };
+  // 10. design-v3 Mockup 1 — global pending review queue, all-mentors+all-GM
+  // visibility (cf. user spec 2026-05-12).
+  const memberInitialsByPlayer = new Map<string, string[]>();
+  for (const [pid, ms] of membersByPlayer.entries()) {
+    memberInitialsByPlayer.set(
+      pid,
+      ms.slice(0, 3).map((m) => initialsFromProfile(profileById.get(m.user_id))),
+    );
+  }
+  const pendingQueue: PendingReviewEntry[] = pendingSubsRaw
+    .map((s) => {
+      const submittedMs = new Date(s.submitted_at).getTime();
+      const minutesAgo = Number.isFinite(submittedMs)
+        ? Math.max(0, Math.round((now.getTime() - submittedMs) / 60_000))
+        : 0;
+      const player = players.find((p) => p.id === s.player_id);
+      const title = tplTitleById.get(s.deliverable_template_id) ?? null;
+      return {
+        submissionId: s.id,
+        playerId: s.player_id,
+        playerName: playerNameById.get(s.player_id) ?? "—",
+        playerSlug: player?.slug ?? "",
+        missionTitle: title,
+        missionCode: deriveMissionCode(title),
+        memberInitials: memberInitialsByPlayer.get(s.player_id) ?? [],
+        submittedAt: s.submitted_at,
+        minutesAgo,
+        isV2: s.status === "submitted_v2",
+      };
+    })
+    .sort((a, b) => a.minutesAgo - b.minutesAgo)
+    .slice(0, 12);
+
+  return { teams, gameFlow, recentValidatedEvents, pendingQueue };
+}
+
+// design-v3 Mockup 1 — best-effort short tag (M3.2 style). Extracts the first
+// "M<digit>.<digit>" sequence found in the template title; returns null when
+// the template doesn't follow that convention.
+function deriveMissionCode(title: string | null): string | null {
+  if (!title) return null;
+  const m = title.match(/M\d+(?:[.\-]\d+)?/i);
+  return m ? m[0].toUpperCase() : null;
 }
 
 // ============================================================================
