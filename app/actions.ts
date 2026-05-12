@@ -1938,3 +1938,124 @@ export async function setPitchOrderFlow(
   revalidatePath("/journey/pitch-prep");
   return { ok: true, message: `Ordre de passage enregistre (${playerIds.length} equipes).` };
 }
+
+// ============================================================================
+// Help Requests (quick-260512-24v) -- Player calls for mentor support
+// Dual-mode: demo returns synthetic success. R1 NA / R2 NA / R3 OK.
+// ============================================================================
+
+const helpRequestSchema = z.object({
+  message: z.string().min(1).max(500),
+});
+
+export async function createHelpRequestFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  const parsed = helpRequestSchema.safeParse({
+    message: formData.get("message"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Message invalide.",
+      severity: "error",
+    };
+  }
+  if (!hasSupabaseEnv()) {
+    return {
+      ok: true,
+      message: "Mode démo — requête simulée.",
+      severity: "warn",
+    };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configuré.", severity: "error" };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifié.", severity: "error" };
+  }
+
+  const { data: membership } = await supabase
+    .from("player_members")
+    .select("player_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const playerId = (membership as { player_id: string } | null)?.player_id;
+  if (!playerId) {
+    return {
+      ok: false,
+      message: "Aucun Player rattaché à votre compte.",
+      severity: "error",
+    };
+  }
+
+  const { error } = await supabase.from("help_requests").insert({
+    player_id: playerId,
+    requested_by: user.id,
+    message: parsed.data.message,
+  });
+  if (error) {
+    return { ok: false, message: error.message, severity: "error" };
+  }
+  revalidatePath("/mentor");
+  revalidatePath("/admin");
+  revalidatePath("/journey");
+  return {
+    ok: true,
+    message: "Message envoyé. Un mentor te rejoint.",
+    severity: "ok",
+  };
+}
+
+const helpIdSchema = z.object({ id: z.string().uuid() });
+
+export async function acknowledgeHelpRequest(formData: FormData): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const parsed = helpIdSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("help_requests")
+    .update({
+      status: "acknowledged",
+      acknowledged_at: new Date().toISOString(),
+      acknowledged_by: user.id,
+    })
+    .eq("id", parsed.data.id)
+    .eq("status", "open"); // idempotent -- only transitions open -> acknowledged
+  revalidatePath("/mentor");
+  revalidatePath("/admin");
+}
+
+export async function resolveHelpRequest(formData: FormData): Promise<void> {
+  if (!hasSupabaseEnv()) return;
+  const parsed = helpIdSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return;
+  const supabase = await createClient();
+  if (!supabase) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("help_requests")
+    .update({
+      status: "resolved",
+      resolved_at: new Date().toISOString(),
+      resolved_by: user.id,
+    })
+    .eq("id", parsed.data.id)
+    .in("status", ["open", "acknowledged"]);
+  revalidatePath("/mentor");
+  revalidatePath("/admin");
+}

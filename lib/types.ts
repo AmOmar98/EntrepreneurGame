@@ -258,3 +258,25 @@ export type MoscowCard = {
   createdAt: string;
   updatedAt: string;
 };
+
+// ============================================================================
+// Help Requests (Player -> Mentor in-app calls -- quick-260512-24v)
+// Mirror supabase/migrations/20260512100000_help_requests.sql
+// R1 NA - R2 NA - R3 OK (purely additive, never gates progression)
+// ============================================================================
+
+export type HelpRequestStatus = "open" | "acknowledged" | "resolved";
+
+export type HelpRequest = {
+  id: string;
+  playerId: string;
+  requestedBy: string;
+  message: string;
+  status: HelpRequestStatus;
+  createdAt: string;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  updatedAt: string;
+};
