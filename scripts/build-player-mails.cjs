@@ -59,7 +59,7 @@ function emailBody({ projectCode, email, password, ideaSeed }) {
   return [
     greet,
     "",
-    "Bienvenue dans le pilote AgreenTech 2026. Le Hack-Days 2 jours (13-14 mai) démarre aujourd'hui à 8h30 à l'UEMF Fès.",
+    "Bienvenue dans le pilote AgreenTech 2026. L'Agreentech 2 jours (13-14 mai) démarre aujourd'hui à 8h30 à l'UEMF Fès.",
     "",
     "Vos accès à la plateforme EIC Entrepreneur Game :",
     "",
@@ -72,7 +72,7 @@ function emailBody({ projectCode, email, password, ideaSeed }) {
     "2. Complétez votre onboarding (profil, projet, équipe)",
     "3. 7 missions (L1 à L6 + bonus) à compléter pendant le bootcamp",
     "4. Pour chaque mission, soumettez votre livrable via la plateforme - vos mentors EIC et le jury évalueront en temps réel",
-    "5. À J2, vous présenterez votre pitch final devant le jury et les partenaires (Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace)",
+    "5. À J2, vous présenterez votre pitch final devant le jury",
     "",
     "Besoin d'aide",
     "- En séance : un GameMaster ou un mentor EIC sera toujours présent",
