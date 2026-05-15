@@ -53,7 +53,7 @@ const STATUS_META: Record<Status, StatusMeta> = {
   feedback_received: {
     label: t.journey_status_feedback_received,
     tone: "amber",
-    actionLabel: t.journey_v2_action_view_feedback,
+    actionLabel: t.journey_v2_action_complete_v2,
     actionVariant: "amber",
     showAction: true,
   },
@@ -95,6 +95,9 @@ function formatRewardXp(maxScore: number): string {
 function getHint(status: Status): string | null {
   if (status === "submitted_v1" || status === "submitted_v2") {
     return t.journey_v2_hint_in_review;
+  }
+  if (status === "feedback_received") {
+    return t.journey_v2_hint_mentor_waiting_v2;
   }
   return null;
 }
