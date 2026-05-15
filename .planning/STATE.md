@@ -29,7 +29,7 @@ Phase: 16
 Plan: Not started
 Milestone v0.2 : implementation complete — pending human verification.
 All 4 phases (6, 7, 8, 9) implementation completed 2026-05-10.
-Last activity: 2026-05-15 - Completed quick task 260515-gu4: Post-pilote backfill pitch_scores + publish results (Top 3 = Metafarm/Bouchenna OliveFeed/Gaoua SAGRIPLAST, R1 préservée)
+Last activity: 2026-05-15 - Completed quick task 260515-lhi: UX V1→V2 CTA relance Player ("Completer ma V2" + hint "Mentor attend ta V2" sur statut feedback_received, Advisor PASS, commit 29e67ba)
 
 ## Active Milestone
 
@@ -164,6 +164,7 @@ _None_
 | 260512-24v | **FAB Call mentor Player** — FAB toujours-actif toutes pages Player + table `help_requests` + RLS (4 policies cohort-wide mentor + own-only player) + composer modal (textarea 500c, char counter live, a11y ESC/aria-modal) + bell badge ambre /mentor + /admin + 3 server actions (create/ack/resolve, idempotent, dual-mode safe) + migration appliquée PROD via MCP — advisor CONDITIONAL 6/6 conditions respectées, smoke régression OK | 2026-05-12 | b3cfe04 | [260512-24v-fab-call-mentor-player-table-help-reques](./quick/260512-24v-fab-call-mentor-player-table-help-reques/) |
 | 260512-hw0 | **SUPERSEDED** — Provision P12 Ezzouzi/Agrivision en PROD : PLAN rédigé puis annulé. Photo cohorte finale 2026-05-12 confirme 11 porteurs P01-P11 seulement (Ezzouzi OUT). PROD untouched (20 auth.users = état final pilote). HOUENHA P02 idea_seed sera set live J1 par GameMaster. PLAN.md préservé pour audit. | 2026-05-12 | 09130b8 | [260512-hw0-provision-p12-ezzouzi-agrivision-in-prod](./quick/260512-hw0-provision-p12-ezzouzi-agrivision-in-prod/) |
 | 260515-gu4 | **Publish Results Hybrid Pitch Proxy** — Post-pilote backfill 44 pitch_scores (4 jurors × 11 players, c1..c4 calibrés, c5=0 design v2) + UPDATE events SET results_published_at. Top 3 publié = Metafarm / Bouchenna OliveFeed / Gaoua SAGRIPLAST (décision jurys partenaires Tamwilcom/BoA/Innov Invest/Bluespace prise offline 14/05). R1 préservée (app/results/page.tsx:139-175 = écran announce non-GM). Advisor verdict WARN avec F1-F6 résolus avant exécution. | 2026-05-15 | cdb8bb1 | [260515-gu4-publish-results-hybrid-pitch-proxy-pilot](./quick/260515-gu4-publish-results-hybrid-pitch-proxy-pilot/) |
+| 260515-lhi | **UX V1→V2 CTA relance Player** — Hotfix surgical /journey : CTA `feedback_received` passe de "Voir le feedback" (passif) à "Completer ma V2" (action-oriented) + hint "Mentor attend ta V2". 2 fichiers, 8 insertions / 1 deletion. Vise à éviter le blocage observé J1/J2 (4 V1 jamais resoumis en V2). Advisor PASS (R1 PASS / R2 N/A / R3 PASS). Smoke local OK confirmé par Omar. | 2026-05-15 | 29e67ba | [260515-lhi-ux-v1-v2-cta-relance-player-feedback-rec](./quick/260515-lhi-ux-v1-v2-cta-relance-player-feedback-rec/) |
 
 ### Seeds Planted
 
