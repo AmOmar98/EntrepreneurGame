@@ -23,3 +23,8 @@ cohorte-*-creds.csv
 # Playwright MCP local console logs (debug artefacts)
 .playwright-mcp/
 
+# Playwright smoke harness (quick-260517-psd) artefacts
+playwright-report/
+test-results/
+playwright/.cache/
+
