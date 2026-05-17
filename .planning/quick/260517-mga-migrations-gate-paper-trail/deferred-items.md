@@ -1,13 +1,16 @@
 # DEFERRED ITEMS — Quick 260517-mga
 
-## 1. Omar SoT decision (BLOCKING manifest promotion)
+## 1. Omar SoT decision (BLOCKING manifest promotion) — RESOLVED 2026-05-17
 
-**Need:** Omar picks Option A / B / C / D from `MANIFEST-draft.md` § Source-of-truth.
-**Until then:**
-- Manifest stays at `.planning/quick/260517-mga-…/MANIFEST-draft.md`.
-- No promotion to `database/MANIFEST.md`.
-- "Rule for future migrations" stays a proposal.
-- `Write(database/**)` deny rule in `.claude/settings.local.json` remains in place.
+**Resolution:** Omar a confirmé **Option A (coexistence minimal-change)** sur la session du 2026-05-17 ("go with option A").
+
+**Policy actée :**
+- `supabase/migrations/` = dir CLI-tracké (autorité pour les futures migrations, format `YYYYMMDDHHMMSS_<slug>.sql`)
+- `database/migrations/` = dir frozen (archive authoring, ne plus ajouter de fichiers)
+- `database/schema.sql` + `triggers.sql` + `rls.sql` = vue déclarative cumulative à maintenir à la main
+- Out-of-band patches via Supabase MCP `apply_migration` autorisés pour hotfix, à logger dans le manifest
+
+**Promotion `database/MANIFEST.md` :** toujours bloquée par `Write(database/**)` / `Edit(database/**)` deny rule. Garde l'intent ici, promotion physique = item #3 (Omar bypass ponctuel ou softening du deny).
 
 ## 2. MCP `list_migrations` reconciliation
 
@@ -29,15 +32,9 @@
 - `rm database/MANIFEST.md` manually, OR
 - Approve the file post-SoT decision and let it become tracked (with the override softened).
 
-## 4. Unification phase (only if Omar picks Option B or C)
+## 4. Unification phase — NON-APPLICABLE (Omar a choisi Option A 2026-05-17)
 
-If Omar selects Option B (CLI-only SoT) or Option C (declarative-only SoT), a dedicated phase is needed:
-- Audit applied-ness of all 8 `database/migrations/` files against PROD.
-- Decide on retroactive timestamps for the 4 orphans (Option B) OR plan migration to declarative-only (Option C).
-- Update CI / docs / `CLAUDE.md` § Database.
-- Possibly squash duplicates.
-
-Out of scope for a quick — this is at least a 1-day phase.
+Option A = coexistence, pas d'unification requise. Item clos.
 
 ## 5. CI gate (long-term)
 
