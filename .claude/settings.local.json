@@ -4,9 +4,9 @@
       "Bash(npm install *)",
       "Bash(npx supabase *)",
 
-      "Bash(curl -s*:*entrepreneur-game-six.vercel.app/*)",
-      "Bash(curl -sf*:*entrepreneur-game-six.vercel.app/*)",
-      "Bash(curl -sI*:*entrepreneur-game-six.vercel.app/*)",
+      "Bash(curl -s*entrepreneur-game-six.vercel.app/*)",
+      "Bash(curl -sf*entrepreneur-game-six.vercel.app/*)",
+      "Bash(curl -sI*entrepreneur-game-six.vercel.app/*)",
       "mcp__claude_ai_Vercel__get_runtime_logs",
       "mcp__claude_ai_Vercel__get_deployment_build_logs",
       "mcp__claude_ai_Vercel__get_deployment",
@@ -39,8 +39,6 @@
       "Edit(lib/**)",
       "Edit(utils/**)",
       "Edit(middleware.ts)",
-      "Write(.planning/pilot-alerts/**)",
-      "Write(.planning/quick/night-queue/**)",
 
       "PushNotification"
     ],
