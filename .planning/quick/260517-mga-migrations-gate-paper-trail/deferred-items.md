@@ -10,7 +10,7 @@
 - `database/schema.sql` + `triggers.sql` + `rls.sql` = vue déclarative cumulative à maintenir à la main
 - Out-of-band patches via Supabase MCP `apply_migration` autorisés pour hotfix, à logger dans le manifest
 
-**Promotion `database/MANIFEST.md` :** toujours bloquée par `Write(database/**)` / `Edit(database/**)` deny rule. Garde l'intent ici, promotion physique = item #3 (Omar bypass ponctuel ou softening du deny).
+**Promotion `database/MANIFEST.md` :** RÉALISÉE 2026-05-17 (Omar a approuvé le bypass deny ponctuel). Manifest version policy actée en place.
 
 ## 2. MCP `list_migrations` reconciliation — RESOLVED 2026-05-17
 
@@ -25,15 +25,19 @@ PROD migration history (21 entries) ne contient AUCUN des 4 orphans `database/mi
 | `202605121201_multiple_permissive_fix.sql` | `events_gm_all cmd='ALL'` split | **NOT applied** (policy intacte) |
 | `202605121202_fk_indexes.sql` | `idx_evaluations_*submission*`, `idx_announcements_*cohort*` | **NOT EXISTS** |
 
-**Verdict :** les 4 fichiers sont **queued pour apply post-pilote**, comme prévu par leurs headers. Décision Omar requise : apply maintenant via Supabase MCP `apply_migration` (avec copy dans `supabase/migrations/` per Option A SoT) ou continuer à différer ?
+**Verdict :** les 4 fichiers étaient **queued pour apply post-pilote**.
 
-## 3. Cleanup of untracked `database/MANIFEST.md` in worktrees
+**Apply done 2026-05-17 via Supabase MCP `apply_migration`** + copy dans `supabase/migrations/` per Option A SoT :
+- `20260517224914_phase14_engagement_trigger.sql`
+- `20260517225015_rls_initplan_fix.sql`
+- `20260517225027_multiple_permissive_fix.sql`
+- `20260517225034_fk_indexes.sql`
 
-**Issue:** Prior pass on branch `worktree-260517-deferred-skeletons` had committed `database/MANIFEST.md` (SHA `889e40a`). This pass removed it from staging via `git rm --cached`, but the worktree copy remains untracked because `rm database/MANIFEST.md` is blocked by the `Write(database/**)` deny rule.
+Logged dans `database/MANIFEST.md` § Out-of-band apply log.
 
-**Need:** Omar (or someone with full write perms) to either:
-- `rm database/MANIFEST.md` manually, OR
-- Approve the file post-SoT decision and let it become tracked (with the override softened).
+## 3. `database/MANIFEST.md` promotion — RESOLVED 2026-05-17
+
+Omar a approuvé le bypass deny ponctuel ; fichier créé avec Option A baked in (policy + out-of-band apply log). Plus de caveat untracked.
 
 ## 4. Unification phase — NON-APPLICABLE (Omar a choisi Option A 2026-05-17)
 

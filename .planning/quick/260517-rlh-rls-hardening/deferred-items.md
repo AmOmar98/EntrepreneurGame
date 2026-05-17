@@ -1,56 +1,22 @@
 # deferred-items — 260517-rlh
 
-## 1. G-08 priv-esc `profiles.app_role` — EXPLOITABLE PROD CONFIRMÉ (2026-05-17)
+## 1. G-08 priv-esc `profiles.app_role` — FIXED 2026-05-17
 
-**Runtime probe résultat :**
-- Test user `9c0b65e2-1e3a-4e56-8840-73311d5a8807` (player)
-- `SET LOCAL ROLE authenticated` + JWT claim `sub=test_user_id` → `UPDATE profiles SET app_role='game_master' WHERE user_id=auth.uid()` → **SUCCEEDED**
-- Reverté immédiatement à `player`. PROD est clean.
+**Probe résultat AVANT fix :** EXPLOITABLE PROD (test user `9c0b65e2-1e3a-4e56-8840-73311d5a8807` updated app_role player→game_master, reverté).
 
-**Sévérité : CRITIQUE** (priv-esc complet via anon-key Supabase JS). Pilote terminé donc pas live-blocking, mais N'IMPORTE QUEL Player connecté avec son JWT peut se promouvoir GM.
+**Fix appliqué via MCP :** migration `20260517224847_profiles_lock_app_role_column_grant` — column-level GRANT (`REVOKE UPDATE ON profiles FROM authenticated; GRANT UPDATE (full_name, email, updated_at) ON profiles TO authenticated;`).
 
-**Policy fautive :**
-```sql
-CREATE POLICY profiles_self_or_gm_update ON public.profiles
-  FOR UPDATE TO authenticated
-  USING  ((user_id = auth.uid()) OR is_game_master())
-  WITH CHECK ((user_id = auth.uid()) OR is_game_master());
-```
+**Probe APRÈS fix :** priv-esc UPDATE returns `permission denied for table profiles` ✓ ; UPDATE legitime sur `full_name` succeeds ✓.
 
-**Fix design proposé (column-level GRANT, PG-native, pas de breaking change RLS) :**
-```sql
--- Revoke blanket UPDATE, re-grant column-by-column except app_role
-REVOKE UPDATE ON public.profiles FROM authenticated;
-GRANT UPDATE (display_name, locale, mailto_opened_at, updated_at)
-  ON public.profiles TO authenticated;
--- app_role + user_id restent gérables UNIQUEMENT via service_role / is_game_master()
-```
+Fichier paper-trail : `supabase/migrations/20260517224847_profiles_lock_app_role_column_grant.sql`. Manifest log dans `database/MANIFEST.md`.
 
-Alternative (BEFORE UPDATE trigger qui reset OLD.app_role si non-GM) plus défensive mais plus de surface. Préférer column-level GRANT.
+## 2. G-02 R1 breach `events.pitch_order_json` — DEFERRED to quick `260517-g02`
 
-**Action requise :** validation Omar + apply via Supabase MCP `apply_migration`.
+**Confirmé EXPLOITABLE PROD** mais le fix simple `REVOKE SELECT (pitch_order_json) FROM authenticated` casse 3 callsites lecture qui passent par JWT user (lib/pitch-prep.ts, lib/jury.ts, app/admin/page.tsx). Fix correct nécessite refactor code (SECURITY DEFINER function OU server-actions via service_role).
 
-## 2. G-02 R1 breach `events.pitch_order_json` — CONFIRMÉ PROD (2026-05-17)
+**Skeleton créé :** `.planning/quick/260517-g02-pitch-order-secdef-or-codepath/PLAN.md` — 3 options (A/B/C) à comparer en discuss-phase avant exécution.
 
-**Policy fautive :**
-```sql
-events_authenticated_select : USING(true)
-```
-
-Tout user authenticated lit toutes les colonnes events, y compris `pitch_order_json` AVANT `pitch_order_published_at`. R1 cardinal breach.
-
-**Fix design proposé (column-level GRANT) :**
-```sql
-REVOKE SELECT ON public.events FROM authenticated;
-GRANT SELECT (id, slug, name, description, start_date, end_date, status,
-              results_published_at, pitch_order_published_at, created_at, updated_at)
-  ON public.events TO authenticated;
--- pitch_order_json reste lisible UNIQUEMENT via is_game_master() (policy events_gm_all couvre)
-```
-
-Note : si Player doit voir pitch_order_json APRÈS publish, ajouter une view SECURITY DEFINER `events_with_published_order` qui expose la colonne quand `pitch_order_published_at IS NOT NULL`.
-
-**Action requise :** validation Omar + apply via Supabase MCP.
+**Pilote terminé** donc pas live-blocking ; à traiter avant le prochain event.
 
 ## 3. Staging Supabase environment
 
