@@ -184,12 +184,38 @@ const httpsUrl = z
   .url()
   .refine((u) => u.startsWith("https://"), "URL doit commencer par https://");
 
+// quick-260519-l1l : Auto-validation system evaluator (Q5 Omar 2026-05-19).
+// Used when submitDeliverable inserts a synthetic evaluations row for the
+// 10-fiches d'entretien auto-validation flow. Picked Omar's GameMaster account
+// (o.ameur@ueuromed.org) as the canonical "system" evaluator — same UUID
+// hard-coded so the seed remains reproducible.
+const SYSTEM_AUTO_VALIDATOR_USER_ID = "59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334";
+
+// quick-260519-l1l : Hard-block exception R3 signed Omar 2026-05-19. The
+// fiches-entretien-v1 deliverable REQUIRES that prep-questions-v1 was already
+// validated by mentor first. This is the ONLY hard-block in the pilot — every
+// other inter-deliverable transition stays amber-warn-only per R3 cardinal rule.
+const HARD_BLOCK_DEPENDENCIES: Record<string, string> = {
+  "fiches-entretien-v1": "prep-questions-v1",
+};
+
+// quick-260519-l1l : 10-URL HTTPS array shape for fiches-entretien-v1.
+// proof_text stores JSON.stringify({ fiches: [{ url: string }, ...] }) with
+// exactly 10 entries, each a valid https:// URL. Zod errors here are *technical*
+// payload validators (R2 distinction : pedagogical rubric warnings vs payload
+// schema errors — schema errors block parsing, rubric warnings never block).
+const fichesEntretienSchema = z.object({
+  fiches: z
+    .array(z.object({ url: httpsUrl }))
+    .length(10, "10 fiches d'entretien requises (URL HTTPS chacune)"),
+});
+
 const submissionSchema = z
   .object({
     deliverableTemplateId: z.string().uuid(),
     kind: z.enum(["proof_url", "proof_text"]),
     proofUrl: z.string().optional(),
-    proofText: z.string().max(4000).optional(),
+    proofText: z.string().max(16000).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.kind === "proof_url") {
@@ -255,6 +281,146 @@ export async function submitDeliverable(
   }
   if (!membership) {
     return { ok: false, message: "Aucun Player rattache a votre compte." };
+  }
+
+  // quick-260519-l1l : Resolve template slug to dispatch on special flows
+  // (hard-block dependency + auto-validation for fiches-entretien-v1).
+  const { data: tplRow, error: tplErr } = await supabase
+    .from("deliverable_templates")
+    .select("slug, max_score")
+    .eq("id", parsed.data.deliverableTemplateId)
+    .maybeSingle();
+  if (tplErr) {
+    return { ok: false, message: tplErr.message };
+  }
+  if (!tplRow) {
+    return { ok: false, message: "Livrable inconnu." };
+  }
+  const templateSlug = (tplRow as { slug: string; max_score: number }).slug;
+  const templateMaxScore = (tplRow as { slug: string; max_score: number }).max_score;
+
+  // quick-260519-l1l : Hard-block 2A→2B (R3 exception, Omar 2026-05-19).
+  // If this deliverable depends on another being validated first, check that
+  // dependency. Defense in depth: composer also disables submit DOM-side, but
+  // server is the source of truth — rejects with explicit pedagogical message.
+  const dependsOnSlug = HARD_BLOCK_DEPENDENCIES[templateSlug];
+  if (dependsOnSlug) {
+    const { data: depRow } = await supabase
+      .from("deliverable_templates")
+      .select("id")
+      .eq("slug", dependsOnSlug)
+      .maybeSingle();
+    if (depRow) {
+      const { data: depSubs } = await supabase
+        .from("submissions")
+        .select("status")
+        .eq("player_id", membership.player_id)
+        .eq("deliverable_template_id", (depRow as { id: string }).id)
+        .order("version", { ascending: false })
+        .limit(1);
+      const depValidated =
+        depSubs && depSubs.length > 0 && (depSubs[0] as { status: string }).status === "validated";
+      if (!depValidated) {
+        return {
+          ok: false,
+          severity: "warn",
+          message:
+            "Préparation 2A à valider par votre mentor avant de débloquer les fiches d'entretien (02b).",
+        };
+      }
+    }
+  }
+
+  // quick-260519-l1l : Auto-validation flow for fiches-entretien-v1 (Q5 Omar).
+  // - Parse 10-URL JSON payload.
+  // - Insert submissions row with status='validated' directly.
+  // - Insert synthetic evaluations row (evaluator = SYSTEM_AUTO_VALIDATOR_USER_ID,
+  //   scores = {fiche_1..10: 25}, total_score = 250) so trg_evaluation_recalc
+  //   propagates XP normally.
+  // - Skip mailto (no mentor notif needed for auto-validated submission).
+  if (templateSlug === "fiches-entretien-v1") {
+    if (parsed.data.kind !== "proof_text" || !parsed.data.proofText) {
+      return {
+        ok: false,
+        message: "Format attendu : 10 URLs HTTPS encodées en JSON (proof_text).",
+      };
+    }
+    let fichesJson: unknown;
+    try {
+      fichesJson = JSON.parse(parsed.data.proofText);
+    } catch {
+      return { ok: false, message: "proof_text doit être un JSON { fiches: [...] } valide." };
+    }
+    const fichesParsed = fichesEntretienSchema.safeParse(fichesJson);
+    if (!fichesParsed.success) {
+      return {
+        ok: false,
+        message:
+          fichesParsed.error.issues[0]?.message ??
+          "10 fiches HTTPS requises (format JSON { fiches: [{url}, ...] }).",
+      };
+    }
+
+    // Check no existing submission already validated.
+    const { data: existing } = await supabase
+      .from("submissions")
+      .select("id, version, status")
+      .eq("player_id", membership.player_id)
+      .eq("deliverable_template_id", parsed.data.deliverableTemplateId)
+      .order("version", { ascending: false });
+    if (existing && existing.length > 0) {
+      const latest = existing[0] as { id: string; status: string };
+      if (latest.status === "validated") {
+        return { ok: false, message: "Fiches déjà soumises et validées." };
+      }
+    }
+
+    // Insert submission row (status validated direct).
+    const { data: subIns, error: subErr } = await supabase
+      .from("submissions")
+      .insert({
+        player_id: membership.player_id,
+        deliverable_template_id: parsed.data.deliverableTemplateId,
+        version: 1,
+        kind: "proof_text",
+        proof_url: null,
+        proof_text: parsed.data.proofText,
+        status: "validated",
+        submitted_by: user.id,
+      })
+      .select("id")
+      .single();
+    if (subErr || !subIns) {
+      return { ok: false, message: subErr?.message ?? "Échec insertion soumission." };
+    }
+
+    // Insert auto-validation evaluations row → trigger trg_evaluation_recalc.
+    const fichesScores: Record<string, number> = {};
+    for (let i = 1; i <= 10; i += 1) {
+      fichesScores[`fiche_${i}`] = 25;
+    }
+    const totalScore = templateMaxScore; // 250
+    const { error: evalErr } = await supabase.from("evaluations").insert({
+      submission_id: (subIns as { id: string }).id,
+      evaluator_id: SYSTEM_AUTO_VALIDATOR_USER_ID,
+      scores: fichesScores,
+      total_score: totalScore,
+      feedback:
+        "Auto-validé (Q5 quick-260519-l1l) : 10 fiches d'entretien soumises. Note fixe 25/25 par fiche.",
+      verdict: "validate_v1",
+    });
+    if (evalErr) {
+      return { ok: false, message: `Submission OK, eval failed: ${evalErr.message}` };
+    }
+
+    revalidatePath("/journey");
+    revalidatePath(`/journey/deliverable/${parsed.data.deliverableTemplateId}`);
+    revalidatePath("/mentor");
+    return {
+      ok: true,
+      severity: "ok",
+      message: "10 fiches d'entretien soumises et validées automatiquement.",
+    };
   }
 
   // Block duplicate V1 (SUBMIT-02: lock until V2 is requested - V2 lives in Phase 3).

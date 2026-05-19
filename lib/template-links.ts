@@ -15,17 +15,30 @@ const COMMERCIALISATION_URL =
   "https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDaSjUNjt14Q5BHtY9GxDA4AZSVZn_ysdyRktKE5db7OLw?e=Zt0LlL";
 
 export const TEMPLATE_LINKS: Record<string, TemplateLink> = {
-  // M1 - Atelier Design Thinking
-  "design-thinking-v1": {
-    templateUrl: DESIGN_THINKING_URL,
-    label: "EIC-DigiHackathon-02-Design-Thinking",
-  },
+  // M1 - Atelier Persona + Design Thinking (bonus) [quick 260519-l1l]
   "persona-v1": {
     templateUrl: DESIGN_THINKING_URL,
     label: "EIC-DigiHackathon-02-Design-Thinking",
   },
+  "design-thinking-v1": {
+    templateUrl: DESIGN_THINKING_URL,
+    label: "EIC-DigiHackathon-02-Design-Thinking",
+  },
 
-  // M2 - Business Model Canvas
+  // M2 - Préparation entretiens + Fiches [quick 260519-l1l]
+  // 02a Préparation = guide questions (point sur PDF Design Thinking 02 par défaut, à
+  // remplacer par lien spécifique 02a quand il existera).
+  "prep-questions-v1": {
+    templateUrl: DESIGN_THINKING_URL,
+    label: "EIC-DigiHackathon-02a-Preparation-Entretiens",
+  },
+  // 02b Fiches entretien = template fiche d'entretien (même PDF parent).
+  "fiches-entretien-v1": {
+    templateUrl: DESIGN_THINKING_URL,
+    label: "EIC-DigiHackathon-02b-Fiche-Entretien",
+  },
+
+  // M3 - Business Model Canvas
   "bmc-v1": {
     templateUrl:
       "https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDfctMur7k_TYk9sq9o87-uAcJtPWXpOmkQhnTBd5-wyWo?e=z1XYOb",
