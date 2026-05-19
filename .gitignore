@@ -28,3 +28,6 @@ playwright-report/
 test-results/
 playwright/.cache/
 
+# Archive locale exports PROD (data porteurs, RGPD)
+.planning/exports/
+
