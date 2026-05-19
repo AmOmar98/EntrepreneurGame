@@ -46,7 +46,7 @@ Baseline perf PROD capturée avant pilote Digi-Hackathon. 17 advisor findings in
 
 | SHA | Message |
 |---|---|
-| _(TBD post-commit)_ | `docs(quick-260519-tqd): DB perf baseline + pooler verdict (J-1 pre-Digi)` |
+| `9ca673f` | `docs(quick-260519-tqd): DB perf baseline + pooler verdict (J-1 Digi-Hackathon)` |
 
 ## Re-measurement protocol
 
