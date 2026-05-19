@@ -238,16 +238,10 @@ WHERE schemaname = 'public' AND tablename IN ('pitch_scores', 'jurors');
 -- Devrait retourner 0 lignes pour un juror "live"
 -- Devrait retourner N lignes pour un juror "closed"
 
--- 3. Backfill : seed les jurors actuels (les 3 mentors qui ont voté sur AgreenTech
---    pilote — cf. memory project_smoke_prod_t3 + project_prod_pilot_state) sur le
---    Digi-Hackathon event courant
-INSERT INTO public.jurors (event_id, user_id, invited_at)
-SELECT
-  (SELECT id FROM events ORDER BY starts_at DESC LIMIT 1),
-  user_id,
-  now()
-FROM profiles WHERE app_role = 'mentor'
-ON CONFLICT DO NOTHING;
+-- 3. Pas de backfill auto ici. Pour Digi-Hackathon : 4 jurys dédiés sont
+--    provisionnés en amont via Lot 5.7 (script create-jurors.ts). Les 3 mentors
+--    AgreenTech historiques NE sont PAS insérés dans `jurors` pour Digi-Hackathon
+--    — ils restent mentor sur leurs cohorts mais ne notent pas le hackathon.
 ```
 
 ### Lot 5.2 — Types + i18n (Agent #2)
@@ -443,20 +437,79 @@ export async function removeJuror(eventId: string, userId: string): Promise<{ ok
 - Colonnes : `rank, team, idea, pitch_avg, score_project, combined, juror_count`
 - Sérialisé via `lib/csv.ts:csvResponse('results-digi-hackathon.csv', ...)`
 
+### Lot 5.7 — Provisioning 4 jurys dédiés (Agent #6, post-DB)
+
+**Décision Omar** : pour Digi-Hackathon, on créé 4 comptes juror dédiés (J01..J04) avec creds aléatoires, distribués physiquement aux jurys partenaires en début d'événement. Pas de backfill auto depuis les mentors AgreenTech.
+
+**Script** : `scripts/create-digi-hackathon-jurors.ts` (Node script Supabase admin, type `tsx scripts/...`). À exécuter une fois en amont via :
+```bash
+NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-digi-hackathon-jurors.ts
+```
+
+**Logique** :
+```ts
+// scripts/create-digi-hackathon-jurors.ts (squelette)
+import { createClient } from '@supabase/supabase-js';
+import { randomBytes } from 'crypto';
+import { writeFileSync } from 'fs';
+
+const supa = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
+const JURORS = [
+  { slug: 'J01', name: 'Jury Tamwilcom', email: 'jury-j01@digi-hackathon.eic.ma' },
+  { slug: 'J02', name: 'Jury Bank of Africa', email: 'jury-j02@digi-hackathon.eic.ma' },
+  { slug: 'J03', name: 'Jury Innov Invest', email: 'jury-j03@digi-hackathon.eic.ma' },
+  { slug: 'J04', name: 'Jury Bluespace', email: 'jury-j04@digi-hackathon.eic.ma' },
+];
+
+const eventId = '<DIGI_HACKATHON_EVENT_UUID>'; // récupéré via supa.from('events').select().limit(1)
+
+const lines = ['slug,name,email,password'];
+for (const j of JURORS) {
+  const password = randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12); // 12 chars
+  // 1. Create auth user
+  const { data, error } = await supa.auth.admin.createUser({
+    email: j.email, password, email_confirm: true,
+  });
+  if (error) throw error;
+  const userId = data.user.id;
+
+  // 2. Insert profile (app_role='mentor' — choix validé Omar 2026-05-19)
+  await supa.from('profiles').upsert({ user_id: userId, app_role: 'mentor', display_name: j.name });
+
+  // 3. Insert into jurors table (active is_juror() pour event Digi-Hackathon)
+  await supa.from('jurors').insert({ event_id: eventId, user_id: userId, invited_at: 'now()' });
+
+  lines.push(`${j.slug},${j.name},${j.email},${password}`);
+}
+
+writeFileSync('jurors-digi-hackathon-creds.csv', lines.join('\n'));
+console.log('✓ 4 jurys created, creds → jurors-digi-hackathon-creds.csv (gitignored)');
+```
+
+**Output** : fichier `jurors-digi-hackathon-creds.csv` à la racine repo (à **gitignorer**, cf. `.gitignore` ajout `jurors-*-creds.csv` au passage). Format identique à `cohorte-agreentech-creds.csv` (cf. memory `reference_cohort_csvs`).
+
+**Distribution** : Omar imprime/transmet les creds physiquement aux 4 jurys avant l'event (carte format A6 par juror, comme les Players).
+
+**Rollback** : `DELETE FROM jurors WHERE event_id = '<DIGI>'; DELETE FROM profiles WHERE user_id IN (...); supa.auth.admin.deleteUser(...)` si besoin de recréer.
+
 ## 6. Critères d'acceptation
 
 - [ ] Migration appliquée sur PROD via MCP, `pg_policies` confirme les 4 policies (`jurors_gm_all`, `jurors_self_select`, `pitch_scores_select_visibility`, `pitch_scores_juror_self_insert`, `pitch_scores_juror_self_update`, `pitch_scores_gm_delete`)
 - [ ] **Test RLS faille corrigée** : un mentor authentifié non-juror exécute `SELECT * FROM pitch_scores` → 0 lignes (vs 100% des lignes actuellement)
 - [ ] **Test RLS live** : juror authentifié exécute `SELECT * FROM pitch_scores WHERE juror_id <> '<self>'` pendant `live` → 0 lignes
 - [ ] **Test RLS closed** : même juror après `closed` → N lignes (autres jurors visibles)
+- [ ] **4 jurys provisionnés** : J01..J04 visibles dans `auth.users` + `profiles` (app_role=mentor) + `jurors` (event=Digi-Hackathon)
+- [ ] **CSV creds gitignored** : `jurors-digi-hackathon-creds.csv` existe à la racine et est listé dans `.gitignore` (pattern `jurors-*-creds.csv`)
+- [ ] **Test login juror** : connexion `jury-j01@digi-hackathon.eic.ma` + password → redirect `/jury`, vue théâtre accessible, autres jurys notes invisibles
 - [ ] Player et Mentor non-juror sur `/results` voient écran « merci » dans tous les états sauf cérémonie GM-only
 - [ ] `/results/ceremony` redirect non-GM vers `/results`
 - [ ] `/admin/export/results.csv` renvoie 403 tant que `state !== 'closed'` ET `publishedAt === null`
-- [ ] `/jury` affiche `jury_not_invited` pour un mentor non-juror
-- [ ] `setPitchModeStateFlow(live)` rejette quand 0 juror invité
+- [ ] `/jury` affiche `jury_not_invited` pour un mentor non-juror (ex : un des 3 mentors AgreenTech historiques)
+- [ ] `setPitchModeStateFlow(live)` rejette quand 0 juror invité (sécurité — ne devrait jamais arriver si Lot 5.7 a tourné)
 - [ ] `npm run typecheck && npm run lint && npm run build` passent
 - [ ] Audit R1 grep : pas de chiffre sur écran Player/Mentor non-juror
-- [ ] Smoke local 2P + 1M(juror) + 1M(non-juror) + 1GM
+- [ ] Smoke local 2P + 1J(j01) + 1M(non-juror) + 1GM
 - [ ] Verdict `eic-pedagogical-advisor` : `OK` ou `WARN with notes` — pas de `BLOCK`
 - [ ] CLAUDE.md AppRole désync corrigée en passant (3 rôles `player|mentor|game_master`)
 
@@ -466,9 +519,11 @@ export async function removeJuror(eventId: string, userId: string): Promise<{ ok
 |---|---|---|---|
 | RLS policy mal écrite → fuite cross-juror | Moyenne | **Critique** | Test SQL explicite avant push ; fail-closed par défaut |
 | Migration faille RLS casse smoke prod existant | Moyenne | Élevé | Tag `v0.X.Y-pre-pitch-mode` avant edits ; backfill jurors immédiat pour préserver flux mentor jury |
-| Backfill jurors mal scoped (oublier event Digi-Hackathon) | Moyenne | Moyen | INSERT depuis profiles WHERE app_role='mentor' explicite dans migration |
+| Script provisioning oublié → 0 juror → `live` impossible | Élevée | Critique | Garde `setPitchModeStateFlow(live)` rejette si 0 juror + checklist runbook avant event |
 | GM ferme `closed` par erreur | Moyenne | Moyen | `confirm()` JS + rollback `closed→live` autorisé |
-| Mentor existant devient « non-juror » silencieusement après migration | Élevée | Élevé | Backfill systématique des mentors actuels en jurors dans Lot 5.1 Part C |
+| CSV creds leakés sur git | Moyenne | **Critique** | Ajout pattern `jurors-*-creds.csv` dans `.gitignore` avant exécution du script ; vérif `git status` ne mentionne pas le fichier |
+| Mentor AgreenTech historique tente de noter Digi-Hackathon | Faible | Faible | Garde `jury_not_invited` UI + RLS DB-enforced (pas de fuite) |
+| Email collision si script relancé | Faible | Moyen | `ON CONFLICT DO NOTHING` sur jurors ; `auth.admin.createUser` échoue gracieusement sur email dup |
 | Service-role bypass dans `computeRanking` casse `/results` post-publish | Faible | Élevé | Garder bypass pour `published`, tester avec `publishedAt` set |
 | Mockup HTML pas reproductible 1:1 | Élevée | Faible | Subagents UI reçoivent l'analyse texte de l'agent Explore + libellés FR |
 | Page `/admin/jurors` manquante pour bootstrap | Faible | Moyen | `AdminJurorsManager` intégré directement dans `/admin` (pas de route séparée) |
@@ -505,6 +560,8 @@ Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts sta
 - `components/admin-pitch-mode-toggle.tsx`
 - `components/admin-jurors-manager.tsx`
 - `app/admin/export/results.csv/route.ts`
+- `scripts/create-digi-hackathon-jurors.ts` (Lot 5.7, one-shot)
+- `jurors-digi-hackathon-creds.csv` (root, **gitignored**)
 
 **Modifiés** :
 - `lib/types.ts` (+2 types `PitchModeState`, `Juror`)
@@ -524,6 +581,7 @@ Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts sta
 - `components/results-stats-strip.tsx` (libellés revus)
 - `components/results-timeline-moments.tsx` (refresh visuel)
 - `components/results-ceremony-screen.tsx` (refresh théâtre + reveal staggered)
+- `.gitignore` (ajout pattern `jurors-*-creds.csv`)
 - `CLAUDE.md` (corriger AppRole : `player | mentor | game_master`)
 
 Total estimé : ~750 lignes de diff sur 23 fichiers (5 nouveaux + 18 modifiés). Soit **3 commits atomiques** :
