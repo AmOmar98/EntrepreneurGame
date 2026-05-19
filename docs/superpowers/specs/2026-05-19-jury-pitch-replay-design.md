@@ -1,10 +1,10 @@
-# Spec — Pitch mode + Replay refresh (Digi-Hackathon)
+# Spec — Pitch mode + Replay refresh + Jurors table (Digi-Hackathon)
 
 **Date** : 2026-05-19
 **Auteur** : Omar + Claude (brainstorming)
 **Cible** : Digi-Hackathon (événement courant post-AgreenTech)
 **Status** : Validé, prêt pour implémentation
-**Orchestration** : approche A — single `/gsd-quick` avec 3 waves parallèles (5-6 subagents `gsd-executor`)
+**Orchestration** : approche A — single `/gsd-quick` avec 3 waves parallèles (6-7 subagents `gsd-executor`)
 
 ---
 
@@ -18,58 +18,85 @@ Le pilote AgreenTech (13-14 mai 2026) est livré et archivé sous `v0.2-pilot-re
 **Besoin exprimé par Omar** :
 
 > « Same UI/UX! Just don't show to other jury or mentor notation before the end of all pitches (GameMaster activates mode pitch on/off). »
+> « CREE ROLE JUROR OR TABLE DEDIE » → décision retenue : **table dédiée `jurors`** (cf. section 4.1 pour justification).
 
 Traduction technique :
 
 - Refresh visuel de `/jury?theater=1` (matching mockup 1) et `/results` + `/results/ceremony` (matching mockup 2).
-- Ajout d'un **state machine global pitch mode** (`off | live | closed`) piloté par le GameMaster, qui gouverne la visibilité des scores jury.
+- Ajout d'une **table dédiée `jurors(event_id, user_id)`** pour identifier qui est jury sur quel événement, indépendamment du rôle global `app_role`.
+- Ajout d'un **state machine global pitch mode** (`off | live | closed`) piloté par le GameMaster, qui gouverne la visibilité des scores jury via RLS.
+- **Correction d'une faille RLS existante** : `pitch_scores_member_or_mentor_select` (cf. `database/rls.sql:236-238`) autorise tout mentor à lire tous les `pitch_scores` — actuellement le filtre cross-juror est applicatif uniquement (`lib/jury.ts:160`), pas DB-enforced. La migration corrige au passage.
 - Export CSV results GM-only, gate `closed`.
 
 ## 2. Existant (point de départ)
 
 | Surface | Composant | État |
 |---|---|---|
+| **Rôles réels** | `lib/types.ts:7` → `"player" \| "mentor" \| "game_master"` | ⚠️ CLAUDE.md désync (mentionne `founder\|mentor\|reviewer\|committee_member\|eic_admin` — à corriger en passant) |
 | `/jury` standard | `app/jury/page.tsx` + `app/jury/jury-form.tsx` | OK, 5 critères 0-20, save via `savePitchScoreFlow` |
-| `/jury?theater=1` | `JuryPitchTheater` + `JuryPitchTimer` + `JuryPitchDials` + `JuryPitchGrid` + `JuryPassageQueue` | Fonctionnel, **refresh UI** requis |
-| `/results` | `app/results/page.tsx` — 4 branches (demo / non-GM-pending / non-GM-published / GM-published) | Fonctionnel, **refresh UI** + **integration state machine** requis |
+| `/jury?theater=1` | `JuryPitchTheater` + sous-composants | Fonctionnel, **refresh UI** requis |
+| `/results` | `app/results/page.tsx` — 4 branches | Fonctionnel, **refresh UI** + **integration state machine** requis |
 | `/results/ceremony` | `app/results/ceremony/page.tsx` + `ResultsCeremonyScreen` | Podium top 3 GM-only, **refresh UI** requis |
-| Pitch order | `lib/pitch-order.ts` + `AdminPitchOrderEditor` | OK, déjà piloté par GM |
+| Pitch order | `lib/pitch-order.ts` + `AdminPitchOrderEditor` | OK |
 | Publication | `events.results_published_at` + `publishResultsFlow` | OK, gate global existant |
-| Visibilité jury | RLS `juror_id = auth.uid()` dans `lib/jury.ts:160` | OK pour vote, **manque garde inter-jury** |
+| **RLS `pitch_scores`** | `database/rls.sql:236-260` — `is_mentor()` permet SELECT all | ⚠️ **Faille** : filtre cross-juror est applicatif, pas DB. À refondre. |
+| Auth helpers | `is_my_player()`, `is_mentor()`, `is_game_master()` dans `database/rls.sql:1-50` | OK, on ajoute `is_juror(event_id)` |
 
 ## 3. État final visé
 
 ### Matrice de visibilité
 
-| STATE | Player | Mentor | Jury (autres) | Jury (soi-même) | GM |
-|---|---|---|---|---|---|
-| `off` | rien spécial | rien spécial | rien | grille vide | dashboard prep |
-| `live` | rien | rien | **rien** (zéro fuite) | SES scores en saisie | « qui a voté » (sans valeurs) |
-| `closed` | écran « merci » | écran « merci » | scores + agrégé | scores + agrégé | tout + bouton publier |
-| `published` (existant) | écran « merci » + cérémonie au vidéoproj | idem | ranking complet | ranking complet | ranking + cérémonie |
+Un **juror** = un user présent dans `public.jurors` pour l'event courant. Peut cumuler avec `app_role = 'mentor'` ou être un mentor non-juror.
 
-**Player et Mentor ne voient JAMAIS le ranking complet en accès direct.** Le top 3 est révélé au vidéoprojecteur via `/results/ceremony` (GM-only). Cohérent avec le paradigme existant `app/results/page.tsx:139-175`.
+| STATE | Player | Mentor (non-juror) | Juror (autres) | Juror (soi-même) | GM |
+|---|---|---|---|---|---|
+| `off` | rien | rien | rien | grille vide | dashboard prep |
+| `live` | rien | rien | **rien** (zéro fuite RLS) | SES scores en saisie | « qui a voté » (sans valeurs) |
+| `closed` | écran « merci » | rien | scores + agrégé | scores + agrégé | tout + bouton publier |
+| `published` (existant) | écran « merci » + cérémonie au vidéoproj | écran « merci » + cérémonie | ranking complet | ranking complet | ranking + cérémonie GM-only |
+
+**Règles dures** :
+- Player et Mentor non-juror ne voient JAMAIS le ranking complet en accès direct. Le top 3 est révélé au vidéoprojecteur via `/results/ceremony` (GM-only).
+- Mentor non-juror n'est pas concerné par le flux jury (n'apparaît pas sur `/jury`).
+- Juror et Mentor sont des dimensions **indépendantes** : un user peut être mentor + juror, mentor seul, juror seul (peu probable mais autorisé).
 
 ### Règles cardinales R1/R2/R3 (cf. `feedback_eic_cardinal_rules`)
 
-- **R1** : la cérémonie reveal reste GM-only (route protégée). Player/Mentor `/results` = écran « merci » sans aucun chiffre. ✅
+- **R1** : cérémonie reveal GM-only ; Player/Mentor `/results` = écran « merci » sans aucun chiffre. ✅
 - **R2** : bandeau jury « vos notes restent privées » = `eic-locked-hint--amber`, jamais `error`. ✅
-- **R3** : aucun blocage inter-mission introduit. Le state `live` n'impacte aucune progression Player. ✅
+- **R3** : aucun blocage inter-mission introduit. State `live` n'impacte aucune progression Player. ✅
 
 ## 4. Architecture & découpe (subagents)
 
+### 4.1 Justification table `jurors` vs enum `juror`
+
+| | Rôle `juror` (enum) | Table `jurors(event_id, user_id)` ✅ |
+|---|---|---|
+| Migration | `ALTER TYPE app_role ADD VALUE 'juror'` + backfill | `CREATE TABLE jurors` (additif pur) |
+| Multi-événements | Un juror reste juror pour toujours | Scopé par event |
+| Cumul mentor + juror | Exclusif (1 seul `app_role` par user) | Cumulable |
+| RLS granularité | `has_role('juror')` global | `is_juror(event_id)` scoped à la ligne |
+| Modèle métier | Juror = identité permanente | Juror = invité d'un événement |
+
+### 4.2 Découpe waves / subagents
+
 ```
 Wave 1 (parallel, 2 agents) — DB + types
-├─ Agent #1 (DB)    : migration enum + colonnes events.pitch_mode_state + closed_at + RLS pitch_scores
-└─ Agent #2 (types) : enum TS dans lib/types.ts + i18n keys dans lib/i18n.ts
+├─ Agent #1 (DB)    : migration table jurors + helper is_juror + pitch_mode_state
+│                     + refonte 3 policies pitch_scores (corrige faille)
+└─ Agent #2 (types) : types TS Juror + PitchModeState dans lib/types.ts
+                       + i18n keys dans lib/i18n.ts
 
 Wave 2 (parallel, 3 agents) — Backend + UI
-├─ Agent #3 (backend) : lib/pitch-mode.ts (helpers) + guards lib/jury.ts + lib/results.ts + setPitchModeStateFlow
-├─ Agent #4 (UI jury) : refresh JuryPitchTheater + sous-composants matching mockup 1
-└─ Agent #5 (UI results) : refresh ResultsReplay + ResultsCeremonyScreen matching mockup 2
+├─ Agent #3 (backend) : lib/pitch-mode.ts (helpers) + lib/jurors.ts
+│                       + guards lib/jury.ts + lib/results.ts
+│                       + setPitchModeStateFlow + addJurorFlow / removeJurorFlow
+├─ Agent #4 (UI jury) : refresh JuryPitchTheater + sous-composants (mockup 1)
+└─ Agent #5 (UI results) : refresh ResultsReplay + ResultsCeremonyScreen (mockup 2)
 
-Wave 3 (sequential) — GM toggle + CSV + audit
-├─ Agent #6 (GM toggle + CSV) : AdminPitchModeToggle + integration /admin + /admin/export/results.csv
+Wave 3 (sequential) — GM toggles + CSV + audit
+├─ Agent #6 (GM admin) : AdminPitchModeToggle + AdminJurorsManager (mini UI)
+│                        + integration /admin + /admin/export/results.csv
 ├─ Advisor eic-pedagogical-advisor : audit R1/R2/R3 — VERDICT obligatoire
 └─ Smoke local + commits atomiques + push origin main
 ```
@@ -78,244 +105,385 @@ Wave 3 (sequential) — GM toggle + CSV + audit
 
 ### Lot 5.1 — DB migration (Agent #1)
 
-**Fichier** : appliqué via `mcp__plugin_supabase_supabase__apply_migration` (cf. `feedback_database_deny_workaround`, edits `database/**` deny). Snapshot du SQL dans `.planning/quick/260519-XXX-pitch-mode/migrations/01-pitch-mode-state.sql` (text-only, pour traçabilité).
+**Application** : via `mcp__plugin_supabase_supabase__apply_migration` (cf. `feedback_database_deny_workaround` — edits `database/**` deny). Snapshot SQL pour traçabilité dans `.planning/quick/260519-XXX-pitch-mode/migrations/01-jurors-and-pitch-mode.sql`.
 
 ```sql
--- 1. Enum
-CREATE TYPE pitch_mode_state AS ENUM ('off', 'live', 'closed');
+-- ============================================================================
+-- Part A : Table jurors + helper is_juror()
+-- ============================================================================
 
--- 2. Colonnes events
-ALTER TABLE events
-  ADD COLUMN pitch_mode_state pitch_mode_state NOT NULL DEFAULT 'off',
+CREATE TABLE public.jurors (
+  event_id uuid NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  invited_at timestamptz NOT NULL DEFAULT now(),
+  invited_by uuid REFERENCES auth.users(id),
+  PRIMARY KEY (event_id, user_id)
+);
+
+CREATE INDEX idx_jurors_user ON public.jurors(user_id);
+CREATE INDEX idx_jurors_event ON public.jurors(event_id);
+
+CREATE OR REPLACE FUNCTION public.is_juror(p_event_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.jurors
+    WHERE event_id = p_event_id AND user_id = auth.uid()
+  )
+$$;
+
+ALTER TABLE public.jurors ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "jurors_gm_all" ON public.jurors
+  FOR ALL TO authenticated
+  USING (public.is_game_master())
+  WITH CHECK (public.is_game_master());
+
+CREATE POLICY "jurors_self_select" ON public.jurors
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+-- ============================================================================
+-- Part B : Enum pitch_mode_state + colonnes events
+-- ============================================================================
+
+CREATE TYPE public.pitch_mode_state AS ENUM ('off', 'live', 'closed');
+
+ALTER TABLE public.events
+  ADD COLUMN pitch_mode_state public.pitch_mode_state NOT NULL DEFAULT 'off',
   ADD COLUMN pitch_mode_closed_at timestamptz NULL;
 
--- 3. Trigger horodatage closed_at
-CREATE OR REPLACE FUNCTION set_pitch_mode_closed_at()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.set_pitch_mode_closed_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.pitch_mode_state = 'closed' AND OLD.pitch_mode_state <> 'closed' THEN
+  IF NEW.pitch_mode_state = 'closed' AND (OLD.pitch_mode_state IS DISTINCT FROM 'closed') THEN
     NEW.pitch_mode_closed_at := now();
   ELSIF NEW.pitch_mode_state <> 'closed' THEN
     NEW.pitch_mode_closed_at := NULL;
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER trg_set_pitch_mode_closed_at
-  BEFORE UPDATE OF pitch_mode_state ON events
-  FOR EACH ROW EXECUTE FUNCTION set_pitch_mode_closed_at();
+  BEFORE UPDATE OF pitch_mode_state ON public.events
+  FOR EACH ROW EXECUTE FUNCTION public.set_pitch_mode_closed_at();
 
--- 4. RLS update pitch_scores (SELECT)
--- Avant : jurors voient leurs scores (juror_id = auth.uid()) + staff voit tout
--- Après : ajout d'une clause qui ouvre la lecture cross-juror UNIQUEMENT
--- quand pitch_mode_state = 'closed' ET le requester a le rôle 'mentor' (qui inclut les jurés).
-DROP POLICY IF EXISTS pitch_scores_select_self ON pitch_scores;
-CREATE POLICY pitch_scores_select_visibility ON pitch_scores
-  FOR SELECT
+-- ============================================================================
+-- Part C : Refonte RLS pitch_scores (corrige la faille existante)
+-- ============================================================================
+
+-- Drop des policies actuelles (database/rls.sql:236-260)
+DROP POLICY IF EXISTS "pitch_scores_member_or_mentor_select" ON public.pitch_scores;
+DROP POLICY IF EXISTS "pitch_scores_mentor_self_insert" ON public.pitch_scores;
+DROP POLICY IF EXISTS "pitch_scores_mentor_self_update" ON public.pitch_scores;
+
+-- SELECT : matrice de visibilité section 3
+CREATE POLICY "pitch_scores_select_visibility" ON public.pitch_scores
+  FOR SELECT TO authenticated
   USING (
-    juror_id = auth.uid()
-    OR is_staff()
+    -- GM voit tout
+    public.is_game_master()
+    -- Juror voit SES propres notes en tout temps (off/live/closed/published)
+    OR (juror_id = auth.uid() AND public.is_juror(pitch_scores.event_id))
+    -- Juror voit les notes des AUTRES jurors uniquement en 'closed' ou published
     OR (
-      has_role('mentor')
-      AND EXISTS (
-        SELECT 1 FROM events e
+      public.is_juror(pitch_scores.event_id)
+      AND EXISTS(
+        SELECT 1 FROM public.events e
         WHERE e.id = pitch_scores.event_id
-          AND e.pitch_mode_state = 'closed'
+          AND (e.pitch_mode_state = 'closed' OR e.results_published_at IS NOT NULL)
       )
     )
+    -- Player ne voit PAS ses propres pitch_scores (R1 cardinal — Player ne voit
+    -- aucun chiffre de jury, juste l'écran "merci"). Cohérent avec la matrice.
+    -- Mentor non-juror : aucune ligne (couvert par les clauses ci-dessus).
   );
+
+-- INSERT : seuls les jurors invités sur l'event peuvent voter
+CREATE POLICY "pitch_scores_juror_self_insert" ON public.pitch_scores
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    (juror_id = auth.uid() AND public.is_juror(event_id))
+    OR public.is_game_master()
+  );
+
+-- UPDATE : idem (un juror peut corriger ses notes tant que ce n'est pas publié)
+CREATE POLICY "pitch_scores_juror_self_update" ON public.pitch_scores
+  FOR UPDATE TO authenticated
+  USING (
+    (juror_id = auth.uid() AND public.is_juror(event_id))
+    OR public.is_game_master()
+  )
+  WITH CHECK (
+    (juror_id = auth.uid() AND public.is_juror(event_id))
+    OR public.is_game_master()
+  );
+
+-- DELETE : GM only (déjà existant database/rls.sql:259-260 mais on re-déclare au cas où)
+DROP POLICY IF EXISTS "pitch_scores_gm_delete" ON public.pitch_scores;
+CREATE POLICY "pitch_scores_gm_delete" ON public.pitch_scores
+  FOR DELETE TO authenticated
+  USING (public.is_game_master());
 ```
 
-**Validation** : SELECT `pg_catalog.pg_policies` après migration pour confirmer la policy active.
+**Validation post-apply** :
+```sql
+-- 1. Policies actives
+SELECT policyname, cmd, qual FROM pg_policies
+WHERE schemaname = 'public' AND tablename IN ('pitch_scores', 'jurors');
+
+-- 2. Test cross-juror leak (à exécuter via SET LOCAL request.jwt.claims)
+-- Devrait retourner 0 lignes pour un juror "live"
+-- Devrait retourner N lignes pour un juror "closed"
+
+-- 3. Backfill : seed les jurors actuels (les 3 mentors qui ont voté sur AgreenTech
+--    pilote — cf. memory project_smoke_prod_t3 + project_prod_pilot_state) sur le
+--    Digi-Hackathon event courant
+INSERT INTO public.jurors (event_id, user_id, invited_at)
+SELECT
+  (SELECT id FROM events ORDER BY starts_at DESC LIMIT 1),
+  user_id,
+  now()
+FROM profiles WHERE app_role = 'mentor'
+ON CONFLICT DO NOTHING;
+```
 
 ### Lot 5.2 — Types + i18n (Agent #2)
 
 `lib/types.ts` :
 ```ts
 export type PitchModeState = 'off' | 'live' | 'closed';
+
+export type Juror = {
+  eventId: string;
+  userId: string;
+  invitedAt: string;
+  invitedBy: string | null;
+};
 ```
 
-`lib/i18n.ts` (extrait fr) :
+`lib/i18n.ts` (extrait fr, 16 nouvelles keys) :
 ```ts
+// Pitch mode toggle (admin)
 admin_pitch_mode_section_title: "Mode pitch",
 admin_pitch_mode_off_label: "Préparation",
 admin_pitch_mode_off_help: "Avant les pitches — jurys préparent leur grille",
 admin_pitch_mode_live_label: "Pitches en cours",
 admin_pitch_mode_live_help: "Les jurys notent. Notes invisibles entre jurés.",
 admin_pitch_mode_closed_label: "Pitches clos",
-admin_pitch_mode_closed_help: "Tous les pitches terminés. Jurys voient les agrégés. Bouton publier débloqué.",
+admin_pitch_mode_closed_help: "Tous les pitches terminés. Jurys voient les agrégés. Publication débloquée.",
 admin_pitch_mode_toggle_confirm_live: "Démarrer les pitches en cours ?",
 admin_pitch_mode_toggle_confirm_closed: "Fermer les pitches ? Les jurys verront l'agrégé.",
+
+// Jurors manager (admin)
+admin_jurors_section_title: "Jury de l'événement",
+admin_jurors_help: "Seuls les users listés ici peuvent voter sur /jury.",
+admin_jurors_add_label: "Ajouter un juror (email)",
+admin_jurors_remove_label: "Retirer",
+admin_jurors_empty: "Aucun juror invité — personne ne pourra noter les pitches.",
+
+// Jury surface
 jury_pitch_mode_live_banner: "Vos notes restent privées jusqu'à la clôture des pitches.",
 jury_pitch_mode_closed_banner: "Les pitches sont clos. Vous voyez maintenant la moyenne par équipe.",
+jury_not_invited: "Vous n'êtes pas invité comme juror sur cet événement.",
+
+// Results / CSV
 results_export_csv_label: "Exporter le classement (CSV)",
 results_export_csv_gate_message: "Disponible une fois tous les pitches clos.",
 ```
 
 ### Lot 5.3 — Backend (Agent #3)
 
-**`lib/pitch-mode.ts`** (nouveau, ≈80 lignes) :
+**`lib/pitch-mode.ts`** (nouveau, ≈90 lignes) :
 ```ts
 import { createClient } from "@/utils/supabase/server";
-import type { AppRole } from "@/lib/types";
-
-export type PitchModeState = 'off' | 'live' | 'closed';
+import type { AppRole, PitchModeState } from "@/lib/types";
 
 export async function getCurrentPitchModeState(): Promise<{
   eventId: string | null;
   state: PitchModeState;
   closedAt: string | null;
+  publishedAt: string | null;
 }> {
   const supabase = await createClient();
-  if (!supabase) return { eventId: null, state: 'off', closedAt: null };
+  if (!supabase) return { eventId: null, state: 'off', closedAt: null, publishedAt: null };
   const { data } = await supabase
     .from("events")
-    .select("id, pitch_mode_state, pitch_mode_closed_at")
+    .select("id, pitch_mode_state, pitch_mode_closed_at, results_published_at")
     .order("starts_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (!data) return { eventId: null, state: 'off', closedAt: null };
-  const row = data as { id: string; pitch_mode_state: PitchModeState; pitch_mode_closed_at: string | null };
-  return { eventId: row.id, state: row.pitch_mode_state, closedAt: row.pitch_mode_closed_at };
+  if (!data) return { eventId: null, state: 'off', closedAt: null, publishedAt: null };
+  const row = data as {
+    id: string;
+    pitch_mode_state: PitchModeState;
+    pitch_mode_closed_at: string | null;
+    results_published_at: string | null;
+  };
+  return {
+    eventId: row.id,
+    state: row.pitch_mode_state,
+    closedAt: row.pitch_mode_closed_at,
+    publishedAt: row.results_published_at,
+  };
 }
 
-/** Visibilité scores inter-jury : autorisée uniquement en `closed` ou `published`. */
-export function canSeeOtherJurorsScores(state: PitchModeState, role: AppRole, publishedAt: string | null): boolean {
-  if (role === 'game_master') return true;
-  if (publishedAt !== null) return true;
-  return state === 'closed' && role === 'mentor';
+/**
+ * Visibilité des scores des AUTRES jurés (en sus de soi-même).
+ * Doublonne la RLS côté UI pour empêcher l'affichage spéculatif côté server.
+ */
+export function canSeeOtherJurorsScores(
+  state: PitchModeState,
+  isJuror: boolean,
+  isGameMaster: boolean,
+  publishedAt: string | null,
+): boolean {
+  if (isGameMaster) return true;
+  if (publishedAt !== null) return isJuror; // jurors voient le détail post-publish
+  return state === 'closed' && isJuror;
 }
 
-/** Visibilité ranking complet : GM toujours, autres uniquement après publish. */
-export function canSeeRanking(role: AppRole, publishedAt: string | null): boolean {
-  if (role === 'game_master') return true;
-  // Player / Mentor : jamais (cf. matrice section 3). Juror = mentor → idem côté
-  // ranking complet, ils voient leur agrégé via canSeeOtherJurorsScores.
+/**
+ * Visibilité du ranking complet (table classée + scores combinés).
+ * R1 cardinal : Player et Mentor non-juror jamais.
+ */
+export function canSeeFullRanking(
+  isJuror: boolean,
+  isGameMaster: boolean,
+  publishedAt: string | null,
+): boolean {
+  if (isGameMaster) return true;
+  if (publishedAt !== null && isJuror) return true;
   return false;
 }
 ```
 
-**`lib/jury.ts`** : enrichir retour de `getJuryOverview()` avec `pitchModeState` (la valeur courante) pour driver l'UI banner.
-
-**`lib/results.ts:computeRanking()`** : ajouter argument `requesterRole`. Si `!canSeeRanking(role, publishedAt)` ET `role !== 'mentor'` → retourner `rows: []`. Mentor reste autorisé à voir l'agrégé en `closed`, qu'on traite via `canSeeOtherJurorsScores`.
-
-**`app/results/page.tsx`** : refactor des 4 branches en s'appuyant sur `getCurrentPitchModeState()` + `canSeeRanking()` + `canSeeOtherJurorsScores()`. La branche « jury voit agrégé » devient explicite (avant elle était indirectement le « non-published » avec service-role bypass).
-
-**`app/actions.ts`** — nouvelle action :
+**`lib/jurors.ts`** (nouveau, ≈60 lignes) :
 ```ts
-const pitchModeSchema = z.object({
-  eventId: z.string().uuid(),
-  next: z.enum(['off', 'live', 'closed']),
-});
-
-export async function setPitchModeStateFlow(
-  _prev: WorkflowState,
-  formData: FormData,
-): Promise<WorkflowState> {
-  // 1. Auth + role check (game_master only)
-  // 2. Zod parse
-  // 3. Transition allowed check (off↔live, live↔closed, closed→off rollback)
-  // 4. UPDATE events SET pitch_mode_state = next (trigger gère closed_at)
-  // 5. revalidatePath('/admin'), /jury, /results
-  // 6. Return { ok: true, message: "Mode pitch ..." }
-}
+export async function getJurorsForEvent(eventId: string): Promise<Juror[]>;
+export async function isCurrentUserJuror(eventId: string): Promise<boolean>;
+export async function addJurorByEmail(eventId: string, email: string): Promise<{ ok: boolean; message: string }>;
+export async function removeJuror(eventId: string, userId: string): Promise<{ ok: boolean; message: string }>;
 ```
+
+**`lib/jury.ts:getJuryOverview()`** : early return `{ rows: [], notInvited: true }` si `!isCurrentUserJuror(eventId)`. Le composant affiche `jury_not_invited`.
+
+**`lib/results.ts:computeRanking()`** : signature étendue à `{ requesterRole, isJuror, eventOverride? }`. Utilise `canSeeFullRanking()` pour décider si on retourne `rows: []`. Mentor non-juror → toujours `rows: []` hors `published`.
+
+**`app/results/page.tsx`** : refactor 4 branches selon matrice section 3. Player/Mentor non-juror = écran « merci ». Juror en `closed` = ranking visible. GM = toujours.
+
+**`app/actions.ts`** — 3 nouvelles actions :
+- `setPitchModeStateFlow(eventId, next)` — GM-only, transitions `off↔live`, `live↔closed`, `closed→off`
+- `addJurorFlow(eventId, email)` — GM-only, lookup user via `auth.users.email`, INSERT, revalidatePath('/admin', '/jury')
+- `removeJurorFlow(eventId, userId)` — GM-only, DELETE, revalidate
 
 ### Lot 5.4 — UI refresh jury theater (Agent #4)
 
 **Cible** : `/jury?theater=1` matching mockup 1.
 
 **Composants impactés** :
-- `components/jury-pitch-theater.tsx` — refonte layout grid `[1fr_400px]` (zone pitch live | sticky notation)
-- `components/jury-pitch-grid.tsx` — sliders 0-20 (ou +/- buttons) avec preview live du total /100
-- `components/jury-passage-queue.tsx` — refresh visuel cards avec statut « notée » / « en cours » / « à venir »
+- `components/jury-pitch-theater.tsx` — layout grid `[1fr_400px]` (pitch live | sticky notation)
+- `components/jury-pitch-grid.tsx` — sliders 0-20 (preview live total /100)
+- `components/jury-passage-queue.tsx` — cards avec statut « notée » / « en cours » / « à venir »
 - `components/jury-pitch-timer.tsx` — refresh visuel countdown
-- **Nouveau bandeau** : si `pitchModeState === 'live'` → afficher `jury_pitch_mode_live_banner` (ambre, R2)
-- **Nouveau champ commentaire** facultatif par équipe (TEXTAREA, sauvegardé via action existante — vérifier schéma `pitch_scores` actuel ou ajouter colonne `comment text` si manque)
+- **Nouveau bandeau live** : si `pitchModeState === 'live'` → `jury_pitch_mode_live_banner` (ambre, R2)
+- **Nouveau bandeau closed** : si `pitchModeState === 'closed'` → `jury_pitch_mode_closed_banner` (vert)
+- **Garde not-invited** : si `notInvited === true` → écran simple « Vous n'êtes pas invité comme juror »
+- Champ commentaire facultatif par équipe (vérifier si colonne `pitch_scores.comment` existe — si non, l'ajouter dans migration Lot 5.1 Part B bis)
 
-**Échelle conservée** : 0-20 par critère, total /100 (Q latérale validée).
-
-**Tokens CSS** : réutiliser `eic-*` tokens existants + ajout d'une feuille `app/jury/theater.css` ou extension de `globals.css` pour le layout split-view.
+**Échelle conservée** : 0-20 par critère, total /100.
 
 ### Lot 5.5 — UI refresh results replay + ceremony (Agent #5)
 
-**Cible** : `/results` (GM) + `/results/ceremony` matching mockup 2.
+**Cible** : `/results` (GM + juror post-published) + `/results/ceremony` matching mockup 2.
 
-**`components/results-replay.tsx`** — restructurer en sections verticales narratives :
+**`components/results-replay.tsx`** — sections verticales narratives :
 1. Hero éditorial (titre Baskervville + sub stats)
 2. `<ResultsPodium>` (refresh hauteurs/animations stagger)
 3. `<ResultsStatsStrip>` (libellés revus)
 4. Classement complet (table existante, accordéon collapsible)
-5. `<ResultsTimelineMoments>` (verticale, refresh visuel)
+5. `<ResultsTimelineMoments>` (verticale, refresh)
 6. Exports (CTA CSV + CTA Cérémonie)
 
 **`components/results-ceremony-screen.tsx`** — refresh :
 - Background sombre théâtre
 - Reveal staggered 3e → 2e → 1er (CSS `animation-delay` motion-safe)
-- Confetti CSS only (pas de lib externe)
-- Footer logos partenaires (vérifier présence dans `public/partners/`)
+- Confetti CSS only
+- Footer logos partenaires (vérifier `public/partners/` durant exécution)
 - Bouton retour `/results`
 
-**Écran « merci » Player/Mentor** (`app/results/page.tsx:139-175`) — refresh visuel cohérent avec hero du mockup 2, **aucun chiffre** (R1).
+**Écran « merci » Player/Mentor non-juror** (`app/results/page.tsx:139-175`) — refresh visuel cohérent, aucun chiffre (R1).
 
-### Lot 5.6 — GM toggle + CSV export (Agent #6)
+### Lot 5.6 — GM admin (toggle + jurors manager + CSV) (Agent #6)
 
-**`components/admin-pitch-mode-toggle.tsx`** (nouveau) :
+**`components/admin-pitch-mode-toggle.tsx`** :
 - Client component, `useActionState(setPitchModeStateFlow, ...)`
-- 3 boutons segmentés colorés (bleu/ambre/vert) avec état actif
-- `confirm()` pour `live` et `closed` (transitions sensibles)
-- Affichage compteur : « N/total jurys ont noté l'équipe en cours »
+- 3 boutons segmentés colorés (bleu/ambre/vert), `confirm()` JS pour `live` et `closed`
 
-**Integration `app/admin/page.tsx`** : après `<AdminStatusBanner>`, avant `<AdminPitchOrderEditor>` (ordre logique : prep → ordre → switch live).
+**`components/admin-jurors-manager.tsx`** (mini UI) :
+- Liste actuelle des jurors (nom + email + bouton retirer)
+- Champ input email + bouton « Ajouter »
+- Affichage `jurors_empty` si vide
+- Garde : empêche `setPitchModeStateFlow(live)` si 0 juror (warn ambre)
+
+**Integration `app/admin/page.tsx`** : après `<AdminStatusBanner>`, avant `<AdminPitchOrderEditor>` :
+```
+[Status banner]
+[Pitch mode toggle] ← nouveau
+[Jurors manager] ← nouveau
+[Pitch order editor] (existant)
+[Leaderboard pré-pitch] (existant)
+```
 
 **`app/admin/export/results.csv/route.ts`** (nouveau) :
-```ts
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
-  // 1. Auth + role check (game_master only) — sinon 403
-  // 2. getCurrentPitchModeState() — si state !== 'closed' && publishedAt === null → 403 + message
-  // 3. computeRanking({ requesterRole: 'game_master' })
-  // 4. Colonnes : rank, team, idea, pitchAvg, scoreProject, combined, juror_count
-  // 5. csvResponse('results-digi-hackathon.csv', toCsv(rows))
-}
-```
+- GM-only (check role + `dynamic = 'force-dynamic'`)
+- Gate : `pitch_mode_state === 'closed'` OU `published`, sinon 403
+- Colonnes : `rank, team, idea, pitch_avg, score_project, combined, juror_count`
+- Sérialisé via `lib/csv.ts:csvResponse('results-digi-hackathon.csv', ...)`
 
 ## 6. Critères d'acceptation
 
-- [ ] Migration DB appliquée sur PROD via MCP, policy `pitch_scores_select_visibility` visible dans `pg_policies`
-- [ ] `setPitchModeStateFlow` accessible uniquement aux GM, transitions illégales rejetées
-- [ ] Pendant `live` : un juror authentifié qui requête `/results` ne voit AUCUN score d'un autre juror (test SQL : `SET ROLE authenticated; SET request.jwt.claims TO ...; SELECT * FROM pitch_scores WHERE juror_id <> '<self>';` → 0 lignes)
-- [ ] Pendant `closed` : ce même juror voit l'agrégé (mais pas le ranking complet)
-- [ ] Player et Mentor sur `/results` voient écran « merci » dans TOUS les états sauf cérémonie GM-only (R1 cardinal)
+- [ ] Migration appliquée sur PROD via MCP, `pg_policies` confirme les 4 policies (`jurors_gm_all`, `jurors_self_select`, `pitch_scores_select_visibility`, `pitch_scores_juror_self_insert`, `pitch_scores_juror_self_update`, `pitch_scores_gm_delete`)
+- [ ] **Test RLS faille corrigée** : un mentor authentifié non-juror exécute `SELECT * FROM pitch_scores` → 0 lignes (vs 100% des lignes actuellement)
+- [ ] **Test RLS live** : juror authentifié exécute `SELECT * FROM pitch_scores WHERE juror_id <> '<self>'` pendant `live` → 0 lignes
+- [ ] **Test RLS closed** : même juror après `closed` → N lignes (autres jurors visibles)
+- [ ] Player et Mentor non-juror sur `/results` voient écran « merci » dans tous les états sauf cérémonie GM-only
 - [ ] `/results/ceremony` redirect non-GM vers `/results`
 - [ ] `/admin/export/results.csv` renvoie 403 tant que `state !== 'closed'` ET `publishedAt === null`
+- [ ] `/jury` affiche `jury_not_invited` pour un mentor non-juror
+- [ ] `setPitchModeStateFlow(live)` rejette quand 0 juror invité
 - [ ] `npm run typecheck && npm run lint && npm run build` passent
-- [ ] Audit R1 grep : `grep -rn "score\|rank\|note\|/100\|points" app/results --include="*.tsx" | grep -v "(GM)"` n'expose aucun chiffre sur écran Player/Mentor
-- [ ] Smoke local 2P + 1M + 1GM (cf. `feedback_smoke_minimal_2p_1m_1gm`)
+- [ ] Audit R1 grep : pas de chiffre sur écran Player/Mentor non-juror
+- [ ] Smoke local 2P + 1M(juror) + 1M(non-juror) + 1GM
 - [ ] Verdict `eic-pedagogical-advisor` : `OK` ou `WARN with notes` — pas de `BLOCK`
+- [ ] CLAUDE.md AppRole désync corrigée en passant (3 rôles `player|mentor|game_master`)
 
 ## 7. Risques & mitigations
 
 | Risque | Probabilité | Impact | Mitigation |
 |---|---|---|---|
-| RLS policy mal écrite → fuite cross-juror en `live` | Moyenne | **Critique** (biais notes) | Test SQL explicite avant push ; default fail-closed |
-| Refresh UI casse smoke prod existant | Moyenne | Élevé | Tag `v0.X.Y-pre-pitch-mode` avant edits ; smoke 2P+1M+1GM post-merge |
-| Migration enum sur PROD avec données existantes | Faible | Élevé | DEFAULT `'off'` sur ALTER ADD COLUMN ; aucune row n'a besoin de backfill |
-| GM ferme `closed` par erreur en plein pitch | Moyenne | Moyen | `confirm()` JS + transition reversible `closed→live` autorisée |
-| Suppression du bypass service-role dans `computeRanking` casse `/results` post-publish | Faible | Élevé | Garder service-role pour `published` uniquement ; tester avec `publishedAt` set |
-| Mockup HTML pas reproductible 1:1 (5 MB inutile à parser) | Élevée | Faible | Subagents UI reçoivent analyse texte de l'agent Explore + libellés FR ; pas besoin des pixels |
+| RLS policy mal écrite → fuite cross-juror | Moyenne | **Critique** | Test SQL explicite avant push ; fail-closed par défaut |
+| Migration faille RLS casse smoke prod existant | Moyenne | Élevé | Tag `v0.X.Y-pre-pitch-mode` avant edits ; backfill jurors immédiat pour préserver flux mentor jury |
+| Backfill jurors mal scoped (oublier event Digi-Hackathon) | Moyenne | Moyen | INSERT depuis profiles WHERE app_role='mentor' explicite dans migration |
+| GM ferme `closed` par erreur | Moyenne | Moyen | `confirm()` JS + rollback `closed→live` autorisé |
+| Mentor existant devient « non-juror » silencieusement après migration | Élevée | Élevé | Backfill systématique des mentors actuels en jurors dans Lot 5.1 Part C |
+| Service-role bypass dans `computeRanking` casse `/results` post-publish | Faible | Élevé | Garder bypass pour `published`, tester avec `publishedAt` set |
+| Mockup HTML pas reproductible 1:1 | Élevée | Faible | Subagents UI reçoivent l'analyse texte de l'agent Explore + libellés FR |
+| Page `/admin/jurors` manquante pour bootstrap | Faible | Moyen | `AdminJurorsManager` intégré directement dans `/admin` (pas de route séparée) |
 
 ## 8. Out of scope (explicitement reporté)
 
 - Exports PDF (47 certificats joueur + rapport 12 pages)
 - Replay vidéo automatique avec voix off
 - Page publique `eic.ma/hack-26`
-- Affichage `pitch_mode_state` dans la mascotte Pixel (idée seed pour `gsd-plant-seed`)
-- Migration de l'échelle 0-20 vers 1-5 étoiles
-- Granularité per-pitch (current_pitch_id pointer)
-- Visibilité partielle pour les mentors non-jurés (tous les mentors ont la même policy)
+- Mascotte Pixel affichant `pitch_mode_state` (idée seed)
+- Migration échelle 0-20 → 1-5 étoiles
+- Granularité per-pitch (`current_pitch_id` pointer)
+- Page dédiée `/admin/jurors` autonome (composant inline dans `/admin` suffit pour le pilote)
+- Notifications email aux jurors lors de l'invitation
+- Logs d'audit `pitch_mode_state` transitions (au-delà du `closed_at`)
 
 ## 9. Annexes
 
@@ -323,26 +491,31 @@ export async function GET() {
 
 Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts standards :
 - `PLAN.md` (waves + agents + commits prévus)
-- `AUDIT.md` (smoke 2P+1M+1GM)
+- `AUDIT.md` (smoke 2P + 1M-juror + 1M-non-juror + 1GM)
 - `ADVISOR-VERDICT.md` (R1/R2/R3 par `eic-pedagogical-advisor`)
 - `SUMMARY.md` (SHA commits + résultat)
 - `deferred-items.md` (out-of-scope ci-dessus)
-- `migrations/01-pitch-mode-state.sql` (snapshot SQL appliqué via MCP)
+- `migrations/01-jurors-and-pitch-mode.sql` (snapshot SQL appliqué via MCP)
 
-### B. Références fichiers existants à modifier
+### B. Références fichiers à modifier
 
-- `lib/types.ts` (+1 type)
-- `lib/i18n.ts` (+12 keys)
-- `lib/jury.ts` (enrichir retour)
-- `lib/results.ts` (param `requesterRole`)
-- `lib/pitch-mode.ts` (**nouveau**, ≈80 lignes)
-- `app/actions.ts` (+1 action `setPitchModeStateFlow`)
-- `app/admin/page.tsx` (intégrer `<AdminPitchModeToggle>`)
-- `app/admin/export/results.csv/route.ts` (**nouveau**)
-- `app/results/page.tsx` (refactor branches + refresh visuel announce screen)
-- `app/jury/page.tsx` (passer `pitchModeState` à `JuryPitchTheater`)
-- `components/admin-pitch-mode-toggle.tsx` (**nouveau**)
-- `components/jury-pitch-theater.tsx` (refresh layout)
+**Nouveaux** :
+- `lib/pitch-mode.ts` (~90 lignes)
+- `lib/jurors.ts` (~60 lignes)
+- `components/admin-pitch-mode-toggle.tsx`
+- `components/admin-jurors-manager.tsx`
+- `app/admin/export/results.csv/route.ts`
+
+**Modifiés** :
+- `lib/types.ts` (+2 types `PitchModeState`, `Juror`)
+- `lib/i18n.ts` (+16 keys)
+- `lib/jury.ts` (early return not-invited, retourne `pitchModeState`)
+- `lib/results.ts` (param `requesterRole`, `isJuror`)
+- `app/actions.ts` (+3 actions : `setPitchModeStateFlow`, `addJurorFlow`, `removeJurorFlow`)
+- `app/admin/page.tsx` (intégrer 2 nouveaux composants)
+- `app/results/page.tsx` (refactor 4 branches selon matrice)
+- `app/jury/page.tsx` (passer `pitchModeState` + `notInvited`)
+- `components/jury-pitch-theater.tsx` (refresh layout + bandeaux state)
 - `components/jury-pitch-grid.tsx` (refresh sliders)
 - `components/jury-passage-queue.tsx` (refresh cards)
 - `components/jury-pitch-timer.tsx` (refresh visuel)
@@ -351,8 +524,12 @@ Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts sta
 - `components/results-stats-strip.tsx` (libellés revus)
 - `components/results-timeline-moments.tsx` (refresh visuel)
 - `components/results-ceremony-screen.tsx` (refresh théâtre + reveal staggered)
+- `CLAUDE.md` (corriger AppRole : `player | mentor | game_master`)
 
-Total estimé : ~600 lignes de diff réparties sur 20 fichiers, dont 3 nouveaux. Soit 2 commits atomiques (1 backend+DB+actions, 1 UI refresh+CSV) ou 3 si on découpe Mockup 1 / Mockup 2.
+Total estimé : ~750 lignes de diff sur 23 fichiers (5 nouveaux + 18 modifiés). Soit **3 commits atomiques** :
+1. `feat(jurors): table jurors + RLS refonte + pitch_mode_state` (DB + types + i18n + helpers)
+2. `feat(jury,results): pitch_mode visibility guards + UI refresh mockups` (lib/jury, lib/results, app/* pages, components/*)
+3. `feat(admin): pitch mode toggle + jurors manager + CSV export` (GM tooling)
 
 ### C. Liens connexes
 
@@ -361,4 +538,5 @@ Total estimé : ~600 lignes de diff réparties sur 20 fichiers, dont 3 nouveaux.
 - Memory `feedback_database_deny_workaround.md` (MCP apply_migration vs edit local)
 - Memory `feedback_smoke_minimal_2p_1m_1gm.md` (smoke standard)
 - Memory `feedback_quick_orchestrator_convention.md` (5 artefacts)
+- Memory `feedback_postgresql_plpgsql_pitfalls.md` (IS DISTINCT FROM dans le trigger plpgsql)
 - CLAUDE.md section « Default = ship + push »
