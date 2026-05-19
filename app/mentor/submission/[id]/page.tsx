@@ -76,11 +76,34 @@ type PlayerRow = {
 
 type TemplateRow = {
   id: string;
+  slug: string;
   title: string;
   description: string;
   rubric: RubricCriterion[] | null;
   max_score: number;
 };
+
+// quick-260519-l1l followup : SYSTEM auto-validator UUID (Omar GM) — same const
+// as in app/actions.ts. Used to detect auto-validated fiches-entretien-v1
+// submissions on the mentor page so we render a locked summary regardless of
+// which mentor opens the page (otherwise mentors other than Omar would see an
+// editable form for an already-auto-validated submission).
+const SYSTEM_AUTO_VALIDATOR_USER_ID = "59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334";
+
+function parseFichesEntretienUrls(proofText: string | null): string[] | null {
+  if (!proofText) return null;
+  try {
+    const parsed = JSON.parse(proofText) as { fiches?: Array<{ url?: unknown }> };
+    const fiches = parsed?.fiches;
+    if (!Array.isArray(fiches)) return null;
+    const urls = fiches
+      .map((f) => (typeof f?.url === "string" ? f.url : null))
+      .filter((u): u is string => Boolean(u));
+    return urls.length > 0 ? urls : null;
+  } catch {
+    return null;
+  }
+}
 
 type ExistingEvalRow = {
   id: string;
@@ -180,7 +203,7 @@ export default async function MentorSubmissionPage({
   // Template.
   const { data: tplRow } = await supabase
     .from("deliverable_templates")
-    .select("id, title, description, rubric, max_score")
+    .select("id, slug, title, description, rubric, max_score")
     .eq("id", submission.deliverable_template_id)
     .maybeSingle();
   const template = (tplRow as TemplateRow | null) ?? null;
@@ -194,6 +217,30 @@ export default async function MentorSubmissionPage({
     .eq("evaluator_id", user!.id)
     .maybeSingle();
   const existing = (existingRow as ExistingEvalRow | null) ?? null;
+
+  // quick-260519-l1l followup : detect auto-validation by SYSTEM_AUTO_VALIDATOR
+  // for fiches-entretien-v1 submissions. Any mentor (not only Omar GM) should
+  // see a locked readonly summary, not an editable form.
+  const isFichesEntretien = template?.slug === "fiches-entretien-v1";
+  const fichesUrls = isFichesEntretien
+    ? parseFichesEntretienUrls(submission.proof_text)
+    : null;
+  let autoEval: ExistingEvalRow | null = null;
+  if (isFichesEntretien && !existing) {
+    const { data: autoRow } = await supabase
+      .from("evaluations")
+      .select("id, scores, total_score, feedback, verdict, expected_action, created_at")
+      .eq("submission_id", submission.id)
+      .eq("evaluator_id", SYSTEM_AUTO_VALIDATOR_USER_ID)
+      .maybeSingle();
+    autoEval = (autoRow as ExistingEvalRow | null) ?? null;
+  }
+  const lockedEval = existing ?? autoEval;
+  const lockedReason: "self" | "auto" | null = existing
+    ? "self"
+    : autoEval
+      ? "auto"
+      : null;
 
   const submissionVersion: 1 | 2 = submission.version === 2 ? 2 : 1;
 
@@ -379,6 +426,7 @@ export default async function MentorSubmissionPage({
               statusLabel={t.mentor_history_status_current}
               submittedAt={submission.submitted_at}
               version={submissionVersion}
+              fichesUrls={fichesUrls ?? undefined}
             />
             <MentorSubmissionHistory entries={history} />
           </div>
@@ -410,48 +458,52 @@ export default async function MentorSubmissionPage({
               />
             </section>
 
-            {existing ? (
+            {lockedEval ? (
               <section
                 aria-label={t.evaluation_existing_summary}
                 className="eic-mentor-eval eic-mentor-eval__locked"
               >
                 <p role="status" className="eic-mentor-page__eval-banner">
                   <Lock size={14} aria-hidden="true" />
-                  {t.evaluation_already_evaluated}
+                  {lockedReason === "auto"
+                    ? "Soumission auto-validée par le système (10 fiches d'entretien). Lecture seule pour le mentor — pas de modification possible."
+                    : t.evaluation_already_evaluated}
                 </p>
                 <h3 className="eic-mentor-eval__title">
-                  {t.evaluation_existing_summary}
+                  {lockedReason === "auto"
+                    ? "Récapitulatif auto-validation"
+                    : t.evaluation_existing_summary}
                 </h3>
                 <ul style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: 13 }}>
                   {rubric.map((c) => (
                     <li key={c.key}>
-                      <strong>{c.label}</strong>: {existing.scores?.[c.key] ?? 0} / {c.max}
+                      <strong>{c.label}</strong>: {lockedEval.scores?.[c.key] ?? 0} / {c.max}
                     </li>
                   ))}
                 </ul>
                 <p style={{ margin: "0 0 8px", fontSize: 13 }}>
                   <strong>{t.evaluation_total_score}: </strong>
                   {String(
-                    typeof existing.total_score === "string"
-                      ? Number(existing.total_score)
-                      : existing.total_score,
+                    typeof lockedEval.total_score === "string"
+                      ? Number(lockedEval.total_score)
+                      : lockedEval.total_score,
                   )}
                 </p>
                 <p style={{ margin: "0 0 8px", fontSize: 13 }}>
                   <strong>{t.evaluation_existing_verdict}: </strong>
-                  {verdictLabel(existing.verdict)}
+                  {verdictLabel(lockedEval.verdict)}
                 </p>
-                {existing.feedback ? (
+                {lockedEval.feedback ? (
                   <div>
                     <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600 }}>
                       {t.evaluation_existing_feedback}
                     </p>
                     <pre className="eic-mentor-page__feedback-pre">
-                      {existing.feedback}
+                      {lockedEval.feedback}
                     </pre>
                   </div>
                 ) : null}
-                {existing.expected_action ? (
+                {lockedEval.expected_action ? (
                   <aside
                     aria-label={t.mentor_action_expected_label}
                     className="eic-mentor-eval__expected"
@@ -468,7 +520,7 @@ export default async function MentorSubmissionPage({
                         color: "#14243d",
                       }}
                     >
-                      {existing.expected_action}
+                      {lockedEval.expected_action}
                     </p>
                   </aside>
                 ) : null}
@@ -480,7 +532,7 @@ export default async function MentorSubmissionPage({
                     href={`mailto:omar.ameur98@gmail.com?subject=${encodeURIComponent(
                       `[Revision GM] ${template?.title ?? "Livrable"} — ${player?.name ?? "Player"}`
                     )}&body=${encodeURIComponent(
-                      `Bonjour GameMaster,\n\nJe souhaite demander une revision pour l'evaluation suivante :\n- Player : ${player?.name ?? ""}\n- Livrable : ${template?.title ?? ""}\n- Submission ID : ${submission.id}\n- Verdict rendu : ${verdictLabel(existing.verdict)}\n\nRaison de la demande de revision :\n[Votre message ici]\n\nCordialement,\nMentor`
+                      `Bonjour GameMaster,\n\nJe souhaite demander une revision pour l'evaluation suivante :\n- Player : ${player?.name ?? ""}\n- Livrable : ${template?.title ?? ""}\n- Submission ID : ${submission.id}\n- Verdict rendu : ${verdictLabel(lockedEval.verdict)}${lockedReason === "auto" ? "\n- Type : Auto-validation systeme (fiches d'entretien)" : ""}\n\nRaison de la demande de revision :\n[Votre message ici]\n\nCordialement,\nMentor`
                     )}`}
                     style={{
                       display: "inline-flex",
