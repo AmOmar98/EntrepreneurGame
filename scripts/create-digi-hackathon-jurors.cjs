@@ -13,7 +13,7 @@
 //   - An event row must exist (script picks the latest by starts_at)
 //
 // Output side-effects:
-//   - public.profiles upsert (app_role='mentor', display_name=jury label)
+//   - public.profiles upsert (app_role='mentor', full_name=jury label)
 //   - public.jurors upsert (event_id, user_id) — ON CONFLICT DO NOTHING
 //   - cohorte-digi-hackathon-creds.csv: appends one line per new juror in
 //     format `J0X,jury-XXX,Nom Jury,TBD,JURY,jury-j0X@digi.uemf.ma,XXXXXXXXXXXX`
@@ -134,11 +134,11 @@ async function provisionJuror(supabase, eventId, juror) {
     console.log(`  [${juror.teamId}] auth.user created (id=${userId})`);
   }
 
-  // 2. Upsert profile (mentor role + display_name).
+  // 2. Upsert profile (mentor role + full_name).
   const profileUpsert = await supabase
     .from("profiles")
     .upsert(
-      { user_id: userId, app_role: "mentor", display_name: juror.name },
+      { user_id: userId, app_role: "mentor", full_name: juror.name },
       { onConflict: "user_id" },
     );
   if (profileUpsert.error) {
