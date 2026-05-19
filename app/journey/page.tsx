@@ -182,7 +182,7 @@ function WelcomeGuideStrip() {
       }}
     >
       <span>
-        <strong>Welcome Guide Digi-Hackathon</strong> &mdash; brief porteur, regles
+        <strong>Welcome Guide Digi-Hackathon</strong> &mdash; brief porteur, règles
         du bootcamp, checklist 20-22 mai.
       </span>
       <a

@@ -34,10 +34,10 @@ export const LEVEL_IDS: LevelId[] = [
 // labels still live in lib/journey.ts:LEVEL_LABELS for legacy callers.
 const SHORT_LABELS: Record<LevelId, string> = {
   L0_diagnostic: "Diagnostic",
-  L1_problem: "Probleme",
+  L1_problem: "Problème",
   L2_solution: "Solution",
-  L3_market: "Marche",
-  L4_business_model: "Modele eco.",
+  L3_market: "Marché",
+  L4_business_model: "Modèle éco.",
   L5_pitch: "Pitch",
   L6_traction: "Traction",
   L7_alumni: "Alumni",

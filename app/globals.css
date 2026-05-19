@@ -8347,3 +8347,23 @@ a.eic-button:focus-visible {
   color: var(--wf-ink, #1B2740);
   border: 1px solid var(--wf-line, #C9C0AE);
 }
+
+/* quick-260520-124 — V1 sliders + V3 molettes responsive layouts. */
+.eic-jury-form-v1__layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+.eic-jury-form-v3__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 640px) {
+  .eic-jury-form-v1__layout {
+    grid-template-columns: 1fr;
+  }
+  .eic-jury-form-v3__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

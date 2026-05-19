@@ -9,11 +9,14 @@ import { getJuryOverview } from "@/lib/jury";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { isCurrentUserJuror } from "@/lib/jurors";
 import { JuryForm } from "./jury-form";
+import { JuryDialForm } from "./jury-dial-form";
 
 const t = dictionaries.fr;
 
 type SearchParams = {
   theater?: string;
+  /** quick-260520-124 — "dial" toggles V3 molettes ; default = V1 sliders. */
+  ui?: string;
 };
 
 export default async function JuryPage({
@@ -29,8 +32,10 @@ export default async function JuryPage({
     redirect(pathForRole(role));
   }
 
-  const { theater } = await searchParams;
+  const { theater, ui } = await searchParams;
   const isTheater = theater === "1";
+  // quick-260520-124 — V1 sliders default, V3 molettes via ?ui=dial.
+  const variant: "slider" | "dial" = ui === "dial" ? "dial" : "slider";
 
   const { eventId, rows } = hasSupabaseEnv()
     ? await getJuryOverview()
@@ -130,13 +135,28 @@ export default async function JuryPage({
             <p style={{ color: "#94a3b8", fontSize: 12, margin: 0 }}>{t.jury_each_max_20}</p>
           </div>
           {/* JRY-04 a11y: was a plain <Link> styled as button without role/focus-ring.
-              Now uses eic-button token class which includes focus-visible outline. */}
-          <Link
-            className="eic-button eic-button--primary"
-            href="/jury?theater=1"
-          >
-            {t.jury_pitch_theater_toggle_on}
-          </Link>
+              Now uses eic-button token class which includes focus-visible outline.
+              quick-260520-124 — add discreet V1↔V3 UI toggle (eic-button standard,
+              not --primary per advisor WARN_NOTES). */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Link
+              className="eic-button"
+              href={`/jury?ui=${variant === "dial" ? "slider" : "dial"}`}
+              aria-label={
+                variant === "dial"
+                  ? "Basculer en sliders"
+                  : "Basculer en molettes"
+              }
+            >
+              {variant === "dial" ? "Sliders" : "Molettes"}
+            </Link>
+            <Link
+              className="eic-button eic-button--primary"
+              href="/jury?theater=1"
+            >
+              {t.jury_pitch_theater_toggle_on}
+            </Link>
+          </div>
         </header>
         {!hasSupabaseEnv() ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_demo_disabled}</p>
@@ -155,12 +175,23 @@ export default async function JuryPage({
                     <p className="eic-jury-card__already-scored">{t.jury_already_scored}</p>
                   ) : null}
                 </header>
-                <JuryForm
-                  player={row.player}
-                  existing={row.existing}
-                  eventId={eventId}
-                  dict={t}
-                />
+                {variant === "dial" ? (
+                  <JuryDialForm
+                    aggregate={row.aggregate}
+                    player={row.player}
+                    existing={row.existing}
+                    eventId={eventId}
+                    dict={t}
+                  />
+                ) : (
+                  <JuryForm
+                    aggregate={row.aggregate}
+                    player={row.player}
+                    existing={row.existing}
+                    eventId={eventId}
+                    dict={t}
+                  />
+                )}
               </article>
             ))}
           </div>

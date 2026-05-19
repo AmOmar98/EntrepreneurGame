@@ -245,7 +245,7 @@ export const dictionaries = {
     // ---- Cohort Pulse (Quick 260510-k1f / B1) - anonymised, R1 ----------------
     cohort_pulse_aria: "Pouls de la cohorte",
     cohort_pulse_kicker: "POULS DE LA COHORTE",
-    cohort_pulse_label_template: "equipes ont soumis",
+    cohort_pulse_label_template: "équipes ont soumis",
     cohort_pulse_empty: "Pas encore de soumission dans la cohorte.",
     // ---- Phase 14 / W3 — Engagement milestones (qualitative R1) ---------------
     engagement_milestones_aria: "Etapes de l'engagement pour ce livrable",
