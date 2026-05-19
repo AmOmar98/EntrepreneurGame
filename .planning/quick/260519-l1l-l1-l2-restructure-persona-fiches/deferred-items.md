@@ -10,9 +10,8 @@
 - **Statut** : RÉSOLU — les PDFs dédiés étaient déjà dans l'Excel source, l'agent avait fait un fallback erroné.
 - **Action effectuée** : `prep-questions-v1` → `EIC-DigiHackathon-02-Annexe-Banque-Questions.pdf` (IQCE6O77…), `fiches-entretien-v1` → `EIC-DigiHackathon-02b-Fiche-Entretien.pdf` (IQCD7Ld…). Commit follow-up post-quick.
 
-### 3. UI mentor : surface lecture-seule des 10 fiches auto-validées
-- **Statut** : la submission auto-validée est insérée en DB avec evaluation associée. Le mentor peut ouvrir `mentor/submission/[id]` mais l'affichage actuel est pensé pour les rubrics manuels.
-- **Action** : vérifier rendu côté mentor (`/mentor/submission/[id]/page.tsx` + `mentor-evaluation-panel.tsx`) pour les submissions avec verdict `validate_v1` + scores `fiche_1..10=25`. Probablement le rubric "Fiche entretien N (URL preuve)" s'affiche déjà via `rubric` jsonb. Smoke à confirmer.
+### 3. ~~UI mentor : surface lecture-seule des 10 fiches auto-validées~~ ✅ RÉSOLU 2026-05-19
+- **Statut** : RÉSOLU — page mentor détecte slug `fiches-entretien-v1` + query auto-eval par `SYSTEM_AUTO_VALIDATOR_USER_ID` → rend panneau locked "Soumission auto-validée par le système" pour tout mentor (pas seulement Omar). `MentorLinkCard` accepte `fichesUrls` → liste numérotée 10 liens externes au lieu d'un seul. GM revision mailto annoté "Type: Auto-validation système".
 
 ### 4. Welcome Guide PDF désync (8 livrables → structure 7 missions / 15 deliverables)
 - **Statut** : programme Welcome Guide initial = 6 ateliers en 2 jours. Nouvelle structure = 7 ateliers (ajout M2 Préparation+Entretiens).
@@ -23,9 +22,8 @@
 - **Statut** : fichier GM-only (gated par `role === 'game_master'` redirect). Acceptable.
 - **Action** : aucune. R1 cardinal Player respecté (path hors `app/journey/`).
 
-### 6. Composer UX — bouton "Coller 10 URLs en bloc"
-- **Statut** : composer impose saisie URL par URL (10 inputs). Lourd si le porteur a déjà ses 10 URLs dans Notion en liste.
-- **Action** : pourra être ajouté en v2 (textarea "coller liste" + parser auto vers les 10 inputs).
+### 6. ~~Composer UX — bouton "Coller 10 URLs en bloc"~~ ✅ RÉSOLU 2026-05-19
+- **Statut** : RÉSOLU — `<details>` collapsible "📋 Coller 10 URLs en bloc" ajouté au-dessus du fieldset. Parser split sur `\s,;` + filtre vide + remplit les 10 inputs. Feedback `N/10 URLs réparties` + alerte non-https. Caché si `locked` (gate 2A).
 
 ## Items NON déférés (livrés ce quick)
 

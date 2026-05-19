@@ -33,6 +33,8 @@ export function FichesEntretienComposer({
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitDeliverable, initialState);
   const [urls, setUrls] = useState<string[]>(Array(10).fill(""));
+  const [bulkPaste, setBulkPaste] = useState("");
+  const [bulkFeedback, setBulkFeedback] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -49,6 +51,37 @@ export function FichesEntretienComposer({
   const proofTextJson = JSON.stringify({
     fiches: urls.map((url) => ({ url: url.trim() })),
   });
+
+  // quick-260519-l1l followup : bulk paste UX. Parse newline/comma/space-
+  // separated URLs, take first 10 non-empty entries, fill inputs. Non-https
+  // entries are still placed (user sees + corrects them via the input's
+  // pattern validator); we just report the count in the feedback line.
+  function handleBulkApply() {
+    const parts = bulkPaste
+      .split(/[\s,;]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (parts.length === 0) {
+      setBulkFeedback("Rien à coller — la zone de texte est vide.");
+      return;
+    }
+    const next: string[] = Array(10).fill("");
+    for (let i = 0; i < Math.min(10, parts.length); i += 1) {
+      next[i] = parts[i] ?? "";
+    }
+    setUrls(next);
+    const httpsCount = parts
+      .slice(0, 10)
+      .filter((p) => p.startsWith("https://")).length;
+    const placed = Math.min(10, parts.length);
+    const ignored = parts.length - placed;
+    const httpsMsg =
+      httpsCount < placed
+        ? ` — ${placed - httpsCount} URL(s) non https à corriger.`
+        : "";
+    const ignoredMsg = ignored > 0 ? ` ${ignored} entrée(s) ignorée(s) au-delà de 10.` : "";
+    setBulkFeedback(`${placed}/10 URLs réparties.${httpsMsg}${ignoredMsg}`);
+  }
 
   return (
     <form
@@ -75,6 +108,67 @@ export function FichesEntretienComposer({
           {lockedReason ??
             "Préparation à valider par votre mentor avant de débloquer les fiches d'entretien."}
         </div>
+      ) : null}
+
+      {!locked ? (
+        <details
+          className="eic-bulk-paste"
+          style={{
+            border: "1px dashed #cbd5e1",
+            borderRadius: 8,
+            padding: "10px 14px",
+            background: "#f8fafc",
+            fontSize: 13,
+          }}
+        >
+          <summary
+            style={{
+              cursor: "pointer",
+              fontWeight: 500,
+              color: "#1B3A5C",
+              listStyle: "none",
+            }}
+          >
+            📋 Coller 10 URLs en bloc (depuis Notion, Sheets, etc.)
+          </summary>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+              Collez vos URLs séparées par retour à la ligne, virgule, point-virgule ou
+              espace. Les 10 premières sont réparties dans les inputs ci-dessous (vous
+              pouvez ensuite ajuster).
+            </p>
+            <textarea
+              value={bulkPaste}
+              onChange={(e) => setBulkPaste(e.target.value)}
+              placeholder={"https://notion.so/...\nhttps://docs.google.com/...\n... (10 URLs)"}
+              rows={4}
+              className="eic-form-input"
+              style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, lineHeight: 1.4 }}
+            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={handleBulkApply}
+                className="eic-button--secondary"
+                style={{
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  background: "#1B3A5C",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                Répartir dans les 10 inputs
+              </button>
+              {bulkFeedback ? (
+                <span style={{ fontSize: 12, color: "#475569" }}>{bulkFeedback}</span>
+              ) : null}
+            </div>
+          </div>
+        </details>
       ) : null}
 
       <fieldset
