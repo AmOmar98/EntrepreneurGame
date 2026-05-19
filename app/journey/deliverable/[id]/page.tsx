@@ -183,6 +183,11 @@ export default async function DeliverableDetailPage({
   const isFichesEntretienDeliverable = tpl.slug === "fiches-entretien-v1";
   let fichesGateLocked = false;
   let fichesGateReason: string | undefined;
+  // quick-260519-uuy / Task 3 — hoist prep-questions-v1 template id so the
+  // composer can render an actionable Link back to the prerequisite. Stays
+  // null when the prep template is absent (e.g. demo seed without 02a).
+  // The slug remains a literal here (R3 exception, signed Omar 2026-05-19).
+  let prepQuestionsDeliverableId: string | null = null;
   if (isFichesEntretienDeliverable) {
     const { data: prepTpl } = await supabase
       .from("deliverable_templates")
@@ -190,6 +195,7 @@ export default async function DeliverableDetailPage({
       .eq("slug", "prep-questions-v1")
       .maybeSingle();
     if (prepTpl) {
+      prepQuestionsDeliverableId = (prepTpl as { id: string }).id;
       const { data: prepSubs } = await supabase
         .from("submissions")
         .select("status")
@@ -552,6 +558,7 @@ export default async function DeliverableDetailPage({
             deliverableTemplateId={id}
             locked={fichesGateLocked}
             lockedReason={fichesGateReason}
+            prepQuestionsDeliverableId={prepQuestionsDeliverableId}
           />
         ) : (
           <SubmissionForm deliverableTemplateId={id} />

@@ -13,11 +13,22 @@
 // R3 — hard-block exception : si prep-questions-v1 pas validée, le composer
 // reçoit `locked={true}` depuis la page détail, désactive submit + affiche
 // message ambre. Server REJETTE quand même côté backend (defense in depth).
+//
+// quick-260519-uuy / Task 3 — le prop `prepQuestionsDeliverableId` matérialise
+// l'EXCEPTION UNIQUE L2 prep→entretien signée Omar 2026-05-19. Il sert
+// uniquement à rendre un Link CTA "Revenir à la préparation 2A" dans la
+// bannière locked. NE PAS généraliser ce prop à d'autres dépendances ni
+// introduire de mécanisme générique (`requires`, `dependsOn`, ...) — toute
+// nouvelle exception doit repasser par l'advisor pédagogique (cf. CLAUDE.md).
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { submitDeliverable, type WorkflowState } from "@/app/actions";
+import { dictionaries } from "@/lib/i18n";
+
+const t = dictionaries.fr;
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -25,10 +36,15 @@ export function FichesEntretienComposer({
   deliverableTemplateId,
   locked = false,
   lockedReason,
+  prepQuestionsDeliverableId,
 }: {
   deliverableTemplateId: string;
   locked?: boolean;
   lockedReason?: string;
+  // quick-260519-uuy / Task 3 — optional + nullable. When null (e.g. prep
+  // template absent from seed), the Link is NOT rendered, the locked banner
+  // shows the textual reason alone. This is the L2 exception only.
+  prepQuestionsDeliverableId?: string | null;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitDeliverable, initialState);
@@ -103,10 +119,35 @@ export function FichesEntretienComposer({
             border: "1px solid #f59e0b",
             color: "#92400e",
             fontSize: 13,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            alignItems: "flex-start",
           }}
         >
-          {lockedReason ??
-            "Préparation à valider par votre mentor avant de débloquer les fiches d'entretien."}
+          <span>
+            {lockedReason ??
+              "Préparation à valider par votre mentor avant de débloquer les fiches d'entretien."}
+          </span>
+          {prepQuestionsDeliverableId ? (
+            <Link
+              href={`/journey/deliverable/${prepQuestionsDeliverableId}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "6px 12px",
+                borderRadius: 6,
+                background: "#92400e",
+                color: "#fef3c7",
+                fontSize: 12,
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              ← {t.fiches_locked_cta_back_to_prep}
+            </Link>
+          ) : null}
         </div>
       ) : null}
 

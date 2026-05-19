@@ -270,6 +270,8 @@ export const dictionaries = {
     // is not conveyed by color alone. Unicode (U+2713 / U+26A0), not ASCII.
     submission_form_success_prefix: "✓ ",
     submission_form_error_prefix: "⚠ ",
+    // quick-260519-uuy / Task 3 — CTA back to prep-questions-v1 in locked banner.
+    fiches_locked_cta_back_to_prep: "Revenir a la preparation 2A",
     submission_readonly_title: "Soumission",
     submission_readonly_kind: "Type",
     submission_readonly_proof_url: "Lien soumis",
@@ -1020,6 +1022,8 @@ export const dictionaries = {
     // is not conveyed by color alone. Unicode (U+2713 / U+26A0), not ASCII.
     submission_form_success_prefix: "✓ ",
     submission_form_error_prefix: "⚠ ",
+    // quick-260519-uuy / Task 3 — CTA back to prep-questions-v1 in locked banner.
+    fiches_locked_cta_back_to_prep: "Back to preparation 2A",
     submission_readonly_title: "Submission",
     submission_readonly_kind: "Type",
     submission_readonly_proof_url: "Submitted link",
