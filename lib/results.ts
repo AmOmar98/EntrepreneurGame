@@ -14,7 +14,8 @@
 // app/results/page.tsx, so we are not exposing data publicly.
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
-import type { Player, LevelId } from "@/lib/types";
+import { canSeeFullRanking } from "@/lib/pitch-mode";
+import type { Player, LevelId, AppRole } from "@/lib/types";
 
 // ============================================================================
 // Public types
@@ -144,13 +145,20 @@ export async function isResultsPublished(): Promise<{
   return { eventId: row.id, publishedAt: row.results_published_at };
 }
 
-export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
+export async function computeRanking(opts?: {
+  pitchWeight?: number;
+  requesterRole?: AppRole;
+  isJuror?: boolean;
+}): Promise<{
   eventId: string | null;
   publishedAt: string | null;
   rows: RankingRow[];
 }> {
   const pitchWeight = clampWeight(opts?.pitchWeight);
   const projectWeight = 1 - pitchWeight;
+  const requesterRole = opts?.requesterRole;
+  const isJuror = !!opts?.isJuror;
+  const isGameMaster = requesterRole === "game_master";
 
   const rlsClient = await createClient();
   if (!rlsClient) return { eventId: null, publishedAt: null, rows: [] };
@@ -171,6 +179,17 @@ export async function computeRanking(opts?: { pitchWeight?: number }): Promise<{
   const event = eventRow as { id: string; results_published_at: string | null };
   const eventId = event.id;
   const publishedAt = event.results_published_at;
+
+  // 1.b Visibility gate (R1 cardinal). Players and non-juror mentors never
+  // get a ranking — caller (app/results/page.tsx) renders the "merci" branch
+  // when rows is empty + non-GM. GM is unconditional; juror needs publishedAt.
+  // Backwards-compat: if requesterRole is undefined (legacy callers), keep
+  // the old behaviour (no gate) — page-level role check still applies.
+  if (requesterRole !== undefined) {
+    if (!canSeeFullRanking(isJuror, isGameMaster, publishedAt)) {
+      return { eventId, publishedAt, rows: [] };
+    }
+  }
 
   // Post-publish, prefer service-role to bypass RLS on players + pitch_scores
   // so every authenticated user (Players included) sees the full ranking. The

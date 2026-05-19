@@ -20,6 +20,8 @@ import {
   slugifyTeam,
   type ImportReport,
 } from "@/lib/admin-import";
+import { addJurorByEmail, removeJuror } from "@/lib/jurors";
+import type { PitchModeState } from "@/lib/types";
 
 export type WorkflowState = {
   ok: boolean;
@@ -2294,4 +2296,200 @@ export async function resolveHelpRequest(formData: FormData): Promise<void> {
     .in("status", ["open", "acknowledged"]);
   revalidatePath("/mentor");
   revalidatePath("/admin");
+}
+
+// ============================================================================
+// Pitch mode + Jurors (quick-260519-jpr Wave 2 - GameMaster only)
+// ============================================================================
+
+// ---- setPitchModeStateFlow ------------------------------------------------
+// State machine transitions allowed:
+//   off ↔ live
+//   live ↔ closed
+//   closed → off (reset for a new cycle)
+// Forbidden: off→closed direct, live→off direct (force pass-through).
+const pitchModeTransitions: Record<PitchModeState, PitchModeState[]> = {
+  off: ["live"],
+  live: ["off", "closed"],
+  closed: ["live", "off"],
+};
+
+const setPitchModeStateSchema = z.object({
+  eventId: z.string().uuid(),
+  next: z.enum(["off", "live", "closed"]),
+});
+
+export async function setPitchModeStateFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+  const parsed = setPitchModeStateSchema.safeParse({
+    eventId: formData.get("eventId"),
+    next: formData.get("next"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Données invalides" };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifié." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Réservé GameMaster." };
+  }
+
+  // Load current state to validate transition.
+  const { data: eventRow, error: eventErr } = await supabase
+    .from("events")
+    .select("pitch_mode_state")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (eventErr) return { ok: false, message: eventErr.message };
+  if (!eventRow) return { ok: false, message: "Événement introuvable." };
+  const current = ((eventRow as { pitch_mode_state: PitchModeState | null }).pitch_mode_state ??
+    "off") as PitchModeState;
+  const next = parsed.data.next;
+
+  if (current === next) {
+    return { ok: true, message: `Mode pitch déjà : ${next}` };
+  }
+  if (!pitchModeTransitions[current].includes(next)) {
+    return { ok: false, message: "Transition non autorisée." };
+  }
+
+  // Guard: cannot go live without at least one juror invited.
+  if (next === "live") {
+    const { count, error: countErr } = await supabase
+      .from("jurors")
+      .select("user_id", { count: "exact", head: true })
+      .eq("event_id", parsed.data.eventId);
+    if (countErr) return { ok: false, message: countErr.message };
+    if (!count || count === 0) {
+      return {
+        ok: false,
+        message: "Invite au moins un juror avant de passer en live.",
+      };
+    }
+  }
+
+  const { error: updErr } = await supabase
+    .from("events")
+    .update({ pitch_mode_state: next })
+    .eq("id", parsed.data.eventId);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: `Mode pitch : ${next}` };
+}
+
+// ---- addJurorFlow ---------------------------------------------------------
+const addJurorSchema = z.object({
+  eventId: z.string().uuid(),
+  email: z.string().email(),
+});
+
+export async function addJurorFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+  const parsed = addJurorSchema.safeParse({
+    eventId: formData.get("eventId"),
+    email: formData.get("email"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Données invalides" };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifié." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Réservé GameMaster." };
+  }
+
+  const result = await addJurorByEmail(parsed.data.eventId, parsed.data.email);
+  if (result.ok) {
+    revalidatePath("/admin");
+  }
+  return { ok: result.ok, message: result.message };
+}
+
+// ---- removeJurorFlow ------------------------------------------------------
+const removeJurorSchema = z.object({
+  eventId: z.string().uuid(),
+  userId: z.string().uuid(),
+});
+
+export async function removeJurorFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+  const parsed = removeJurorSchema.safeParse({
+    eventId: formData.get("eventId"),
+    userId: formData.get("userId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Données invalides" };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configuré." };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifié." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Réservé GameMaster." };
+  }
+
+  const result = await removeJuror(parsed.data.eventId, parsed.data.userId);
+  if (result.ok) {
+    revalidatePath("/admin");
+  }
+  return { ok: result.ok, message: result.message };
 }
