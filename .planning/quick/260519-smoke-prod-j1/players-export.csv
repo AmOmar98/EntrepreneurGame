@@ -1,0 +1,11 @@
+team_slug,team_name,current_level,status,score_project,score_engagement,submissions_count,validated_count,leader_email,member_emails
+simock,Simock,L1_problem,active,20,475,4,2,team-simock@digi.uemf.ma,
+addictless,AddictLess,L0_diagnostic,active,0,0,0,0,team-addictless@digi.uemf.ma,
+bla-dwa,Bla Dwa,L0_diagnostic,active,0,0,0,0,team-bla-dwa@digi.uemf.ma,
+fokusmind,FokusMind,L0_diagnostic,active,0,0,0,0,team-fokusmind@digi.uemf.ma,
+graph-anomal,Graph-Anomal,L0_diagnostic,active,0,0,0,0,team-graph-anomal@digi.uemf.ma,
+hassana,HASSANA,L0_diagnostic,active,0,0,0,0,team-hassana@digi.uemf.ma,
+mednova,MedNova,L0_diagnostic,active,0,0,0,0,team-mednova@digi.uemf.ma,
+mindbot,MindBot,L0_diagnostic,active,0,0,0,0,team-mindbot@digi.uemf.ma,
+nafas,NAFAS,L0_diagnostic,active,0,0,0,0,team-nafas@digi.uemf.ma,
+shihty-plus,Shihty+,L0_diagnostic,active,0,0,0,0,team-shihty-plus@digi.uemf.ma,

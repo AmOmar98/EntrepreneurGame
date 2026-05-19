@@ -160,7 +160,7 @@ export default async function JourneyPage() {
   );
 }
 
-// Bandeau discret pointant vers le Welcome Guide AgreenTech sur OneDrive UEMF.
+// Bandeau discret pointant vers le Welcome Guide Digi-Hackathon sur OneDrive UEMF.
 // Visible une fois en haut du parcours porteur (branche non-empty) et juste
 // sous le titre de bienvenue (branche empty). Lien externe nouvel onglet.
 function WelcomeGuideStrip() {
@@ -182,8 +182,8 @@ function WelcomeGuideStrip() {
       }}
     >
       <span>
-        <strong>Welcome Guide AgreenTech</strong> &mdash; brief porteur, regles du
-        bootcamp, checklist 13-14 mai.
+        <strong>Welcome Guide Digi-Hackathon</strong> &mdash; brief porteur, regles
+        du bootcamp, checklist 20-22 mai.
       </span>
       <a
         href={WELCOME_GUIDE_URL}

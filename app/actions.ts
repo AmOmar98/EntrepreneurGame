@@ -184,12 +184,11 @@ const httpsUrl = z
   .url()
   .refine((u) => u.startsWith("https://"), "URL doit commencer par https://");
 
-// quick-260519-l1l : Auto-validation system evaluator (Q5 Omar 2026-05-19).
-// Used when submitDeliverable inserts a synthetic evaluations row for the
-// 10-fiches d'entretien auto-validation flow. Picked Omar's GameMaster account
-// (o.ameur@ueuromed.org) as the canonical "system" evaluator — same UUID
-// hard-coded so the seed remains reproducible.
-const SYSTEM_AUTO_VALIDATOR_USER_ID = "59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334";
+// quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation system
+// evaluator UUID is now hardcoded in the SECURITY DEFINER trigger
+// `trg_auto_eval_fiches_entretien` (G01 = o.ameur@ueuromed.org =
+// 59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334). See
+// .planning/quick/260519-smoke-prod-j1/fix_h1_auto_eval_trigger.sql
 
 // quick-260519-l1l : Hard-block exception R3 signed Omar 2026-05-19. The
 // fiches-entretien-v1 deliverable REQUIRES that prep-questions-v1 was already
@@ -287,7 +286,7 @@ export async function submitDeliverable(
   // (hard-block dependency + auto-validation for fiches-entretien-v1).
   const { data: tplRow, error: tplErr } = await supabase
     .from("deliverable_templates")
-    .select("slug, max_score")
+    .select("slug")
     .eq("id", parsed.data.deliverableTemplateId)
     .maybeSingle();
   if (tplErr) {
@@ -296,8 +295,7 @@ export async function submitDeliverable(
   if (!tplRow) {
     return { ok: false, message: "Livrable inconnu." };
   }
-  const templateSlug = (tplRow as { slug: string; max_score: number }).slug;
-  const templateMaxScore = (tplRow as { slug: string; max_score: number }).max_score;
+  const templateSlug = (tplRow as { slug: string }).slug;
 
   // quick-260519-l1l : Hard-block 2A→2B (R3 exception, Omar 2026-05-19).
   // If this deliverable depends on another being validated first, check that
@@ -331,12 +329,16 @@ export async function submitDeliverable(
     }
   }
 
-  // quick-260519-l1l : Auto-validation flow for fiches-entretien-v1 (Q5 Omar).
+  // quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation flow for
+  // fiches-entretien-v1. Player inserts submission with status='validated'.
+  // The synthetic evaluations row is now inserted server-side by trigger
+  // `trg_auto_eval_fiches_entretien` (SECURITY DEFINER, bypasses RLS
+  // `evaluations_mentor_self_insert`) — see
+  // .planning/quick/260519-smoke-prod-j1/fix_h1_auto_eval_trigger.sql
   // - Parse 10-URL JSON payload.
   // - Insert submissions row with status='validated' directly.
-  // - Insert synthetic evaluations row (evaluator = SYSTEM_AUTO_VALIDATOR_USER_ID,
-  //   scores = {fiche_1..10: 25}, total_score = 250) so trg_evaluation_recalc
-  //   propagates XP normally.
+  // - Trigger fires AFTER INSERT, creates eval row (scores fiche_1..10=25,
+  //   total=250, verdict='validate_v1', evaluator=G01 UUID).
   // - Skip mailto (no mentor notif needed for auto-validated submission).
   if (templateSlug === "fiches-entretien-v1") {
     if (parsed.data.kind !== "proof_text" || !parsed.data.proofText) {
@@ -376,41 +378,21 @@ export async function submitDeliverable(
     }
 
     // Insert submission row (status validated direct).
-    const { data: subIns, error: subErr } = await supabase
-      .from("submissions")
-      .insert({
-        player_id: membership.player_id,
-        deliverable_template_id: parsed.data.deliverableTemplateId,
-        version: 1,
-        kind: "proof_text",
-        proof_url: null,
-        proof_text: parsed.data.proofText,
-        status: "validated",
-        submitted_by: user.id,
-      })
-      .select("id")
-      .single();
-    if (subErr || !subIns) {
-      return { ok: false, message: subErr?.message ?? "Échec insertion soumission." };
-    }
-
-    // Insert auto-validation evaluations row → trigger trg_evaluation_recalc.
-    const fichesScores: Record<string, number> = {};
-    for (let i = 1; i <= 10; i += 1) {
-      fichesScores[`fiche_${i}`] = 25;
-    }
-    const totalScore = templateMaxScore; // 250
-    const { error: evalErr } = await supabase.from("evaluations").insert({
-      submission_id: (subIns as { id: string }).id,
-      evaluator_id: SYSTEM_AUTO_VALIDATOR_USER_ID,
-      scores: fichesScores,
-      total_score: totalScore,
-      feedback:
-        "Auto-validé (Q5 quick-260519-l1l) : 10 fiches d'entretien soumises. Note fixe 25/25 par fiche.",
-      verdict: "validate_v1",
+    // Auto-eval row is created server-side by trigger
+    // trg_auto_eval_fiches_entretien (SECURITY DEFINER) — no client-side insert
+    // needed, RLS evaluations_mentor_self_insert no longer blocks the Player.
+    const { error: subErr } = await supabase.from("submissions").insert({
+      player_id: membership.player_id,
+      deliverable_template_id: parsed.data.deliverableTemplateId,
+      version: 1,
+      kind: "proof_text",
+      proof_url: null,
+      proof_text: parsed.data.proofText,
+      status: "validated",
+      submitted_by: user.id,
     });
-    if (evalErr) {
-      return { ok: false, message: `Submission OK, eval failed: ${evalErr.message}` };
+    if (subErr) {
+      return { ok: false, message: subErr.message };
     }
 
     revalidatePath("/journey");
@@ -843,7 +825,7 @@ const importSchema = z.object({
   cohortSlug: z.string().min(2).max(64).default("hack-days-mai-2026"),
 });
 
-const DEFAULT_COHORT_NAME = "AgreenTech Mai 2026";
+const DEFAULT_COHORT_NAME = "Digi-Hackathon Mai 2026";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 
