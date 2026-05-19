@@ -500,47 +500,62 @@ grep -c "^SUPABASE_SERVICE_ROLE_KEY=" .env.local
 // scripts/create-digi-hackathon-jurors.ts (squelette)
 import { createClient } from '@supabase/supabase-js';
 import { randomBytes } from 'crypto';
-import { writeFileSync } from 'fs';
+import { appendFileSync, existsSync, writeFileSync } from 'fs';
 
 const supa = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
+// Domaine email cohérent avec les Players (`team-XXX@digi.uemf.ma`).
+// Le nom du partenaire reste générique — Omar peut éditer lead_name à la main
+// dans le CSV après génération s'il a les noms réels des jurys.
 const JURORS = [
-  { slug: 'J01', name: 'Jury Tamwilcom', email: 'jury-j01@digi-hackathon.eic.ma' },
-  { slug: 'J02', name: 'Jury Bank of Africa', email: 'jury-j02@digi-hackathon.eic.ma' },
-  { slug: 'J03', name: 'Jury Innov Invest', email: 'jury-j03@digi-hackathon.eic.ma' },
-  { slug: 'J04', name: 'Jury Bluespace', email: 'jury-j04@digi-hackathon.eic.ma' },
+  { teamId: 'J01', slug: 'jury-tamwilcom',  name: 'Jury Tamwilcom',           lead: 'TBD', email: 'jury-j01@digi.uemf.ma' },
+  { teamId: 'J02', slug: 'jury-boa',        name: 'Jury Bank of Africa',      lead: 'TBD', email: 'jury-j02@digi.uemf.ma' },
+  { teamId: 'J03', slug: 'jury-innov',      name: 'Jury Innov Invest',        lead: 'TBD', email: 'jury-j03@digi.uemf.ma' },
+  { teamId: 'J04', slug: 'jury-bluespace',  name: 'Jury Bluespace',           lead: 'TBD', email: 'jury-j04@digi.uemf.ma' },
 ];
 
-const eventId = '<DIGI_HACKATHON_EVENT_UUID>'; // récupéré via supa.from('events').select().limit(1)
+// 1. Resolver event Digi-Hackathon (le plus récent)
+const { data: ev } = await supa.from('events').select('id').order('starts_at', { ascending: false }).limit(1).maybeSingle();
+const eventId = ev!.id;
 
-const lines = ['slug,name,email,password'];
+// 2. Cible CSV : APPEND au fichier cohorte unique (déjà gitignored via .gitignore pattern cohorte-*-creds)
+const csvPath = 'cohorte-digi-hackathon-creds.csv';
+const csvHeader = 'team_id,team_slug,team_name,lead_name,project_code,email,password';
+if (!existsSync(csvPath)) {
+  writeFileSync(csvPath, csvHeader + '\n');
+}
+
 for (const j of JURORS) {
-  const password = randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12); // 12 chars
-  // 1. Create auth user
+  const password = randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12);
+
+  // a. Create auth user (idempotent : capture erreur "already registered" pour reruns)
   const { data, error } = await supa.auth.admin.createUser({
     email: j.email, password, email_confirm: true,
   });
-  if (error) throw error;
-  const userId = data.user.id;
+  if (error && !error.message.includes('already')) throw error;
+  const userId = data?.user?.id ?? /* lookup existing */ (await supa.auth.admin.listUsers()).data.users.find(u => u.email === j.email)!.id;
 
-  // 2. Insert profile (app_role='mentor' — choix validé Omar 2026-05-19)
+  // b. Upsert profile (app_role='mentor' — choix validé Omar 2026-05-19)
   await supa.from('profiles').upsert({ user_id: userId, app_role: 'mentor', display_name: j.name });
 
-  // 3. Insert into jurors table (active is_juror() pour event Digi-Hackathon)
-  await supa.from('jurors').insert({ event_id: eventId, user_id: userId, invited_at: 'now()' });
+  // c. Insert into jurors table (active is_juror() pour event Digi-Hackathon)
+  await supa.from('jurors').upsert({ event_id: eventId, user_id: userId, invited_at: new Date().toISOString() });
 
-  lines.push(`${j.slug},${j.name},${j.email},${password}`);
+  // d. Append au CSV unique (format aligné Players)
+  //    project_code='JURY' marque la ligne comme juror (pas un Player)
+  appendFileSync(csvPath, `${j.teamId},${j.slug},${j.name},${j.lead},JURY,${j.email},${password}\n`);
 }
 
-writeFileSync('jurors-digi-hackathon-creds.csv', lines.join('\n'));
-console.log('✓ 4 jurys created, creds → jurors-digi-hackathon-creds.csv (gitignored)');
+console.log(`✓ 4 jurys créés, creds appendés à ${csvPath} (gitignored)`);
 ```
 
-**Output** : fichier `jurors-digi-hackathon-creds.csv` à la racine repo (à **gitignorer**, cf. `.gitignore` ajout `jurors-*-creds.csv` au passage). Format identique à `cohorte-agreentech-creds.csv` (cf. memory `reference_cohort_csvs`).
+**Output** : 4 nouvelles lignes appendées à `cohorte-digi-hackathon-creds.csv` (déjà gitignored via pattern `cohorte-*-creds` dans `.gitignore`). Le fichier passe de 23 lignes (header + 22 Players) à 27 lignes (header + 22 Players + 4 jurys). La colonne `project_code='JURY'` distingue les jurys des Players au regard.
 
-**Distribution** : Omar imprime/transmet les creds physiquement aux 4 jurys avant l'event (carte format A6 par juror, comme les Players).
+**Distribution** : Omar filtre les 4 lignes `project_code=JURY` et imprime/transmet les cartes aux jurys partenaires avant l'event (mêmes cartes A6 que les Players, juste filtrer le CSV).
 
-**Rollback** : `DELETE FROM jurors WHERE event_id = '<DIGI>'; DELETE FROM profiles WHERE user_id IN (...); supa.auth.admin.deleteUser(...)` si besoin de recréer.
+**Idempotence** : script ré-exécutable sans crash (catch « already registered » sur auth + upsert sur profiles/jurors). Si Omar a déjà éditté `lead_name` manuellement dans le CSV, l'append créera des doublons → le script vérifie d'abord si la ligne J0X existe déjà dans le CSV et skip si oui.
+
+**Rollback** : `DELETE FROM jurors WHERE event_id = '<DIGI>'; DELETE FROM profiles WHERE user_id IN (4 ids); supa.auth.admin.deleteUser(...)` + supprimer les 4 dernières lignes du CSV.
 
 ## 6. Critères d'acceptation
 
@@ -549,8 +564,8 @@ console.log('✓ 4 jurys created, creds → jurors-digi-hackathon-creds.csv (git
 - [ ] **Test RLS live** : juror authentifié exécute `SELECT * FROM pitch_scores WHERE juror_id <> '<self>'` pendant `live` → 0 lignes
 - [ ] **Test RLS closed** : même juror après `closed` → N lignes (autres jurors visibles)
 - [ ] **4 jurys provisionnés** : J01..J04 visibles dans `auth.users` + `profiles` (app_role=mentor) + `jurors` (event=Digi-Hackathon)
-- [ ] **CSV creds gitignored** : `jurors-digi-hackathon-creds.csv` existe à la racine et est listé dans `.gitignore` (pattern `jurors-*-creds.csv`)
-- [ ] **Test login juror** : connexion `jury-j01@digi-hackathon.eic.ma` + password → redirect `/jury`, vue théâtre accessible, autres jurys notes invisibles
+- [ ] **CSV creds appendés** : `cohorte-digi-hackathon-creds.csv` passe de 23 à 27 lignes (4 nouvelles avec `project_code=JURY`), fichier déjà gitignored via pattern `cohorte-*-creds`
+- [ ] **Test login juror** : connexion `jury-j01@digi.uemf.ma` + password → redirect `/jury`, vue théâtre accessible, autres jurys notes invisibles
 - [ ] Player et Mentor non-juror sur `/results` voient écran « merci » dans tous les états sauf cérémonie GM-only
 - [ ] `/results/ceremony` redirect non-GM vers `/results`
 - [ ] `/admin/export/results.csv` renvoie 403 tant que `state !== 'closed'` ET `publishedAt === null`
@@ -569,7 +584,7 @@ console.log('✓ 4 jurys created, creds → jurors-digi-hackathon-creds.csv (git
 | RLS policy mal écrite → fuite cross-juror | Moyenne | **Critique** | Test SQL explicite avant push ; fail-closed par défaut |
 | Migration faille RLS casse smoke prod existant | Moyenne | Élevé | Tag `v0.X.Y-pre-pitch-mode` avant edits ; backfill jurors immédiat pour préserver flux mentor jury |
 | Script provisioning oublié → 0 juror → `live` impossible | Élevée | Critique | Garde `setPitchModeStateFlow(live)` rejette si 0 juror + checklist runbook avant event + pré-check Claude en Wave 3 |
-| SUPABASE_SERVICE_ROLE_KEY absent de .env.local → script provisioning skip | Élevée (état actuel) | Élevé | Pré-check Claude avec `grep -c` + message explicite pour Omar ; mise à jour `.env.example` si besoin |
+| SUPABASE_SERVICE_ROLE_KEY absent de .env.local → script provisioning skip | ~~Élevée~~ Résolu 2026-05-19 (Omar a ajouté la clé) | Élevé | Pré-check Claude avec `grep -c` reste actif au cas où ; `.env.example` à mettre à jour |
 | GM ferme `closed` par erreur | Moyenne | Moyen | `confirm()` JS + rollback `closed→live` autorisé |
 | CSV creds leakés sur git | Moyenne | **Critique** | Ajout pattern `jurors-*-creds.csv` dans `.gitignore` avant exécution du script ; vérif `git status` ne mentionne pas le fichier |
 | Mentor AgreenTech historique tente de noter Digi-Hackathon | Faible | Faible | Garde `jury_not_invited` UI + RLS DB-enforced (pas de fuite) |
@@ -610,8 +625,10 @@ Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts sta
 - `components/admin-pitch-mode-toggle.tsx`
 - `components/admin-jurors-manager.tsx`
 - `app/admin/export/results.csv/route.ts`
-- `scripts/create-digi-hackathon-jurors.ts` (Lot 5.7, one-shot)
-- `jurors-digi-hackathon-creds.csv` (root, **gitignored**)
+- `scripts/create-digi-hackathon-jurors.ts` (Lot 5.7, one-shot, idempotent)
+
+**Modifié** (append only, déjà gitignored) :
+- `cohorte-digi-hackathon-creds.csv` (+4 lignes `project_code=JURY`)
 
 **Modifiés** :
 - `lib/types.ts` (+2 types `PitchModeState`, `Juror`)
@@ -631,7 +648,6 @@ Dossier `.planning/quick/260519-XXX-pitch-mode-replay/` avec les 5 artefacts sta
 - `components/results-stats-strip.tsx` (libellés revus)
 - `components/results-timeline-moments.tsx` (refresh visuel)
 - `components/results-ceremony-screen.tsx` (refresh théâtre + reveal staggered)
-- `.gitignore` (ajout pattern `jurors-*-creds.csv`)
 - `CLAUDE.md` (corriger AppRole : `player | mentor | game_master`)
 
 Total estimé : ~750 lignes de diff sur 23 fichiers (5 nouveaux + 18 modifiés). Soit **3 commits atomiques** :
