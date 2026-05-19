@@ -1,179 +1,93 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1
-milestone_name: Pilot Hack-Days Fès-Meknès** — Phases 1-5
-status: unknown
-last_updated: "2026-05-11T20:27:37.484Z"
-last_activity: 2026-05-11
-progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 26
-  completed_plans: 28
-  percent: 100
+milestone: v0.3
+milestone_name: Digi-Hackathon (20-22 mai 2026)
+status: in_progress
+last_updated: "2026-05-19T22:00:00.000Z"
+last_activity: 2026-05-19
+phase: prep-t-1
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-09)
+See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 
-**Core value** : Permettre à 6-15 équipes réelles de vivre le Hack-Days 13-14 mai 2026 — chaque livrable d'atelier soumis, évalué, noté en ligne, classement publié — sans perte de données et sans honte devant les partenaires.
-
-**Current focus** : v0.2 EIC Design v2 Refresh — appliquer le design v2 EIC complet sur l'app v0.1. Mode qualité sans deadline.
+**Core value (v0.3)** : Livrer Digi-Hackathon 20-22 mai 2026 sur base PROD AgreenTech restructurée 13 livrables, sans perte de données ni honte partenaires.
 
 ## Current Position
 
-Phase: 16
-Plan: Not started
-Milestone v0.2 : implementation complete — pending human verification.
-All 4 phases (6, 7, 8, 9) implementation completed 2026-05-10.
-Last activity: 2026-05-19 - Completed quick task 260519-uuy: UI/UX quick-wins detail livrable (feedback mentor visible + a11y prefix ✓/⚠ + ticket aria-label + CTA hard-block L2 retour 2A) — 3 commits atomiques 4a2a0ff/282b9ec/7338ae4
+**Milestone** : v0.3 Digi-Hackathon
+**Phase courante** : Prep T-1 (complete) → bascule "Event live" 2026-05-20 00h00
+**PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — 20 auth.users inchangés depuis pilote AgreenTech 13-14/05
 
-## Active Milestone
+**Dernière activité** : 2026-05-19 — quick 260519-uuy completed (UI/UX detail livrable, 3 commits atomiques 4a2a0ff/282b9ec/7338ae4)
 
-**v0.2 — EIC Design v2 Refresh** (implementation complete pending verification)
-
-4 phases ordonnées livrées (Design System → Joueur → Mentor → GameMaster). Chaque phase commit atomique → fallback v0.1 garanti à tout moment via `git reset --hard v0.1-pilot-ready`.
-
-Source de vérité design : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08).
-
-## Phase Status
+## Phase Status (v0.3)
 
 | Phase | Goal | Status |
 |---|---|---|
-| 1-5 | Pilot v0.1 (Foundation, Player, Mentor, GameMaster, Pitch+Deploy) | complete |
-| 6 | Design system EIC + AppShell + Login branded | complete (verified 2026-05-10, smoke 7/7 passed) |
-| 7 | Joueur : barre charge L0-L7 + drawer + onboarding + ticket SOUMIS | implementation complete (8/8 PLR — 7 commits — VERIFICATION human_needed) |
-| 8 | Mentor : commentaires async sur lien + composer V2 | implementation complete (6/6 MNT — 7 commits — VERIFICATION human_needed) |
-| 9 | GameMaster + jury + replay + Pixel mascotte | implementation complete (9/9 GMR — 12 commits — VERIFICATION human_needed) |
-| 10 | T-3 Critical Gates + Design v2 Tail Sections | **in_progress** — B1-B4 fixés via quicks 260510-* ; B5 ops Omar ; sub-tâches design tail (sections 10/11/12/13/14) partiellement livrées via Phase 10 plan ; sections restantes à exécuter |
-| 11 | Design Audit Refinements (13 items, 4 waves) | **complete 2026-05-10** — 13/13 items shipped (15 commits atomiques pushed origin main). Build/typecheck clean, R1 audit clean. Tag `v0.2.1-pre-phase11` posé pour rollback. SUMMARY.md livré. |
-| 13 | Smoke Completion + Phase 11 Gates Closeout + Bug Annexes (9 plans, 4 waves) | **planned** — pré-pilote, à exécuter avant cutoff 2026-05-12 23h00 |
-| 14 | Scoring d'engagement livrables (paliers 100/25/50) | **🔓 unlocked pré-pilote 2026-05-11** — discuss/plan/execute à enchaîner après Phase 13, AVANT cutoff 2026-05-12 23h00. Q4 tranchée par owner. |
+| Prep T-1 | Restructure 13 livrables + reskin + smoke prod | ✅ complete (13 quicks 12-19/05) |
+| Event live | Pilote 3j stable, hotfixes via quicks sur main | 🟡 planned 20-22/05 |
+| Post-mortem | Audit + backfill résultats + archive | 🟡 planned 23-25/05 |
 
-## Next Action — Pilot Operator Gates (Omar)
+## Next Action
 
-**CRITIQUE — avant test E2E v0.2 :**
+**Avant J1 (20/05 matin)** :
+1. ✅ Smoke prod J-1 (déjà fait, quick 260519-smoke-prod-j1)
+2. ✅ One-pagers PDF cohorte imprimés (quick 260519-onepagers)
+3. ⚠️ Vérifier pilot-health-watcher cron actif pour J1-J3
+4. ⚠️ Vérifier accès Vercel + Supabase MCP pour hotfixes live
 
-1. **Apply migration SQL Phase 8** : `database/migrations/08-mentor-comments.sql` sur Supabase prod (sinon comments + expected_action fail at runtime)
-2. **Apply migration SQL Phase 9** : `database/migrations/09-gamemaster-live.sql` sur Supabase prod (sinon /admin/deliverables toggle + announcements fail)
-3. **Visual review** des 3 phases v0.2 sur dev local + preview Vercel :
-   - Phase 7 : `/journey` (barre L0-L7 desktop/mobile), `/onboarding` (3 étapes), `/journey/deliverable/[id]` (ticket SOUMIS + révision V2)
-   - Phase 8 : `/mentor/submission/[id]` (link card + history + tagged comments + expected_action)
-   - Phase 9 : `/admin?live=1` (radar + Pixel mascot + status banner), `/admin/deliverables`, `/admin/announce`, `/jury?theater=1`, `/results` (replay quand published)
-4. **Smoke E2E régression v0.1** : `/login`, `/journey`, `/mentor`, `/admin`, `/jury`, `/results` continuent à marcher en mode standard (sans `?live=1` ni `?theater=1`)
-5. **Reduced-motion check** : pulsations radar + ticket rotated + drawer animations respectent `prefers-reduced-motion`
-6. **A11y check** : focus, aria-labels, ESC keys, tap targets ≥44px
-7. **No-Realtime check** : grep `supabase.channel\|subscribe(` dans `app/`, `components/`, `lib/` → doit être vide
+## Risk Watch (v0.3)
 
-Voir VERIFICATION.md de chaque phase (`.planning/phases/0[789]-*/0[789]-VERIFICATION.md`) pour la liste exhaustive d'items à valider.
+- **PROD stabilité J1-J3** : aucun déploiement risqué après 2026-05-19 23h00. Hotfix only.
+- **R1/R2/R3 cardinaux** : surface étendue post quick-260519-uuy (CTA back-to-prep en bannière locked). Re-audit grep R1 obligatoire avant tout merge live.
+- **Exception L2 hard-block** : nouvelle (signée 19/05), pas testée en charge cohorte 11 porteurs. Monitor M2 J1.
+- **Welcome Guide désync** : 8 PDFs ateliers ≠ 7 missions code (gérée hors-code par Omar coordination).
 
-## Pilot Operator Action Items (Omar — préservés depuis v0.1)
+## Quick Tasks Completed — v0.3 prep (T-1, 2026-05-12 → 2026-05-19)
 
-Ces actions restent à faire pour le pilote du 13-14 mai 2026, indépendamment de v0.2 (et peuvent être faites en parallèle de v0.2) :
+| # | Description | Date | Commit |
+|---|-------------|------|--------|
+| 260512-24v | FAB Call mentor Player + table help_requests + RLS | 2026-05-12 | b3cfe04 |
+| 260512-d3m | Design v3 mockups (cockpit live mode + SUMMARY/AUDIT) | 2026-05-12 | 821f657 |
+| 260512-hw0 | SUPERSEDED — P12 Ezzouzi pas provisionné (PLAN archivé) | 2026-05-12 | 09130b8 |
+| 260512-msu | RLS fix propagation verdict→submissions.status | 2026-05-12 | f9939b4 |
+| 260515-gu4 | Publish results hybrid pitch proxy (backfill 44 pitch_scores) | 2026-05-15 | cdb8bb1 |
+| 260515-lhi | UX V1→V2 CTA relance Player (hotfix /journey) | 2026-05-15 | 29e67ba |
+| 260517-g02 | Pitch order sec-def or codepath (PLAN only, untracked) | 2026-05-17 | (uncommitted) |
+| 260517-mga | Migrations gate paper trail + MANIFEST.md + 4 mga orphans | 2026-05-17 | d628dae |
+| 260517-psd | Playwright smoke dualmode (harness + 3 specs R1/R2/R3) | 2026-05-17 | b0f6687 |
+| 260517-rlh | RLS hardening (audit + gap analysis + test skeleton) | 2026-05-17 | b4f636d |
+| 260517-vsa | Validator severity baseline + audit + gate scripts | 2026-05-17 | a9cf3ce |
+| 260519-dgh | Digi-Hackathon reskin visuel (tag v0.2.1-pre-digi) | 2026-05-19 | c66754f |
+| 260519-l1l | L1+L2 restructure persona + fiches (exception R3 hard-block) | 2026-05-19 | d7bfec8 |
+| 260519-onepagers | PDF one-pagers cohorte imprimables (workflow permanent) | 2026-05-19 | (uncommitted) |
+| 260519-pyx | Restructure 12→13 livrables Digi-Hackathon (8 PDFs WG) | 2026-05-19 | c71156c |
+| 260519-rwi | Patch pilot-health-watcher + pilot-hotfix-prepper | 2026-05-19 | b31de42 |
+| 260519-smoke-prod-j1 | Smoke prod J-1 final | 2026-05-19 | (uncommitted) |
+| 260519-t3a | T-3 add (PLAN only, untracked) | 2026-05-19 | (uncommitted) |
+| 260519-tqd | DB perf baseline + pooler verdict (Option 1) | 2026-05-19 | 9ca673f |
+| 260519-uuy | UI/UX quick-wins detail livrable (3 commits atomiques) | 2026-05-19 | 7338ae4 |
 
-1. Apply schema Supabase prod fresh (`schema.sql` → `triggers.sql` → `rls.sql`)
-2. Run `database/rls_test.sql` → verdict ALL PASS dans `RLS-TEST-RESULTS.md`
-3. Vercel deploy (env vars + push) selon `docs/DEPLOY.md`
-4. Smoke test E2E sur URL prod → verdict PASS dans `SMOKE-TEST-E2E.md`
-5. Magic links 6-15 testeurs internes (cf. `INTERNAL-TESTERS.md`) pour répétition
-6. Tag git `v0.1-pilot-ready` posé localement (commit `8176419`) — `git push --tags` quand prêt
+## Seeds Planted
 
-## Risk Watch (v0.2)
-
-- **Ne pas casser v0.1** : Phase 6 (design system) refactor le shell partagé, risque de régression sur tous les écrans. Mitigation = tester `/login`, `/journey`, `/mentor`, `/admin`, `/jury`, `/results` après chaque commit.
-- **Drawer + glass effect mobile** : `backdrop-filter: blur` impacte perfs sur Android low-end. À vérifier avec Chrome devtools throttling.
-- **Polices Google Fonts** : Baskervville + Montserrat self-hosted via `next/font/google`. À monitorer LCP après refonte.
-- **Mascotte Pixel SVG** : nouveau composant, risque visuel. À builder en isolé d'abord (page de dev) avant de l'intégrer au dashboard GM.
-
-## Roadmap Evolution
-
-- Phase 12 added: quick-260510-t3x
-- Phase 13 added 2026-05-10: smoke-completion-phase11-gates-bug-annexes (9 plans, 4 waves) — pré-pilote
-- Phase 14 added 2026-05-10: scoring-engagement-livrables (paliers 100/25/50) — initialement post-pilote
-- Phase 14 **délockée pré-pilote 2026-05-11** par owner (Q4 tranchée, exécution autorisée avant cutoff 2026-05-12 23h00)
-- Phase 15 added 2026-05-11: adversarial-hardening-pre-pilote-agreentech — pré-pilote
-
-## Decisions
-
-- 2026-05-09 : milestone v0.2 démarrée avant clôture formelle de v0.1 (artefacts `.planning/phases/01-*` à `05-*` préservés). v0.1 sera archivée via `/gsd-complete-milestone` après le pilote du 13-14 mai.
-- 2026-05-09 : numérotation phases continue (Phase 6, 7, 8, 9) sans `--reset-phase-numbers`.
-- 2026-05-09 : Source de vérité design = `.planning/design-v2/` (extraction locale du bundle Claude Design `tar.gz`). L'URL Anthropic ne sera pas re-fetchée.
-- [Phase 06]: Phase 6 Plan 01: EIC tokens copied verbatim, next/font/google self-hosted, glass/aurora utilities prefixed .eic-* — v0.1 surfaces preserved
-- [Phase 06]: Phase 6 Plan 02: 5 typed primitives + CSS contracts in globals.css — server-renderable, BEM modifiers, prefers-reduced-motion guard on pulse keyframe
-- [Phase 06]: Phase 6 Plan 03: AppShell variant prop split player/staff — TopbarLite + MobileTabBar extracted, .eic-staff-sidebar additive class swaps sidebar to --eic-blue, v0.1 default backward compat preserved
-- [Phase 06]: Phase 6 Plan 04: /login refactored to branded EIC v2 — eic-aurora + EICLogo + eic-glass card + 6-partner footer. LoginForm uses React 19 3-tuple useActionState + Button primitive size=lg. PartnerBanner conditional per-partner (PARTNER_SVG_AVAILABLE, all 6 SVGs present). Phase 6 closes — DSY-01..07 all delivered.
-- [Phase 07]: Plan 07-01 (atomic PLR-03+PLR-04): journey-track + level-node + drawer + deliverable-card + hero-next-step. Layout grid 3-col desktop / single mobile. AppShell variant=player. Pulsations CSS pure + prefers-reduced-motion guards. backward compat preserved on demo mode (empty fallback).
-- [Phase 07]: Plans 07-02/03/04: onboarding 3 étapes éditoriales (welcome stats / team / 3 règles), submission-ticket post-V1 (sunburst + stamp rotated), revision-panel pédagogique (parsing heuristique ✓/⚠ from feedback_text). v0.1 unused components removed (journey-header, journey-timeline, journey-deliverables, onboarding-form). 8/8 PLR delivered.
-- [Phase 08]: Migration SQL `08-mentor-comments.sql` separated DDL — evaluation_comments table (RLS: mentor + team SELECT, mentor INSERT, GM DELETE) + evaluations.expected_action column with NOT VALID CHECK (non-empty when verdict=request_v2). Apply via `supabase db push` ou manuel.
-- [Phase 08]: Mentor evaluation refactor — link-based central card with type detection (Google Docs/GitHub/Notion/Figma/video/PDF), V1/V2 history antichrono, tagged async comments (remarque/à corriger), expected_action conditional input, confirmation banner with form lock post-submit. Server side: addEvaluationCommentFlow + evaluateSubmission Zod superRefine for expected_action. Zero Realtime confirmed via grep. 6/6 MNT delivered.
-- [Phase 09]: Migration SQL `09-gamemaster-live.sql` separated DDL — deliverable_templates.is_active boolean + announcements table (kind/target_kind/target_ids) + RLS via is_game_master() (note: codebase helper, brief said is_staff). Apply via `supabase db push` ou manuel.
-- [Phase 09]: Agent 9A delivered GMR-04/05/06/09 — jury pitch theater (?theater=1, timer 5min CSS countdown, /5 grid persisting /20 via existing savePitchScoreFlow), results replay (podium SVG, 5 stats strip, hardcoded timeline moments v0.2), /admin/deliverables toggle is_active + filter in lib/journey.ts, /admin/announce composer 4 kinds × 4 targets + Player strip on /journey.
-- [Phase 09]: Agent 9B delivered GMR-01/02/03/07/08 — admin live mode (?live=1) atomic with radar SVG (computeRadarLayout polar arrangement, sized by score, color by activity state), team-circle CSS pulsations + vibrate (no React tick re-render), team-focus editorial layout, status banner 4 states (serein/concentre/inquiet/euphorique) computed from team activity distribution + recent validated events. Pixel mascotte SVG floating bottom-right with 4 moods mirroring hackStatus, foldable to pill. GMR-08 committed BEFORE GMR-07 per ROADMAP DoD. 9/9 GMR delivered.
-- [Phase 15]: Phase 15 Plan 01: 5 audits adversariaux livres en scripts SQL/markdown + 5 verdict skeletons, zero modification code applicatif (D-02), R1 audit etendu cohort-* exit 0
-
-## Accumulated Context (préservé v0.1)
-
-- 2026-05-08 : lucide-react pinné à `^0.577.0` (latest 0.x stable). Le 1.x existe mais upgrade différé jusqu'à présence de tests (V2).
-- 2026-05-08 : Phase 1 ferme avec stub `/auth/callback` posé pour Phase 4 (magic link bulk import).
-- 2026-05-08 : Phase 5 closeout (Plan 05-05) en mode FULL AUTO — artefacts livres, deploy + smoke test reels deferres a Omar avant 13 mai.
-
-### Décisions héritées des phases 1-5
-
-- [Phase 02]: Likert q1..q5 et membres present non persistes (pas de table diagnostic Phase 1) - validation server-side conservee pour UX
-- [Phase 02]: Plan 03: V2 fully blocked at action level until Phase 3 introduces verdict-based gating
-- [Phase 02]: Phase 2 cloturee : i18n complet, anti-leak audite clean, SMOKE.md livre comme procedure UAT executable avant 13 mai.
-- [Phase 03]: Mentor data layer aggregates submissions+evaluations in two bulk queries (no N+1), per-player pending derived from status + connected user's evaluations
-- [Phase 03]: evaluateSubmission keeps players.score_project untouched - relies on trg_evaluation_recalc trigger
-- [Phase 03]: Single submitDeliverable action routes V1 vs V2 server-side based on latest submission status; client never sends version
-- [Phase 03]: No trigger change: max(total_score) on validated submissions naturally yields V2 score because V1 with request_v2 stays at feedback_received (excluded from validated agg)
-- [Phase 03]: Phase 3 closed via static grep audits (SCORE-01, SUBMIT-03, no Phase 1 concepts) + 03-SMOKE-TEST template; manual E2E deferred to UAT before 2026-05-13
-- [Phase 04]: Demo mode bypasses role gate on /admin/export/players.csv to return header-only CSV (per must_have)
-- [Phase 04]: Conserve les tokens CSS legacy en plus des nouveaux --brand-* pour eviter regressions sur components existants
-- [Phase 04]: PartnerBanner = server component, LoginForm = client subcomponent, LoginPage = server shell
-- [Phase 04]: Plan 04-02: GameMaster CSV bulk import idempotent (parseCsv pure helpers + service-role optional invites)
-- [Phase 05]: Pondération ranking 50/50 par défaut + dense ranking
-- [Phase 05]: Publish results idempotent (UPDATE conditionnel sur results_published_at IS NULL)
-- [Phase 05]: Plan 05-03: RLS test suite via set_config Supabase pattern + 10 scenarios + templates operateur
-
----
+| ID | Title | Trigger | Date |
+|----|-------|---------|------|
+| [SEED-001](./seeds/SEED-001-schemas-v2-architectural-refacto.md) | Schemas v2 architectural refacto | Post-pilote AgreenTech, milestone v0.4 (renumbered, was v0.3) | 2026-05-10 |
 
 ## Blockers
 
 _None_
 
-### Quick Tasks Completed
+## Historique Milestones
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260510-heu | Audit R1 (score invisible côté Player) + 1 patch | 2026-05-10 | 1291f94 | [260510-heu-audit-r1-score-invisible-cote-player-et-](./quick/260510-heu-audit-r1-score-invisible-cote-player-et-/) |
-| 260510-hzv | Update CLAUDE.md — sync lib/ refactor v0.2 (17 edits) | 2026-05-10 | bedf685 | [260510-hzv-update-claude-md-sync-lib-refactor-v02](./quick/260510-hzv-update-claude-md-sync-lib-refactor-v02/) |
-| 260510-iee | T3 quick wins A1 (auto-save 8s + pastille) + A4 (compteur Y/N champs) | 2026-05-10 | cf28807 | [260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c](./quick/260510-iee-t3-quick-wins-a1-auto-save-a4-compteur-c/) |
-| 260510-j2j | B2 banner L3 → tooltip ambre warn-only (R2/R3) | 2026-05-10 | 4733406 | [260510-j2j-b2-retirer-banner-rouge-l3-et-remplacer-](./quick/260510-j2j-b2-retirer-banner-rouge-l3-et-remplacer-/) |
-| 260510-jm8 | A5 Pixel mascotte 3 triggers Player (a) 1er livrable (b) stagnation 15min (c) verbatim n°2 (dormant) | 2026-05-10 | a58c00e | [260510-jm8-a5-pixel-mascotte-3-triggers-evenementie](./quick/260510-jm8-a5-pixel-mascotte-3-triggers-evenementie/) |
-| 260510-k1f | B1 Cohort Pulse Bar anonymisée /journey (R1, dual-mode, 6 lignes L0-L5) | 2026-05-10 | 311dd78 | [260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv](./quick/260510-k1f-b1-cohort-pulse-bar-anonymisee-t3-improv/) |
-| 260510-kpw | **B1 RÉTRO CRITICAL FIX** — R1 leak /results colmaté (gate isGameMaster sur podium scores + ranking table, annonce qualitative Players + EIC-validated FR copy) | 2026-05-10 | 16aa0f7 | [260510-kpw-b1retro-r1-leak-results-gate-isgamemaste](./quick/260510-kpw-b1retro-r1-leak-results-gate-isgamemaste/) |
-| 260510-l3m | **B2 RÉTRO** — pondération 20/80 AgreenTech (DEFAULT_PITCH_WEIGHT 0.5→0.8) — décision EIC manager 10/05 | 2026-05-10 | 8199fb1 | [260510-l3m-b2retro-ponderation-20-80-default-pitch-](./quick/260510-l3m-b2retro-ponderation-20-80-default-pitch-/) |
-| 260510-l3a | Patch Phase 10 plan + ROADMAP post-quick-sessions (10.0.2 + 10.0.7 DONE, paths fix, A2/B3/B4 absorption, 0.10 C3 ajouté, B5/C1/C2/C4 hors scope) | 2026-05-10 | 79f0e36 | [260510-l3a-patch-phase-10-plan-roadmap-post-quick-s](./quick/260510-l3a-patch-phase-10-plan-roadmap-post-quick-s/) |
-| 260510-l68 | **B4 RÉTRO** — refonte seed_event_hackdays.sql AgreenTech 2026 (6 missions + 9 livrables relabelés, rubric 5×5=25 uniforme, idempotent slugs préservés, +1 patch evaluationSchema .max(25)) | 2026-05-10 | d8ca1cf | [260510-l68-b4retro-seed-agreentech-7-missions-l1-l2](./quick/260510-l68-b4retro-seed-agreentech-7-missions-l1-l2/) |
-| 260510-lu5 | **B3 RÉTRO** — migrations Phase 8+9 appliquées en PROD Supabase via supabase CLI (npx, toolchain wired, supabase/migrations/ + config.toml committés, 4 entries aligned local↔remote) | 2026-05-10 | d7b3e80 | [260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr](./quick/260510-lu5-b3retro-apply-migrations-phase-8-9-to-pr/) |
-| 260510-rxa | Patch BLOCK dim 8 PLAN-CHECK phase 12 — insertion Plan 12-04 `apply-migrations-gate` (Wave 1.5 blocking, depends_on [12-02, 12-03]) entre creation des fichiers SQL et consommation TS — verdict READY-WITH-NOTES → READY | 2026-05-10 | 8f03c68 | [260510-rxa-patcher-block-dim-8-schema-apply-gate-ph](./quick/260510-rxa-patcher-block-dim-8-schema-apply-gate-ph/) |
-| 260511-sbt | **F-16-01 RLS fix** — GRANT select+insert sur `evaluation_comments` à authenticated (table-level GRANT manquant après migration 08, appliqué PROD + ALTER DEFAULT PRIVILEGES pour futures tables) | 2026-05-11 | f6a30e1 | [260511-sbt-fix-rls-evaluation-comments-bug-f-16-01](./quick/260511-sbt-fix-rls-evaluation-comments-bug-f-16-01/) |
-| 260512-24v | **FAB Call mentor Player** — FAB toujours-actif toutes pages Player + table `help_requests` + RLS (4 policies cohort-wide mentor + own-only player) + composer modal (textarea 500c, char counter live, a11y ESC/aria-modal) + bell badge ambre /mentor + /admin + 3 server actions (create/ack/resolve, idempotent, dual-mode safe) + migration appliquée PROD via MCP — advisor CONDITIONAL 6/6 conditions respectées, smoke régression OK | 2026-05-12 | b3cfe04 | [260512-24v-fab-call-mentor-player-table-help-reques](./quick/260512-24v-fab-call-mentor-player-table-help-reques/) |
-| 260512-hw0 | **SUPERSEDED** — Provision P12 Ezzouzi/Agrivision en PROD : PLAN rédigé puis annulé. Photo cohorte finale 2026-05-12 confirme 11 porteurs P01-P11 seulement (Ezzouzi OUT). PROD untouched (20 auth.users = état final pilote). HOUENHA P02 idea_seed sera set live J1 par GameMaster. PLAN.md préservé pour audit. | 2026-05-12 | 09130b8 | [260512-hw0-provision-p12-ezzouzi-agrivision-in-prod](./quick/260512-hw0-provision-p12-ezzouzi-agrivision-in-prod/) |
-| 260515-gu4 | **Publish Results Hybrid Pitch Proxy** — Post-pilote backfill 44 pitch_scores (4 jurors × 11 players, c1..c4 calibrés, c5=0 design v2) + UPDATE events SET results_published_at. Top 3 publié = Metafarm / Bouchenna OliveFeed / Gaoua SAGRIPLAST (décision jurys partenaires Tamwilcom/BoA/Innov Invest/Bluespace prise offline 14/05). R1 préservée (app/results/page.tsx:139-175 = écran announce non-GM). Advisor verdict WARN avec F1-F6 résolus avant exécution. | 2026-05-15 | cdb8bb1 | [260515-gu4-publish-results-hybrid-pitch-proxy-pilot](./quick/260515-gu4-publish-results-hybrid-pitch-proxy-pilot/) |
-| 260515-lhi | **UX V1→V2 CTA relance Player** — Hotfix surgical /journey : CTA `feedback_received` passe de "Voir le feedback" (passif) à "Completer ma V2" (action-oriented) + hint "Mentor attend ta V2". 2 fichiers, 8 insertions / 1 deletion. Vise à éviter le blocage observé J1/J2 (4 V1 jamais resoumis en V2). Advisor PASS (R1 PASS / R2 N/A / R3 PASS). Smoke local OK confirmé par Omar. | 2026-05-15 | 29e67ba | [260515-lhi-ux-v1-v2-cta-relance-player-feedback-rec](./quick/260515-lhi-ux-v1-v2-cta-relance-player-feedback-rec/) |
-| 260519-tqd | **DB perf baseline + pooler verdict (J-1 Digi-Hackathon)** — Option 1 retenue zero-risk : Task 1.1 MEASUREMENTS (advisor 17 findings + pg_stat top 14 + indexes inventory + EXPLAIN baseline volume 0) + Task 1.3 POOLER verdict DONE (REST-only stack, pooler non applicable). 3 tasks code/schema (1.2 indexes / 1.4 React.cache / 1.5 middleware skip) DEFERRED post-pilote ≥22/05. Trouvaille : Supabase eu-west-1 ↔ Vercel cdg1 désalignés (~30-50ms RTT), index `(player_id, deliverable_template_id)` redondant avec UNIQUE existant, memory `feedback_database_deny_workaround.md` outdated depuis MANIFEST.md 17/05. | 2026-05-19 | 9ca673f | [260519-tqd-db-perf-top-5-quick-wins-pg-stat-stateme](./quick/260519-tqd-db-perf-top-5-quick-wins-pg-stat-stateme/) |
-| 260519-uuy | **UI/UX quick-wins detail livrable Player** — 3 améliorations rollback-friendly issues brainstorm 3-agents : (1) feedback mentor visible dans `SubmissionReadonly` pour `validated`/`rejected`/`submitted_v2` (donnée déjà fetched côté serveur), (2) a11y WCAG 1.4.1 préfixe textuel ✓/⚠ sur messages submit + aria-label descriptif sur ticket SOUMIS, (3) CTA actionnable "Revenir à la préparation 2A" dans bannière locked `fiches-entretien-v1` (exception L2 unique signée Omar 19/05 préservée, slug literal, prop optionnel/nullable). Advisor verdict PASS_CONDITIONAL avec 5 conditions C1-C5 toutes respectées. Smoke régression typecheck/lint/build OK après chaque commit. Audit R1 post-exec : aucune nouvelle ligne R1-sensitive introduite Player-side. | 2026-05-19 | 7338ae4 | [260519-uuy-ui-ux-quick-wins-detail-livrable-a11y-ti](./quick/260519-uuy-ui-ux-quick-wins-detail-livrable-a11y-ti/) |
-
-### Seeds Planted
-
-| ID | Title | Trigger | Date |
-|----|-------|---------|------|
-| [SEED-001](./seeds/SEED-001-schemas-v2-architectural-refacto.md) | Schemas v2 architectural refacto (T3-IMPROVEMENTS section F) | Post-pilote AgreenTech, milestone v0.3 ouverte | 2026-05-10 |
+- **v0.1** Pilot Hack-Days Fès-Meknès — archivé 2026-05-08 (voir `milestones/v0.1-MILESTONE-AUDIT.md`, tag `v0.1-pilot-ready`)
+- **v0.2** EIC Design v2 Refresh — archivé 2026-05-11 (voir `milestones/v0.2-MILESTONE-AUDIT.md`, tag `v0.2-pilot-ready`)
+- **v0.3** Digi-Hackathon — in_progress depuis 2026-05-19
 
 ---
 
-*Last updated: 2026-05-10 — milestone v0.2 EIC Design v2 Refresh implementation complete (Phases 6+7+8+9 = 33 commits feat/db/docs/chore depuis v0.1-pilot-ready). 23 v0.2 requirements implémentés (DSY×7 + PLR×8 + MNT×6 + GMR×9). Pending : apply migrations SQL (08+09), visual review, smoke E2E régression, a11y/reduced-motion check. v0.1 pilot-ready intact via tag `v0.1-pilot-ready` ; rollback distant possible si nécessaire. Sprint T-3 quick wins 2026-05-10 : audit R1 (260510-heu, 1 patch) + CLAUDE.md sync lib/ refactor (260510-hzv, 17 edits) + T3 A1+A4 (260510-iee, auto-save 8s + compteur Y/N champs) + B2 banner L3 → tooltip ambre warn-only (260510-j2j, 3 commits, R2/R3 conformes) + SEED-001 v0.3 schemas v2 planté.*
+*Last updated: 2026-05-19 — milestone v0.3 ouvert formellement, archive v0.2 propre. 13 quicks Digi T-1 listés rétroactivement. Prep T-1 complete, attente bascule Event live 2026-05-20. Spec source : `docs/superpowers/specs/2026-05-19-planning-reorganisation-v03-design.md`.*

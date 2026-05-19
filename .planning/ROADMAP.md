@@ -1,9 +1,32 @@
-# Roadmap — Entrepreneur Game Pilot 13-14 mai 2026
+# Roadmap — Entrepreneur Game
 
-**Project A** — strict nécessaire pour onboarding + workshop avec 6-15 startups réelles.
-**Source** : spec `docs/superpowers/specs/2026-05-08-entrepreneur-game-pilot-design.md` §5.
+## v0.3 Digi-Hackathon (20-22 mai 2026, current)
 
-5 phases, 1 par jour de dev. Chaque phase produit un état déployable et testable.
+Mode T-1 : pas de phases formelles avant event. Travail traçable via `.planning/quick/`.
+
+| Phase | Goal | Status | Quand |
+|---|---|---|---|
+| Prep T-1 | Restructure 13 livrables + reskin Digi + smoke prod | **complete** (13 quicks 260512→260519) | jusqu'au 2026-05-19 |
+| Event live | Pilote 3 jours stable, hotfixes via /gsd-quick sur main | **planned** | 2026-05-20 → 2026-05-22 |
+| Post-mortem | Audit milestone, backfill résultats, archive v0.3 | **planned** | 2026-05-23 → 2026-05-25 |
+
+Plans détaillés : aucun pré-event. Quicks live = source de vérité.
+
+Source spec : `docs/superpowers/specs/2026-05-19-planning-reorganisation-v03-design.md`.
+
+---
+
+## ✅ v0.2 EIC Design v2 Refresh — archivé 2026-05-11
+
+Voir `milestones/v0.2-MILESTONE-AUDIT.md` + `milestones/v0.2-ROADMAP.md`. Tag `v0.2-pilot-ready` (commit `ccdc2bc`).
+
+---
+
+## ✅ v0.1 Pilot Hack-Days Fès-Meknès — archivé 2026-05-08
+
+Tag `v0.1-pilot-ready` (commit `8176419`). Phases 1-5 préservées ci-dessous pour historique.
+
+**Source spec d'origine** : `docs/superpowers/specs/2026-05-08-entrepreneur-game-pilot-design.md` §5. 5 phases, 1 par jour de dev. Chaque phase produit un état déployable et testable.
 
 ---
 

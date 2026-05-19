@@ -8,20 +8,21 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 2026) où chaque livrable produit pendant les ateliers est soumis, évalué et noté en ligne, avec un classement final calculé et publié — sans perte de données, sans honte devant les partenaires (Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace).
 
-## Current Milestone: v0.2 EIC Design v2 Refresh
+## Current Milestone: v0.3 Digi-Hackathon (20-22 mai 2026)
 
-**Goal :** Appliquer le design v2 EIC complet (bundle Claude Design `.planning/design-v2/`) sur l'app v0.1 pilot-ready — refonte visuelle qui transforme l'app de fonctionnelle-mais-fade à digne des partenaires UEMF/EIC, sans casser la fonctionnalité v0.1. Qualité avant timing, pas de deadline.
+**Goal :** Livrer le pilote Digi-Hackathon (3 jours, 20-22 mai 2026) sur la base PROD AgreenTech (v0.2-pilot-ready) restructurée 13 livrables alignés 8 PDFs Welcome Guide. Mode T-1 : stabilité + smoke prod > nouvelles features.
 
-**Target features (4 phases) :**
+**Scope cardinal** :
+- 13 livrables (5 bonus) répartis sur 7 missions M1→M7
+- Exception R3 unique : `prep-questions-v1` → `fiches-entretien-v1` hard-block pédagogique (signée Omar 19/05)
+- Reskin Digi appliqué (quick 260519-dgh)
+- One-pagers PDF cohorte imprimables (workflow `docs/templates/event-onepager/`)
 
-- **Design system EIC** — `eic-tokens.css` (palette bleu `#1B3A5C` + vert `#2E7D32` + ivoire `#F6F1E8`), polices Baskervville (titres) + Montserrat (corps), glass effect (`backdrop-filter: blur+saturate`), primitives partagées (boutons, pills, cards, level badges), refonte AppShell, login branded avec partenaires
-- **Joueur** — barre de charge verticale L0→L7 (montante mobile, descendante desktop), hero « Prochaine étape » unique + drawer livrables au hover/clic, onboarding 3 étapes éditoriales (bienvenue/équipe/règles), écran SOUMIS avec stamp éditorial, écran révision V2 avec bandeau « aucune perte d'XP »
-- **Mentor** — pas de chat live ; commentaires async tagués (`remarque` / `à corriger`) sur le lien soumis, vue lien (URL ou texte), historique des liens, action attendue avec composer
-- **GameMaster + Jury + Replay + Pixel** — mode live + radar salle (cercles XP qui pulsent par activité), focus équipe éditorial (filigrane numéroté + Baskervville), annonces live ciblées, mode pitch jury théâtre (timer 5 min + grille /5 critères), replay/podium fin de hack, mascotte Pixel floating bottom-right (4 humeurs : serein/concentré/inquiet/euphorique)
+**Approche** : mode quick par défaut ; phases formelles uniquement post-event (post-mortem).
 
-**Source de vérité design** : `.planning/design-v2/` (bundle Claude Design exporté 2026-05-08, voir `chats/chat1.md` pour l'historique d'itérations utilisateur).
+**Source PROD** : https://entrepreneur-game-six.vercel.app — 20 auth.users (11P + 2M + 3J + 4GM) inchangés depuis pilote AgreenTech 13-14 mai 2026.
 
-**Approche** : chaque phase commit atomique → fallback v0.1 garanti à tout moment via `git reset --hard v0.1-pilot-ready`. Pas de descope sous pression : on prend le temps nécessaire pour livrer chaque phase proprement.
+**Milestones précédents archivés** : v0.1 (tag `v0.1-pilot-ready`, archive `milestones/v0.1-*`) et v0.2 (tag `v0.2-pilot-ready`, archive `milestones/v0.2-*`).
 
 ## Requirements
 

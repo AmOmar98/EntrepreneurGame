@@ -4,7 +4,26 @@
 - v0.1 (Pilot) : `docs/superpowers/specs/2026-05-08-entrepreneur-game-pilot-design.md` §3
 - v0.2 (Design v2 Refresh) : `.planning/design-v2/` (bundle Claude Design 2026-05-08, voir `chats/chat1.md`)
 
-**Cadrage** : Project A v0.1 livré 2026-05-08 (pilot-ready). v0.2 EIC Design v2 Refresh en cours, mode qualité sans deadline. MUST = non-négociable, SHOULD = bonus, COULD = V2.
+**Cadrage** : v0.1 livré 2026-05-08 (pilot-ready), v0.2 livré 2026-05-11 (pilote AgreenTech 13-14/05 réussi). **v0.3 Digi-Hackathon en cours** (event 20-22 mai 2026, mode T-1). MUST = non-négociable, SHOULD = bonus, COULD = V2.
+
+---
+
+## v0.3 Requirements (Digi-Hackathon — 20-22 mai 2026)
+
+**Pré-event (T-1, complete)** :
+- [x] **DIGI-01** : 13 livrables seedés alignés 8 PDFs Welcome Guide (seed `database/seed_event_digi_hackathon.sql`) _(quick 260519-pyx)_
+- [x] **DIGI-02** : Exception R3 unique L2 hard-block `prep-questions-v1` → `fiches-entretien-v1` _(quick 260519-l1l, signée Omar 19/05)_
+- [x] **DIGI-03** : Reskin visuel Digi-Hackathon appliqué _(quick 260519-dgh)_
+- [x] **DIGI-04** : One-pagers PDF cohorte imprimables (workflow permanent `docs/templates/event-onepager/`) _(quick 260519-onepagers)_
+- [x] **DIGI-05** : Smoke prod J-1 OK (typecheck/lint/build clean, 13 livrables visibles dual-mode) _(quicks 260519-psd + 260519-smoke-prod-j1)_
+
+**Pendant event (J1-J3, planned)** :
+- [ ] **DIGI-06** : PROD stable J1-J3 (pas de crash bloquant, R1/R2/R3 préservées)
+- [ ] **DIGI-07** : Hotfix protocol respecté (commit direct main + push + smoke 30 min)
+
+**Post-event (J+1 à J+3, planned)** :
+- [ ] **DIGI-08** : Backfill pitch_scores + publish results (hybrid pitch proxy, cf. pattern quick 260515-gu4)
+- [ ] **DIGI-09** : Milestone audit v0.3 + archive (`milestones/v0.3-MILESTONE-AUDIT.md`)
 
 ---
 
