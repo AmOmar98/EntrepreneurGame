@@ -25,16 +25,17 @@ export const TEMPLATE_LINKS: Record<string, TemplateLink> = {
     label: "EIC-DigiHackathon-02-Design-Thinking",
   },
 
-  // M2 - Préparation entretiens + Fiches [quick 260519-l1l]
-  // 02a Préparation = guide questions (point sur PDF Design Thinking 02 par défaut, à
-  // remplacer par lien spécifique 02a quand il existera).
+  // M2 - Preparation entretiens + Fiches [quick 260519-l1l]
+  // 02a Preparation = Annexe Banque-Questions (PDF dedie).
   "prep-questions-v1": {
-    templateUrl: DESIGN_THINKING_URL,
-    label: "EIC-DigiHackathon-02a-Preparation-Entretiens",
+    templateUrl:
+      "https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCE6O776P8MSLeIFRNcEzVcAYIwCB9DG2mbU0A1kPr4YO0?e=Nz1CJ8",
+    label: "EIC-DigiHackathon-02-Annexe-Banque-Questions",
   },
-  // 02b Fiches entretien = template fiche d'entretien (même PDF parent).
+  // 02b Fiches entretien = template fiche d'entretien (PDF dedie).
   "fiches-entretien-v1": {
-    templateUrl: DESIGN_THINKING_URL,
+    templateUrl:
+      "https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCD7LdcvseSSJGeIC9gyEcMAc4QGSX3wyaSRG3wzp4-sks?e=eXkgYw",
     label: "EIC-DigiHackathon-02b-Fiche-Entretien",
   },
 

@@ -8,10 +8,9 @@
 - **Workaround** : `.planning/quick/260519-l1l-l1-l2-restructure-persona-fiches/seed_event_digi_hackathon.NEW2.sql` contient le diff complet appliqué via MCP `execute_sql`. À mergerver dans le canonical post-pilote.
 - **Action post-pilote** : lever deny + copier NEW2.sql → `database/seed_event_digi_hackathon.sql` + commit `chore(seed): resync canonical with PROD 7-missions structure`.
 
-### 2. Liens OneDrive dédiés 02a et 02b
-- **Statut** : `prep-questions-v1` et `fiches-entretien-v1` pointent actuellement vers le PDF parent `EIC-DigiHackathon-02-Design-Thinking` (`DESIGN_THINKING_URL`).
-- **Raison** : pas de PDF dédié 02a (Préparation) ni 02b (Fiche-Entretien) dans le source de vérité `Links Templates Livrables Digi-Hackathon.xlsx`.
-- **Action** : si Omar produit 2 PDFs séparés (02a + 02b), update `lib/template-links.ts` lignes 25-37 avec les nouveaux templateUrl + labels.
+### 2. ~~Liens OneDrive dédiés 02a et 02b~~ ✅ RÉSOLU 2026-05-19
+- **Statut** : RÉSOLU — les PDFs dédiés étaient déjà dans l'Excel source, l'agent avait fait un fallback erroné.
+- **Action effectuée** : `prep-questions-v1` → `EIC-DigiHackathon-02-Annexe-Banque-Questions.pdf` (IQCE6O77…), `fiches-entretien-v1` → `EIC-DigiHackathon-02b-Fiche-Entretien.pdf` (IQCD7Ld…). Commit follow-up post-quick.
 
 ### 3. UI mentor : surface lecture-seule des 10 fiches auto-validées
 - **Statut** : la submission auto-validée est insérée en DB avec evaluation associée. Le mentor peut ouvrir `mentor/submission/[id]` mais l'affichage actuel est pensé pour les rubrics manuels.
