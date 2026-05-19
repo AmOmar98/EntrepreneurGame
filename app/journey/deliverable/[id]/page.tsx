@@ -18,6 +18,7 @@ import {
   MentorCommentsList,
   type MentorCommentEntry,
 } from "@/components/mentor-comments-list";
+import { FichesEntretienComposer } from "@/components/fiches-entretien-composer";
 import { MoscowKanban } from "@/components/moscow-kanban";
 import { RevisionPanel } from "@/components/revision-panel";
 import { SubmissionForm } from "@/components/submission-form";
@@ -175,6 +176,37 @@ export default async function DeliverableDetailPage({
   const moscowCards = isMoscowDeliverable
     ? await getMoscowCardsForPlayerDeliverable(playerId, tpl.id)
     : null;
+
+  // quick-260519-l1l : Fiches d'entretien (02b) composer + R3 exception hard-block
+  // gate on prep-questions-v1 (02a). Signed Omar 2026-05-19. ONLY hard-block in
+  // pilot — every other deliverable transition stays amber-warn-only.
+  const isFichesEntretienDeliverable = tpl.slug === "fiches-entretien-v1";
+  let fichesGateLocked = false;
+  let fichesGateReason: string | undefined;
+  if (isFichesEntretienDeliverable) {
+    const { data: prepTpl } = await supabase
+      .from("deliverable_templates")
+      .select("id")
+      .eq("slug", "prep-questions-v1")
+      .maybeSingle();
+    if (prepTpl) {
+      const { data: prepSubs } = await supabase
+        .from("submissions")
+        .select("status")
+        .eq("player_id", playerId)
+        .eq("deliverable_template_id", (prepTpl as { id: string }).id)
+        .order("version", { ascending: false })
+        .limit(1);
+      const prepValidated =
+        prepSubs && prepSubs.length > 0 &&
+        (prepSubs[0] as { status: string }).status === "validated";
+      if (!prepValidated) {
+        fichesGateLocked = true;
+        fichesGateReason =
+          "Préparation 2A à valider par votre mentor avant de débloquer les fiches d'entretien (02b).";
+      }
+    }
+  }
 
   // Fetch latest submission for this (player, template). RLS naturally returns
   // empty rows for any foreign player_id, so any "wrong owner" scenario simply
@@ -511,6 +543,16 @@ export default async function DeliverableDetailPage({
             </h2>
             <SubmissionForm deliverableTemplateId={id} version={2} />
           </>
+        ) : isFichesEntretienDeliverable ? (
+          // quick-260519-l1l : dedicated 10-URL composer for fiches-entretien-v1
+          // with hard-block gate on prep-questions-v1 (R3 exception, signed Omar
+          // 2026-05-19). Defense-in-depth: server action ALSO rejects if gate
+          // not passed (cf app/actions.ts HARD_BLOCK_DEPENDENCIES).
+          <FichesEntretienComposer
+            deliverableTemplateId={id}
+            locked={fichesGateLocked}
+            lockedReason={fichesGateReason}
+          />
         ) : (
           <SubmissionForm deliverableTemplateId={id} />
         )}
