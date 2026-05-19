@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Download } from "lucide-react";
+import { AdminJurorsManager } from "@/components/admin-jurors-manager";
 import { AdminLiveToggle } from "@/components/admin-live-toggle";
 import { AdminLiveView } from "@/components/admin-live-view";
+import { AdminPitchModeToggle } from "@/components/admin-pitch-mode-toggle";
 import { AdminPitchOrderEditor } from "@/components/admin-pitch-order-editor";
 import { AdminStatusBanner } from "@/components/admin-status-banner";
 import { AppShell } from "@/components/app-shell";
@@ -18,10 +20,13 @@ import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { computeHackStatus } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
 import { levelOrd } from "@/lib/journey";
+import { getJurorsForEvent } from "@/lib/jurors";
 import type { PitchOrder } from "@/lib/pitch-order";
+import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { createClient } from "@/utils/supabase/server";
 import { getCohortOverview, getGlobalCounters, type CohortRow } from "@/lib/admin";
+import type { PitchModeState } from "@/lib/types";
 
 const t = dictionaries.fr;
 
@@ -69,22 +74,41 @@ export default async function AdminPage({
     return { id: r?.id ?? null, pitchOrder: r?.pitch_order_json ?? null };
   }
 
-  const [rows, counters, snapshot, eventInfo] = hasSupabaseEnv()
+  const [rows, counters, snapshot, eventInfo, pitchModeInfo] = hasSupabaseEnv()
     ? await Promise.all([
         getCohortOverview(),
         getGlobalCounters(),
         getAdminLiveSnapshot(),
         fetchCurrentEvent(),
+        getCurrentPitchModeState(),
       ])
     : [
         [] as CohortRow[],
         { totalSubmissions: 0, pendingReview: 0, validated: 0, totalDeliverableSlots: 0 },
         emptySnapshot,
         { id: null as string | null, pitchOrder: null as PitchOrder | null },
+        {
+          eventId: null as string | null,
+          state: "off" as PitchModeState,
+          closedAt: null as string | null,
+          publishedAt: null as string | null,
+        },
       ];
 
   const currentEventId = eventInfo.id;
   const pitchOrder = eventInfo.pitchOrder;
+  const pitchModeState: PitchModeState = pitchModeInfo.state;
+
+  // Fetch jurors list for current event (Wave 3 - quick-260519-jpr).
+  // Minimal shape: userId + invitedAt. Display fallback = truncated userId.
+  const jurors = currentEventId && hasSupabaseEnv()
+    ? (await getJurorsForEvent(currentEventId)).map((j) => ({
+        userId: j.userId,
+        email: null as string | null,
+        displayName: null as string | null,
+        invitedAt: j.invitedAt,
+      }))
+    : [];
 
   const hackStatus = computeHackStatus(
     snapshot.teams.map((team) => ({ state: team.state })),
@@ -164,6 +188,8 @@ export default async function AdminPage({
               leaderboard={leaderboard}
               currentEventId={currentEventId}
               pitchOrder={pitchOrder}
+              pitchModeState={pitchModeState}
+              jurors={jurors}
             />
           )}
         </div>
@@ -178,12 +204,16 @@ function StandardView({
   leaderboard,
   currentEventId,
   pitchOrder,
+  pitchModeState,
+  jurors,
 }: {
   rows: CohortRow[];
   counters: { totalSubmissions: number; pendingReview: number; validated: number; totalDeliverableSlots: number };
   leaderboard: CohortRow[];
   currentEventId: string | null;
   pitchOrder: PitchOrder | null;
+  pitchModeState: PitchModeState;
+  jurors: Array<{ userId: string; email: string | null; displayName: string | null; invitedAt: string }>;
 }) {
   return (
     <>
@@ -201,6 +231,21 @@ function StandardView({
           {t.admin_demo_disabled}
         </div>
       )}
+
+      {/* quick-260519-jpr Wave 3 — Pitch mode toggle + Jurors manager.
+          Placed between AdminStatusBanner (rendered in parent) and the
+          pitch order editor / leaderboard. GM-only surface (page-level role
+          gate enforces this upstream). */}
+      {currentEventId ? (
+        <>
+          <AdminPitchModeToggle
+            eventId={currentEventId}
+            currentState={pitchModeState}
+            jurorCount={jurors.length}
+          />
+          <AdminJurorsManager eventId={currentEventId} jurors={jurors} />
+        </>
+      ) : null}
 
       {/* KPI grid */}
       <section

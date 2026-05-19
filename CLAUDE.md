@@ -13,7 +13,7 @@ Path alias: `@/*` → repo root (see `tsconfig.json`).
 
 ## Architecture
 
-Next.js 15 App Router (React 19, TypeScript, Tailwind via `globals.css`) for the EIC Venture Journey pilot — a multi-role dashboard (founder / coach / reviewer / committee / EIC admin) gamifying startup progress through stages L0→L5 and three checkpoints (`make_it`, `sell_it`, `look_after_it`).
+Next.js 15 App Router (React 19, TypeScript, Tailwind via `globals.css`) for the EIC Venture Journey pilot — a multi-role dashboard (player / mentor / game_master) gamifying startup progress through stages L0→L5 and three checkpoints (`make_it`, `sell_it`, `look_after_it`).
 
 ### Data layer dual-mode
 
@@ -26,7 +26,7 @@ When editing data flow, keep both modes working: type/shape changes in `lib/type
 
 ### Domain types (lib/types.ts — single source of truth)
 
-Core enums — `Stage` (L0_diagnostic…L5_alumni), `Checkpoint`, `MaturityPhase`, `DeliverableStatus`, `BonusStatus`, `BonusType`, `AppRole` (`founder | mentor | reviewer | committee_member | eic_admin`), `TeamRole`. The XP model distinguishes confirmed XP, pending XP, prestige XP, validated deliverables, and capped bonus achievements; bonus rules and `calculateBonusClaim` live here too.
+Core enums — `Stage` (L0_diagnostic…L5_alumni), `Checkpoint`, `MaturityPhase`, `DeliverableStatus`, `BonusStatus`, `BonusType`, `AppRole` (`player | mentor | game_master`), `TeamRole`. The XP model distinguishes confirmed XP, pending XP, prestige XP, validated deliverables, and capped bonus achievements; bonus rules and `calculateBonusClaim` live here too.
 
 ### Server actions & validation
 
@@ -297,10 +297,10 @@ Toute session `/gsd-quick` produit un dossier `.planning/quick/YYMMDD-XXX-slug/`
 - Purpose: Render dashboards per role.
 - Location: `app/<role-area>/page.tsx`
 - Imports: domain types and helpers from `lib/types.ts` and role-specific modules (e.g., `lib/journey.ts`, `lib/mentor.ts`, `lib/admin.ts`), layout from `components/app-shell.tsx`, server actions from `app/actions.ts` (passed as `action={...}` to `<form>`).
-- Examples: `app/page.tsx` (EIC cockpit), `app/journey/page.tsx` (founder map), `app/startup/[slug]/page.tsx` (per-startup detail), `app/coach/page.tsx`, `app/review/page.tsx`, `app/committee/page.tsx`, `app/admin/game/page.tsx`, `app/admin/startups/page.tsx`, `app/ops/page.tsx`, `app/onboarding/page.tsx`, `app/login/page.tsx`, `app/mailto/page.tsx`.
+- Examples: `app/page.tsx` (EIC cockpit), `app/journey/page.tsx` (player map), `app/startup/[slug]/page.tsx` (per-startup detail), `app/mentor/page.tsx`, `app/admin/page.tsx`, `app/onboarding/page.tsx`, `app/login/page.tsx`, `app/mailto/page.tsx`.
 - Purpose: Persistent sidebar navigation, role-filtered nav items, current-phase indicator.
 - Location: `components/app-shell.tsx` (client component, `usePathname`).
-- Renders `navItems` filtered by `role` prop, plus `journeyPhases` rail. Pages opt in by wrapping content with `<AppShell role="founder|mentor|reviewer|committee_member|eic_admin">`.
+- Renders `navItems` filtered by `role` prop, plus `journeyPhases` rail. Pages opt in by wrapping content with `<AppShell role="player|mentor|game_master">`.
 - Global styling: `app/globals.css` (Tailwind + design tokens), `app/layout.tsx` (root with `<html lang="fr">`).
 - Purpose: All writes (deliverables, bonus events, KYC, startups, assignments, auth, reviews).
 - Location: `app/actions.ts` (single `"use server"` module).
@@ -340,7 +340,7 @@ Toute session `/gsd-quick` produit un dossier `.planning/quick/YYMMDD-XXX-slug/`
 - Location: `middleware.ts` → `utils/supabase/middleware.ts:updateSession`
 - Triggers: every non-static request matched by the middleware config.
 - Responsibilities: cookie refresh, redirect to `/login` when authenticated session is missing in Supabase mode.
-- Location: `app/page.tsx` (root cockpit, defaults to `eic_admin` role).
+- Location: `app/page.tsx` (root cockpit, defaults to `game_master` role).
 - Other top-level entries: `app/journey/page.tsx`, `app/login/page.tsx`, `app/onboarding/page.tsx`.
 - Location: `app/actions.ts` exports — `submitDeliverable`, `submitDeliverableFlow`, `claimBonusEvent`, `claimBonusEventFlow`, `reviewDeliverable`, `reviewBonusEvent`, `signIn`, `signOut`, `saveOnboardingKyc`, `updateBootcampQuest`, `markMailtoOpened`, `createStartup`, `assignProjectMember`, `assignCoach`, `updateStartupStatus`.
 - Location: route handlers under `app/api/export/`. CSV filenames follow the README contract (`cohort.csv`, `review-queue.csv`, `kpi-snapshot.csv`, `committee/[id].csv`, `eml/[id]`).
