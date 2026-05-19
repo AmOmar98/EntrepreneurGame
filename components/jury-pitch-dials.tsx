@@ -64,6 +64,11 @@ export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: P
 
   const total = scores.c1 + scores.c2 + scores.c3 + scores.c4;
   const weighted = total / 4;
+  // quick-260519-jpr Wave 2 — normalised /100 score (mockup 1 alignment).
+  // 4 criteria x 20 = 80 max; normalised by 5/4 to land on /100 (cf.
+  // lib/results.ts pitchAvg helper).
+  const normalised100 = Math.round((total * 5) / 4);
+  const allTouched = total > 0;
 
   return (
     <form action={formAction} className="wf-card eic-jury-dials">
@@ -149,6 +154,7 @@ export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: P
         <div className="wf-stack" style={{ gap: 2 }}>
           <div className="wf-kicker">{t.jury_total_label}</div>
           <div
+            aria-live="polite"
             style={{
               fontFamily: "var(--font-heading, Baskervville, serif)",
               fontSize: 28,
@@ -157,12 +163,17 @@ export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: P
               lineHeight: 1,
             }}
           >
-            {weighted.toFixed(1)}
+            {normalised100}
             <span
               style={{ fontSize: 14, color: "var(--wf-ink-faint)", fontWeight: 500 }}
             >
               {" "}
-              / 20
+              / 100
+            </span>
+            <span
+              style={{ fontSize: 11, color: "var(--wf-ink-faint)", marginLeft: 8 }}
+            >
+              ({weighted.toFixed(1)}/20)
             </span>
           </div>
         </div>
@@ -172,9 +183,15 @@ export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: P
         </span>
         <button
           className="wf-btn is-success"
-          disabled={pending}
+          disabled={pending || !allTouched}
           type="submit"
           style={{ padding: "10px 18px", fontSize: 13 }}
+          aria-disabled={pending || !allTouched}
+          title={
+            !allTouched
+              ? "Notez au moins un critère pour activer la sauvegarde"
+              : undefined
+          }
         >
           {pending ? t.jury_saving : t.jury_save}
         </button>

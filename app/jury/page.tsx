@@ -6,6 +6,8 @@ import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJuryOverview } from "@/lib/jury";
+import { getCurrentPitchModeState } from "@/lib/pitch-mode";
+import { isCurrentUserJuror } from "@/lib/jurors";
 import { JuryForm } from "./jury-form";
 
 const t = dictionaries.fr;
@@ -34,6 +36,47 @@ export default async function JuryPage({
     ? await getJuryOverview()
     : { eventId: null, rows: [] };
 
+  // quick-260519-jpr Wave 2 — pitch mode state + juror invitation gate.
+  // GameMaster bypasses notInvited (always sees jury surface). Mentor invited
+  // = juror = sees grid. Mentor non-invited = "not invited" full-screen.
+  const { state: pitchModeState } = hasSupabaseEnv()
+    ? await getCurrentPitchModeState()
+    : { state: "off" as const };
+  const isGameMaster = role === "game_master";
+  const isJuror = hasSupabaseEnv()
+    ? await isCurrentUserJuror(eventId)
+    : false;
+  const notInvited = hasSupabaseEnv() && !isGameMaster && !isJuror;
+
+  // -----------------------------------------------------------------------
+  // Not invited screen (quick-260519-jpr Wave 2) — mentor without juror row.
+  // -----------------------------------------------------------------------
+  if (notInvited) {
+    return (
+      <AppShell role={role ?? "mentor"} variant="staff">
+        <main
+          style={{
+            minHeight: "60vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            padding: 32,
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: 16, color: "var(--wf-ink, #2a2a2a)", maxWidth: 420 }}>
+            {t.jury_not_invited}
+          </p>
+          <Link className="eic-button eic-button--primary" href="/">
+            Retour à l&apos;accueil
+          </Link>
+        </main>
+      </AppShell>
+    );
+  }
+
   // -----------------------------------------------------------------------
   // Theater mode (GMR-04)
   // -----------------------------------------------------------------------
@@ -52,7 +95,11 @@ export default async function JuryPage({
           ) : !eventId || rows.length === 0 ? (
             <p className="eic-jury-theater-shell__empty">{t.jury_empty}</p>
           ) : (
-            <JuryPitchTheater eventId={eventId} rows={rows} />
+            <JuryPitchTheater
+              eventId={eventId}
+              rows={rows}
+              pitchModeState={pitchModeState}
+            />
           )}
         </main>
       </AppShell>

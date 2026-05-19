@@ -16,15 +16,18 @@ import { JuryPitchDials } from "@/components/jury-pitch-dials";
 import { JuryPitchTimer } from "@/components/jury-pitch-timer";
 import { dictionaries } from "@/lib/i18n";
 import type { JuryPlayerRow } from "@/lib/jury";
+import type { PitchModeState } from "@/lib/types";
 
 const t = dictionaries.fr;
 
 type Props = {
   rows: JuryPlayerRow[];
   eventId: string;
+  /** quick-260519-jpr Wave 2 — visibility banner driver (live/closed/off). */
+  pitchModeState?: PitchModeState;
 };
 
-export function JuryPitchTheater({ rows, eventId }: Props) {
+export function JuryPitchTheater({ rows, eventId, pitchModeState = "off" }: Props) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   const scoredPlayerIds = useMemo(() => {
@@ -36,6 +39,7 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
   }, [rows]);
 
   const current = rows[currentIndex];
+  const scoredCount = scoredPlayerIds.size;
 
   return (
     <div className="eic-jury-theater eic-jury-theater--v3">
@@ -46,6 +50,9 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
           gap: 14,
           background: "var(--wf-paper)",
           borderBottom: "1px solid var(--wf-line)",
+          position: "sticky",
+          top: 0,
+          zIndex: 5,
         }}
       >
         <div className="wf-brand">
@@ -53,14 +60,47 @@ export function JuryPitchTheater({ rows, eventId }: Props) {
           <div className="wf-stack" style={{ gap: 2 }}>
             <div className="wf-brand-name">{t.jury_pitch_theater_intro}</div>
             <div className="wf-brand-sub">
-              EIC · UEMF · AgreenTech · {Math.min(currentIndex + 1, rows.length)} /{" "}
-              {rows.length}
+              EIC · UEMF · {scoredCount}/{rows.length} équipes notées
             </div>
           </div>
         </div>
         <span className="wf-grow" />
         <JuryPitchTimer />
       </header>
+
+      {pitchModeState === "live" ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            padding: "10px 20px",
+            background: "var(--wf-amber-tint, #F4E6C8)",
+            color: "var(--wf-amber, #B47A14)",
+            borderBottom: "1px solid #DCC394",
+            fontSize: 13,
+            fontWeight: 500,
+            textAlign: "center",
+          }}
+        >
+          {t.jury_pitch_mode_live_banner}
+        </div>
+      ) : pitchModeState === "closed" ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            padding: "10px 20px",
+            background: "var(--wf-green-tint, #DBE7DB)",
+            color: "var(--wf-green, #2E7D32)",
+            borderBottom: "1px solid #B7D4B7",
+            fontSize: 13,
+            fontWeight: 500,
+            textAlign: "center",
+          }}
+        >
+          {t.jury_pitch_mode_closed_banner}
+        </div>
+      ) : null}
 
       <div className="eic-jury-theater__layout">
         <section className="eic-jury-theater__stage">

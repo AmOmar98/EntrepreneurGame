@@ -31,6 +31,7 @@ export function JuryPassageQueue({
               ? "done"
               : "upcoming";
           const cls = `eic-jury-queue__item eic-jury-queue__item--${status}`;
+          const statusIcon = isCurrent ? "●" : isPast ? "✓" : "○";
           return (
             <li className={cls} key={p.id}>
               <button
@@ -39,9 +40,27 @@ export function JuryPassageQueue({
                 onClick={() => onSelect(i)}
                 type="button"
               >
-                <span className="eic-jury-queue__rank">{i + 1}</span>
+                <span
+                  className="eic-jury-queue__rank"
+                  aria-hidden="true"
+                  style={
+                    isPast
+                      ? { background: "var(--wf-green, #2E7D32)", color: "#fff" }
+                      : isCurrent
+                        ? {
+                            background: "var(--wf-amber, #B47A14)",
+                            color: "#fff",
+                            animation: "pulse-amber 1.6s ease-in-out infinite",
+                          }
+                        : undefined
+                  }
+                >
+                  {statusIcon}
+                </span>
                 <span className="eic-jury-queue__name">
-                  <span className="eic-jury-queue__team">{p.name}</span>
+                  <span className="eic-jury-queue__team">
+                    {i + 1}. {p.name}
+                  </span>
                   {p.idea ? (
                     <span className="eic-jury-queue__idea">{p.idea}</span>
                   ) : null}

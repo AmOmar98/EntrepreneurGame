@@ -54,7 +54,8 @@ export function JuryPitchTimer({
   }, [running, stop]);
 
   const pct = Math.max(0, Math.min(1, remaining / durationSeconds));
-  const danger = remaining <= 30;
+  // quick-260519-jpr Wave 2 — bump danger threshold to <1min (spec mockup 1).
+  const danger = remaining <= 60;
 
   return (
     <div
