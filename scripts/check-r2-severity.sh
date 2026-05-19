@@ -56,5 +56,5 @@ echo "If these are legitimate WorkflowState markers, update the whitelist in"
 echo "  scripts/check-r2-severity.sh, scripts/check-r2-severity.ps1, and"
 echo "  docs/validator-severity-baseline.md."
 echo "If these are Player deliverable validators, flip them to severity: \"warn\""
-echo "  (cardinal R2) and spawn eic-pedagogical-advisor before committing."
+echo "  (cardinal R2) before committing."
 exit 1

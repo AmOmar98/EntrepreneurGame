@@ -70,5 +70,5 @@ Write-Host 'If these are legitimate WorkflowState markers, update the whitelist 
 Write-Host '  scripts/check-r2-severity.sh, scripts/check-r2-severity.ps1, and'
 Write-Host '  docs/validator-severity-baseline.md.'
 Write-Host 'If these are Player deliverable validators, flip them to severity: "warn"'
-Write-Host '  (cardinal R2) and spawn eic-pedagogical-advisor before committing.'
+Write-Host '  (cardinal R2) before committing.'
 exit 1

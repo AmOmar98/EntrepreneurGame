@@ -37,7 +37,7 @@
 
 **Wave C — Quick wins bugs annexes**
 
-- **13-07** : fix `components/app-shell.tsx` bouton logout `type="button"` (StaffShell + AppShell). Hors zone sensible, advisor non requis.
+- **13-07** : fix `components/app-shell.tsx` bouton logout `type="button"` (StaffShell + AppShell). Hors zone sensible.
 - **13-08** : SQL diagnostic Pouls "Diagnostic 0/1" `deliverable_templates` L0_diagnostic + correction seed si nécessaire.
 
 **Wave D — Cutoff guard**
@@ -61,7 +61,7 @@
 
 ### Cardinaux obligatoires Phase 14 (zone hyper-sensible)
 
-1. Spawn `eic-pedagogical-advisor` AVANT chaque edit dans : `lib/score.ts`, `lib/types.ts`, `database/triggers.sql`, `app/journey/`, `app/results/`, `app/admin/`, `components/journey-*`, `components/results-*`.
+1. Vérifier R1/R2/R3 manuellement AVANT chaque edit dans : `lib/score.ts`, `lib/types.ts`, `database/triggers.sql`, `app/journey/`, `app/results/`, `app/admin/`, `components/journey-*`, `components/results-*`.
 2. Audit grep R1 post-edit :
    ```
    grep -rn "score\|rank\|note\|/100\|/140\|points\|toFixed" app/journey app/results components/journey-* components/results-* --include="*.tsx"
@@ -75,11 +75,8 @@
 - **Branche unique** : tous les commits sur `ralph/pre-pilot-phases-13-14`. Vérifier avec `git branch --show-current` au début de chaque itération. Si une autre branche est checkout, FAIRE `git checkout ralph/pre-pilot-phases-13-14` immédiatement.
 - 1 sub-task = 1 commit atomique + `git push origin HEAD` immédiat (pousse sur la branche courante = `ralph/pre-pilot-phases-13-14`).
 - Préfixe commit : `(13-0X-slug)` ou `(14-discuss/plan/execute)`.
-- Avant toute édition zone sensible (Player-facing) : invoke `eic-pedagogical-advisor`.
+- Avant toute édition zone sensible (Player-facing) : revue manuelle R1/R2/R3.
 - Préserver dual-mode demo (`hasSupabaseEnv()` check) — jamais `redirect("/login")` ou `getCurrentUser()` avant le check.
-- **Politique advisor BLOCK assouplie** (branche isolée = blast radius contenu) : si `eic-pedagogical-advisor` renvoie BLOCK, Ralph fait UNE tentative de fix dirigée par les notes advisor, ré-invoque l'advisor, puis :
-  - Si re-PASS / WARN → continue, log dans SUMMARY.md.
-  - Si re-BLOCK → skip cette sub-task, log dans `BLOCKED.md` à la racine de la phase, passe à la suivante. NE PAS commiter la sub-task BLOCKED.
 - Si `npm run typecheck` ou `npm run build` fail : 1 tentative de fix, sinon revert l'edit, log dans `BLOCKED.md`, continue.
 - À la fin de chaque phase : écrire `SUMMARY.md` avec SHA des commits + lister `BLOCKED.md` éventuel.
 - **Pas de tag à poser** par Ralph. Omar tagguera après merge manuel sur main.
@@ -91,6 +88,5 @@
 - **Phase 13 + Phase 14 toutes deux closed** avec SUMMARY.md → écrire `PHASE-14-DONE` dans le rapport final pour déclencher la completion-promise.
 - **`npm run build` fail** persistant après revert — log et continue (ne pas stopper la session).
 - **Max-iterations atteint** (géré par flag CLI).
-- BLOCK advisor n'arrête PLUS la session (cf. politique assouplie ci-dessus) — log dans `BLOCKED.md` et continue.
 
 GO.
