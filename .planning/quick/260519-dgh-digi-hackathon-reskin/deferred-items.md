@@ -19,6 +19,7 @@
 
 ## Low priority
 
+- [ ] **npm audit moderate** (relevé 19/05 post-reseed) : `postcss <8.5.10` XSS via `</style>` non échappé, tiré en transitive par next 15.5.15. **Non-exploitable** côté pilote (postcss build-time, pas runtime, aucun input user via CSS). Fix npm propose `next@9.3.3` (downgrade breaking massif, à rejeter). Vraie fix : `"overrides": {"postcss": "^8.5.10"}` dans package.json + `npm install` + smoke build/lint/typecheck — à faire post-22/05 hors fenêtre pilote
 - [ ] **Migration bonus_events table** (pattern v0.3 déjà planifié pour AgreenTech). Les 5 livrables `is_bonus=true` peuvent rester dans deliverable_templates pour Digi — décision post-event
 - [ ] **Region Vercel** : `cdg1` toujours OK pour Digi (Maroc + Europe). Pas de changement requis
 - [ ] **Membres équipes secondaires** : actuellement 1 lead/team. Co-founders/contributors saisissables via `/admin/players/[id]` UI post-onboarding si Omar veut tracker tous les participants
