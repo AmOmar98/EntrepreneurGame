@@ -1,11 +1,8 @@
-// Phase 9 / GMR-05 — Results replay editorial wrapper. Composes hero +
-// podium + 5-stats strip + full ranking + timeline + exports band.
-// Server component (RevealOnView is a client wrapper around children).
-//
-// Phase 11 / B3 — wraps podium / stats / timeline with RevealOnView so the
-// three sections fade-in via IntersectionObserver. The R1 gate on
-// `combined.toFixed(1)` (results-podium.tsx:65-67) is preserved INSIDE the
-// reveal wrapper — wrapping does not change conditional rendering.
+// Phase 9 / GMR-05 — Results replay editorial wrapper.
+// Refreshed quick-260519-jpr W2 #5 : narrative sections matching mockup 2
+// (hero éditorial / podium animé / stats 4 KPIs / classement collapsible /
+// timeline zigzag / exports CTA). Now accepts isJuror + jurorIntroKey so
+// the juror-only branches (C/D) share the same shell as the GM full view.
 import { PartnerBanner } from "@/components/partner-banner";
 import { ResultsPodium, type PodiumEntry } from "@/components/results-podium";
 import {
@@ -14,8 +11,10 @@ import {
 } from "@/components/results-stats-strip";
 import { ResultsTimelineMoments } from "@/components/results-timeline-moments";
 import { RevealOnView } from "@/components/reveal-on-view";
+import { ResultsRankingCollapsible } from "@/components/results-ranking-collapsible";
 import { dictionaries } from "@/lib/i18n";
 import type { RankingRow } from "@/lib/results";
+import type { CSSProperties } from "react";
 
 const t = dictionaries.fr;
 
@@ -24,14 +23,10 @@ type Props = {
   stats: ReplayStats;
   publishedAt: string | null;
   isGameMaster: boolean;
+  isJuror?: boolean;
+  /** When set on juror-only views, drives the intro paragraph copy. */
+  jurorIntroKey?: "closed" | "published";
 };
-
-function formatNumber(value: number): string {
-  return value.toLocaleString("fr-FR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
-}
 
 function formatPublishedAt(iso: string | null): string {
   if (!iso) return "";
@@ -48,8 +43,21 @@ function formatPublishedAt(iso: string | null): string {
   }
 }
 
-export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props) {
-  const winner = rows.find((r) => r.rank === 1) ?? null;
+function formatStatsLine(stats: ReplayStats): string {
+  return t.results_replay_hero_stats_template
+    .replace("{teams}", String(stats.teams))
+    .replace("{submissions}", String(stats.submissions))
+    .replace("{jurors}", String(stats.jurors));
+}
+
+export function ResultsReplay({
+  rows,
+  stats,
+  publishedAt,
+  isGameMaster,
+  isJuror = false,
+  jurorIntroKey,
+}: Props) {
   const podium: PodiumEntry[] = rows
     .filter((r) => r.rank <= 3)
     .map((r) => ({
@@ -58,108 +66,56 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
       combined: r.combined,
     }));
 
+  const canSeeNumbers = isGameMaster || isJuror;
+  const jurorIntro =
+    jurorIntroKey === "closed"
+      ? t.results_replay_juror_closed_intro
+      : jurorIntroKey === "published"
+        ? t.results_replay_juror_published_intro
+        : null;
+
   return (
     <div className="eic-results-replay">
+      {/* Hero éditorial — Baskervville, gros titre, sub stats dynamique */}
       <header className="eic-results-replay__hero">
         <PartnerBanner />
         <p className="eic-results-replay__hero-kicker">
           {t.results_replay_hero_kicker}
         </p>
-        {winner ? (
-          <h1 className="eic-results-replay__hero-title">
-            {t.results_replay_hero_winner_prefix}{" "}
-            <em>{winner.player.name}</em>{" "}
-            {t.results_replay_hero_winner_suffix}
-          </h1>
-        ) : (
-          <h1 className="eic-results-replay__hero-title">
-            {t.results_replay_hero_no_winner}
-          </h1>
-        )}
+        <h1 className="eic-results-replay__hero-title eic-results-replay__hero-title--editorial">
+          {t.results_replay_hero_editorial_title}
+        </h1>
+        <p className="eic-results-replay__hero-dates">
+          {t.results_replay_hero_editorial_dates}
+        </p>
+        {canSeeNumbers ? (
+          <p className="eic-results-replay__hero-stats">{formatStatsLine(stats)}</p>
+        ) : null}
         {publishedAt ? (
           <p className="eic-results-replay__hero-meta">
             {t.results_published_at_label} {formatPublishedAt(publishedAt)}
           </p>
         ) : null}
+        {jurorIntro ? (
+          <p className="eic-results-replay__juror-intro">{jurorIntro}</p>
+        ) : null}
       </header>
 
-      {/* RES-06 a11y: stagger 200ms between sections via CSS var --reveal-delay.
-          prefers-reduced-motion handled in useInView hook (observer skipped, isInView=true immediately). */}
+      {/* Podium top 3 — animation staggered via CSS --reveal-delay */}
       {podium.length > 0 ? (
-        <RevealOnView style={{ "--reveal-delay": "0ms" } as React.CSSProperties}>
-          <ResultsPodium entries={podium} isGameMaster={isGameMaster} />
+        <RevealOnView style={{ "--reveal-delay": "0ms" } as CSSProperties}>
+          <ResultsPodium entries={podium} isGameMaster={canSeeNumbers} />
         </RevealOnView>
       ) : null}
 
-      <RevealOnView style={{ "--reveal-delay": "200ms" } as React.CSSProperties}>
+      {/* Stats strip — 4 KPIs horizontaux (équipes / livrables / score moyen / jurys) */}
+      <RevealOnView style={{ "--reveal-delay": "150ms" } as CSSProperties}>
         <ResultsStatsStrip stats={stats} />
       </RevealOnView>
 
-      {isGameMaster ? (
-        <section
-          aria-label={t.results_replay_ranking_title}
-          className="eic-results-replay__ranking"
-        >
-          <h2 className="eic-results-replay__ranking-title">
-            {t.results_replay_ranking_title}
-          </h2>
-          <p className="eic-results-replay__ranking-weighting">
-            {t.results_replay_weighting_caption}
-          </p>
-          {rows.length === 0 ? (
-            <p className="eic-results-replay__ranking-empty">{t.results_empty}</p>
-          ) : (
-            <table className="eic-results-replay__ranking-table">
-              <thead>
-                <tr>
-                  <th scope="col">{t.results_col_rank}</th>
-                  <th scope="col">{t.results_col_team}</th>
-                  <th scope="col">{t.results_col_pitch}</th>
-                  <th scope="col">{t.results_col_project}</th>
-                  <th scope="col">{t.results_col_combined}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const isPodium = row.rank <= 3;
-                  return (
-                    <tr
-                      className={
-                        isPodium
-                          ? "eic-results-replay__ranking-row eic-results-replay__ranking-row--podium"
-                          : "eic-results-replay__ranking-row"
-                      }
-                      key={row.player.id}
-                    >
-                      <td className="eic-results-replay__ranking-rank">{row.rank}</td>
-                      <td>
-                        <span className="eic-results-replay__ranking-team">
-                          {row.player.name}
-                        </span>
-                        {row.player.idea ? (
-                          <span className="eic-results-replay__ranking-idea">
-                            {row.player.idea}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td>
-                        {formatNumber(row.pitchAvg)}
-                        <span className="eic-results-replay__ranking-jurors">
-                          {" "}
-                          ({row.pitchJurorCount})
-                        </span>
-                      </td>
-                      <td>{formatNumber(row.scoreProject)}</td>
-                      <td className="eic-results-replay__ranking-combined">
-                        {formatNumber(row.combined)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
+      {/* Classement complet collapsible — visible GM + jurors */}
+      {canSeeNumbers ? (
+        <ResultsRankingCollapsible rows={rows} />
       ) : (
         <section
           aria-label={t.results_replay_ranking_announcement_title}
@@ -174,10 +130,12 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
         </section>
       )}
 
+      {/* Timeline moments — zigzag gauche/droite */}
       <RevealOnView>
         <ResultsTimelineMoments />
       </RevealOnView>
 
+      {/* Exports band — GM only (2 CTAs : CSV + Cérémonie) */}
       {isGameMaster ? (
         <footer className="eic-results-replay__exports">
           <h2 className="eic-results-replay__exports-title">
@@ -188,9 +146,14 @@ export function ResultsReplay({ rows, stats, publishedAt, isGameMaster }: Props)
               className="eic-button eic-button--primary"
               href="/admin/export/players.csv"
             >
-              {t.results_replay_export_players}
+              {t.results_export_csv_label}
             </a>
-            {/* TODO Agent 9B / v0.3: dedicated /api/export/ranking.csv route. */}
+            <a
+              className="eic-button eic-button--ghost"
+              href="/results/ceremony"
+            >
+              {t.results_ceremony_enter}
+            </a>
           </div>
         </footer>
       ) : null}

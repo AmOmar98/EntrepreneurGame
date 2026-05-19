@@ -5543,6 +5543,402 @@ tr:last-child td {
 }
 
 /* ==========================================================================
+   quick-260519-jpr W2 #5 — /results narrative refresh & ceremony theatre.
+   ========================================================================== */
+
+/* ---- Thank-you editorial screen (Player/Mentor non-juror) ---------------- */
+.eic-results-thanks {
+  min-height: calc(100vh - 64px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 24px;
+  background: var(--home-ivory, #f6f1e8);
+}
+.eic-results-thanks__inner {
+  max-width: 640px; text-align: center;
+}
+.eic-results-thanks__sparkle {
+  font-size: 28px; color: var(--eic-blue, #1b3a5c);
+  margin: 0 0 24px; opacity: 0.6;
+  animation: eic-sparkle 3.2s ease-in-out infinite;
+}
+@keyframes eic-sparkle {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-results-thanks__sparkle { animation: none; }
+}
+.eic-results-thanks__title {
+  font-family: var(--font-heading, Baskervville, serif);
+  font-size: clamp(34px, 5vw, 52px); font-weight: 600;
+  color: var(--home-ink, #14243d);
+  line-height: 1.15; margin: 0 0 20px; letter-spacing: -0.01em;
+}
+.eic-results-thanks__body {
+  font-size: 16px; color: var(--home-muted-strong, #44556c);
+  line-height: 1.55; margin: 0;
+}
+
+/* ---- Editorial hero refresh -------------------------------------------- */
+.eic-results-replay__hero-title--editorial {
+  font-size: clamp(40px, 6vw, 72px);
+}
+.eic-results-replay__hero-dates {
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--home-muted, #617084); margin: 4px 0 12px;
+  letter-spacing: 0.04em;
+}
+.eic-results-replay__hero-stats {
+  font-size: 14px; color: var(--home-muted-strong, #44556c);
+  margin: 6px 0 0; font-weight: 500;
+}
+.eic-results-replay__juror-intro {
+  margin: 14px auto 0; max-width: 560px;
+  background: rgba(27, 58, 92, 0.06);
+  border: 1px solid rgba(27, 58, 92, 0.14);
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 13px; color: var(--eic-blue, #1b3a5c);
+}
+
+/* ---- Podium animation staggered (motion-safe) ------------------------- */
+@keyframes eic-podium-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.eic-results-replay__podium-step--animated {
+  opacity: 0;
+  animation: eic-podium-rise 520ms ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-results-replay__podium-step--animated {
+    animation: none; opacity: 1;
+  }
+}
+
+/* ---- Ranking collapsible ---------------------------------------------- */
+.eic-results-replay__ranking-header {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.eic-results-replay__ranking-toggle {
+  align-self: flex-start;
+  background: var(--eic-blue, #1b3a5c); color: #f6f1e8;
+  border: 0; border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font-body);
+  margin-top: 6px;
+  transition: background 160ms ease;
+}
+.eic-results-replay__ranking-toggle:hover {
+  background: #2a5a8c;
+}
+.eic-results-replay__ranking-tablewrap {
+  overflow-x: auto;
+  animation: eic-collapse-open 240ms ease-out;
+}
+@keyframes eic-collapse-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-results-replay__ranking-tablewrap { animation: none; }
+}
+
+/* ---- Stats strip 4-col ------------------------------------------------ */
+.eic-results-replay__stats-row--4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 720px) {
+  .eic-results-replay__stats-row--4col { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Timeline zigzag (alternance gauche/droite) ----------------------- */
+.eic-results-replay__timeline--zigzag .eic-results-replay__timeline-list--zigzag {
+  border-left: 0; padding-left: 0; position: relative;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.eic-results-replay__timeline--zigzag .eic-results-replay__timeline-list--zigzag::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 2px; background: var(--eic-green, #2e7d32); transform: translateX(-50%);
+}
+.eic-results-replay__timeline--zigzag .eic-results-replay__timeline-item {
+  position: relative; display: flex; width: 100%;
+}
+.eic-results-replay__timeline--zigzag .eic-results-replay__timeline-item::before {
+  content: ""; position: absolute; left: 50%; top: 8px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--eic-green, #2e7d32);
+  transform: translateX(-50%);
+  border: 2px solid #fff;
+}
+.eic-results-replay__timeline-item--left {
+  justify-content: flex-start;
+}
+.eic-results-replay__timeline-item--right {
+  justify-content: flex-end;
+}
+.eic-results-replay__timeline-content {
+  width: calc(50% - 30px);
+  background: #fff;
+  border: 1px solid var(--home-border, #d8d0c2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 4px 12px rgba(17, 30, 48, 0.06);
+}
+@media (max-width: 720px) {
+  .eic-results-replay__timeline--zigzag .eic-results-replay__timeline-list--zigzag::before {
+    left: 18px;
+  }
+  .eic-results-replay__timeline--zigzag .eic-results-replay__timeline-item::before {
+    left: 18px;
+  }
+  .eic-results-replay__timeline-item--left,
+  .eic-results-replay__timeline-item--right {
+    justify-content: flex-start;
+    padding-left: 40px;
+  }
+  .eic-results-replay__timeline-content { width: 100%; }
+}
+
+/* ---- Exports band CTAs ------------------------------------------------ */
+.eic-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  font-family: var(--font-body); cursor: pointer;
+  transition: transform 120ms ease, background 160ms ease, color 160ms ease;
+  border: 1px solid transparent;
+}
+.eic-button:hover { transform: translateY(-1px); }
+.eic-button--primary {
+  background: #f6f1e8; color: var(--eic-blue, #1b3a5c);
+}
+.eic-button--primary:hover { background: #fff; }
+.eic-button--ghost {
+  background: transparent; color: #f6f1e8;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.eic-button--ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   Ceremony theatre (results-ceremony-screen.tsx — quick-260519-jpr W2 #5)
+   ========================================================================== */
+.eic-ceremony {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, #1B3A5C 0%, #0E1F33 60%, #050B14 100%);
+  color: #fff;
+  font-family: var(--font-body, Montserrat, system-ui), sans-serif;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+.eic-ceremony__aurora {
+  position: absolute; pointer-events: none;
+  filter: blur(80px);
+}
+.eic-ceremony__aurora--blue {
+  top: -20%; left: 10%; width: 60%; height: 60%;
+  background: radial-gradient(circle, rgba(78, 156, 229, 0.16) 0%, transparent 60%);
+}
+.eic-ceremony__aurora--green {
+  bottom: -10%; right: 10%; width: 50%; height: 50%;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.14) 0%, transparent 60%);
+}
+
+/* Confetti layer */
+.eic-ceremony__confetti-layer {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 3; overflow: hidden;
+}
+.eic-ceremony__confetti {
+  position: absolute; top: -20px;
+  width: 8px; height: 14px;
+  background: #FFD780;
+  opacity: 0.85;
+  animation: eic-confetti-fall 3.6s linear infinite;
+}
+.eic-ceremony__confetti:nth-child(2n)   { background: #4E9CE5; left: 8%; animation-delay: 0.1s; }
+.eic-ceremony__confetti:nth-child(3n)   { background: #C9A227; left: 18%; animation-delay: 0.45s; }
+.eic-ceremony__confetti:nth-child(4n)   { background: #4CAF50; left: 28%; animation-delay: 0.7s; }
+.eic-ceremony__confetti:nth-child(5n)   { background: #F47B5C; left: 38%; animation-delay: 1.1s; }
+.eic-ceremony__confetti:nth-child(6n)   { background: #FFD780; left: 48%; animation-delay: 0.25s; }
+.eic-ceremony__confetti:nth-child(7n)   { background: #4E9CE5; left: 58%; animation-delay: 0.9s; }
+.eic-ceremony__confetti:nth-child(8n)   { background: #C9A227; left: 68%; animation-delay: 1.5s; }
+.eic-ceremony__confetti:nth-child(9n)   { background: #4CAF50; left: 78%; animation-delay: 0.35s; }
+.eic-ceremony__confetti:nth-child(10n)  { background: #F47B5C; left: 88%; animation-delay: 1.2s; }
+.eic-ceremony__confetti:nth-child(11n)  { left: 94%; animation-delay: 1.7s; }
+.eic-ceremony__confetti:nth-child(odd)  { transform: rotate(30deg); }
+.eic-ceremony__confetti:nth-child(even) { transform: rotate(-25deg); }
+@keyframes eic-confetti-fall {
+  0% { top: -20px; opacity: 0; }
+  10% { opacity: 0.95; }
+  100% { top: 110vh; opacity: 0.2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eic-ceremony__confetti-layer { display: none; }
+}
+
+/* Topbar back link */
+.eic-ceremony__topbar {
+  padding: 20px 32px;
+  display: flex; align-items: center; justify-content: flex-end;
+  position: relative; z-index: 2;
+}
+.eic-ceremony__back {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px; text-decoration: none;
+  padding: 8px 14px; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+.eic-ceremony__back:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Hero */
+.eic-ceremony__hero {
+  flex: 0 0 auto; text-align: center;
+  padding: 24px 24px 24px;
+  position: relative; z-index: 2;
+}
+.eic-ceremony__hero-kicker {
+  font-family: var(--font-body), Montserrat, sans-serif;
+  font-size: 11px; letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 16px;
+}
+.eic-ceremony__hero-title {
+  font-family: var(--font-heading, Baskervville, serif);
+  font-size: clamp(40px, 6vw, 84px);
+  font-weight: 600; margin: 0 0 12px;
+  line-height: 1.05; letter-spacing: -0.01em;
+}
+.eic-ceremony__hero-body {
+  font-size: 16px; color: rgba(255, 255, 255, 0.7);
+  margin: 0 auto; max-width: 540px; line-height: 1.5;
+}
+
+/* Stage */
+.eic-ceremony__stage {
+  flex: 1 1 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 16px 24px;
+  position: relative; z-index: 2;
+  min-height: 380px;
+}
+.eic-ceremony__empty { color: rgba(255, 255, 255, 0.6); font-size: 14px; }
+.eic-ceremony__reveal-btn {
+  padding: 16px 36px; font-size: 18px; font-weight: 600;
+  background: linear-gradient(135deg, var(--wf-blue, #1b3a5c) 0%, #2A5A8C 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px; cursor: pointer;
+  font-family: var(--font-body), Montserrat, sans-serif;
+  box-shadow: 0 10px 32px rgba(27, 58, 92, 0.45);
+  letter-spacing: 0.01em;
+}
+.eic-ceremony__reveal-btn:hover {
+  transform: translateY(-1px);
+}
+.eic-ceremony__podium-kicker {
+  font-family: var(--font-body), Montserrat, sans-serif;
+  font-size: 11px; letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 36px;
+}
+.eic-ceremony__podium-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 280px));
+  gap: 28px; align-items: end;
+}
+@media (max-width: 720px) {
+  .eic-ceremony__podium-row {
+    grid-template-columns: 1fr; gap: 16px;
+  }
+}
+.eic-ceremony__podium-card {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 720ms ease-out, transform 720ms ease-out, box-shadow 720ms ease-out;
+  border-radius: 16px; padding: 24px 18px;
+  text-align: center; backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(14, 31, 51, 0.5) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 32px rgba(14, 31, 51, 0.45);
+}
+.eic-ceremony__podium-card.is-revealed {
+  opacity: 1; transform: translateY(0);
+}
+.eic-ceremony__podium-card--rank-1 {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(27, 58, 92, 0.55) 100%);
+  border-color: rgba(255, 215, 128, 0.55);
+}
+.eic-ceremony__podium-card--rank-1.is-revealed {
+  box-shadow: 0 0 60px rgba(255, 200, 80, 0.35), 0 18px 48px rgba(27, 58, 92, 0.55);
+}
+.eic-ceremony__podium-glyph {
+  font-size: 44px; line-height: 1;
+}
+.eic-ceremony__podium-card--rank-1 .eic-ceremony__podium-glyph { font-size: 54px; }
+.eic-ceremony__podium-label {
+  font-size: 11px; letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+.eic-ceremony__podium-team {
+  font-family: var(--font-heading, Baskervville, serif);
+  font-size: 24px; font-weight: 600; line-height: 1.15;
+  margin: 4px 0;
+}
+.eic-ceremony__podium-card--rank-1 .eic-ceremony__podium-team { font-size: 30px; }
+.eic-ceremony__podium-idea {
+  font-size: 12px; color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4; margin: 0 0 8px;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.eic-ceremony__podium-scorewrap { margin-top: auto; }
+.eic-ceremony__podium-score {
+  font-family: Montserrat, sans-serif;
+  font-size: 30px; font-weight: 800;
+  color: #BFD3E8; letter-spacing: -0.02em; line-height: 1;
+}
+.eic-ceremony__podium-card--rank-1 .eic-ceremony__podium-score {
+  font-size: 38px; color: #FFD780;
+}
+.eic-ceremony__podium-scorelabel {
+  font-size: 9px; letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase; margin-top: 4px;
+}
+
+/* Footer (partner banner) */
+.eic-ceremony__footer {
+  padding: 24px 32px 32px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  position: relative; z-index: 2;
+}
+.eic-ceremony__footer-label {
+  font-size: 10px; letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 14px;
+}
+.eic-ceremony__footer-banner {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: inline-block;
+}
+
+/* ==========================================================================
    Phase 9 — Admin live mode (GMR-01 + GMR-02 + GMR-03 + GMR-07 + GMR-08)
    ========================================================================== */
 

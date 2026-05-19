@@ -1,5 +1,9 @@
-// Phase 9 / GMR-05 — Results replay 3-step podium (or / argent / bronze).
-// Pure server component. SVG markup tokenized via EIC variables.
+// Phase 9 / GMR-05 — Results replay podium (or / argent / bronze).
+// Refreshed quick-260519-jpr W2 #5 : hauteurs 200/160/120, animation
+// staggered via CSS animation-delay (0ms / 150ms / 300ms in render order),
+// motion-safe respect via globals.css media query prefers-reduced-motion.
+// Pure server component. R1 cardinal preserved: score only visible to GM
+// + jurors (isGameMaster prop conveys "canSeeNumbers" from parent).
 import { dictionaries } from "@/lib/i18n";
 
 const t = dictionaries.fr;
@@ -12,16 +16,19 @@ export type PodiumEntry = {
 
 type Props = {
   entries: PodiumEntry[];
+  /** True for GM and jurors only — drives whether combined score is rendered. */
   isGameMaster: boolean;
 };
 
+// Render order keeps the silver/gold/bronze visual arrangement
+// (2 - 1 - 3, items aligned to baseline).
 const ORDER: (1 | 2 | 3)[] = [2, 1, 3];
 
-const HEIGHTS: Record<1 | 2 | 3, number> = { 1: 220, 2: 170, 3: 140 };
+const HEIGHTS: Record<1 | 2 | 3, number> = { 1: 200, 2: 160, 3: 120 };
 const HEIGHT_CLASS: Record<1 | 2 | 3, string> = {
-  1: "eic-podium-h-220",
-  2: "eic-podium-h-170",
-  3: "eic-podium-h-140",
+  1: "eic-podium-h-200",
+  2: "eic-podium-h-160",
+  3: "eic-podium-h-120",
 };
 
 const COLOR: Record<1 | 2 | 3, string> = {
@@ -41,7 +48,6 @@ export function ResultsPodium({ entries, isGameMaster }: Props) {
   const byRank = new Map<1 | 2 | 3, PodiumEntry>();
   for (const e of entries.slice(0, 3)) byRank.set(e.rank, e);
 
-  // Only render ranks that have a matching entry — center the row when <3.
   const filledOrder = ORDER.filter((rank) => byRank.has(rank));
 
   return (
@@ -54,10 +60,16 @@ export function ResultsPodium({ entries, isGameMaster }: Props) {
         className="eic-results-replay__podium-row"
         style={{ justifyContent: filledOrder.length < 3 ? "center" : undefined }}
       >
-        {filledOrder.map((rank) => {
-          const entry = byRank.get(rank)!
+        {filledOrder.map((rank, idx) => {
+          const entry = byRank.get(rank)!;
+          // Stagger the entrance: 0ms / 150ms / 300ms in render order.
+          const delayMs = idx * 150;
           return (
-            <div className="eic-results-replay__podium-step" key={rank}>
+            <div
+              className="eic-results-replay__podium-step eic-results-replay__podium-step--animated"
+              key={rank}
+              style={{ animationDelay: `${delayMs}ms` }}
+            >
               <p className="eic-results-replay__podium-team">{entry.teamName}</p>
               {isGameMaster ? (
                 <p className="eic-results-replay__podium-score">

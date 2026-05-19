@@ -851,6 +851,14 @@ export const dictionaries = {
     jury_not_invited: "Vous n'êtes pas invité comme juror sur cet événement.",
     results_export_csv_label: "Exporter le classement (CSV)",
     results_export_csv_gate_message: "Disponible une fois tous les pitches clos.",
+    // ---- /results narrative refresh (quick-260519-jpr W2 #5) ---------------
+    results_replay_hero_editorial_title: "Digi-Hackathon · clôture",
+    results_replay_hero_editorial_dates: "13-14 mai 2026",
+    results_replay_hero_stats_template: "{teams} équipes · {submissions} livrables · {jurors} jurés",
+    results_replay_ranking_collapsible_open: "Voir le classement complet ↓",
+    results_replay_ranking_collapsible_close: "Masquer le classement ↑",
+    results_replay_juror_closed_intro: "Pitches clos. Voici la moyenne des notes jurys par équipe.",
+    results_replay_juror_published_intro: "Les résultats sont publiés. Vous voyez l'agrégé jurys + projet.",
   },
   en: {
     brand_name: "Entrepreneur Game",

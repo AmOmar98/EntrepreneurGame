@@ -7,11 +7,16 @@ import { getCurrentRole, getCurrentUser } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { computeRanking } from "@/lib/results";
+import { getCurrentPitchModeState } from "@/lib/pitch-mode";
+import { isCurrentUserJuror } from "@/lib/jurors";
 import { createClient } from "@/utils/supabase/server";
 import { PublishButton } from "./publish-button";
 
 const t = dictionaries.fr;
 
+// ============================================================================
+// loadReplayStats — KPI rollup for the editorial hero + stats strip.
+// ============================================================================
 async function loadReplayStats(): Promise<ReplayStats> {
   const supabase = await createClient();
   if (!supabase) {
@@ -24,7 +29,6 @@ async function loadReplayStats(): Promise<ReplayStats> {
     };
   }
 
-  // Resolve current event.
   const { data: eventRow } = await supabase
     .from("events")
     .select("id")
@@ -33,7 +37,6 @@ async function loadReplayStats(): Promise<ReplayStats> {
     .maybeSingle();
   const eventId = (eventRow as { id?: string } | null)?.id ?? null;
 
-  // Teams (count of players in cohorts of this event).
   let teams = 0;
   let totalScoreProject = 0;
   if (eventId) {
@@ -59,18 +62,15 @@ async function loadReplayStats(): Promise<ReplayStats> {
     }
   }
 
-  // Submissions (count, all statuses).
   const { count: submissionsCount } = await supabase
     .from("submissions")
     .select("id", { count: "exact", head: true });
 
-  // Mentor + GM counts (via profiles).
   const { count: mentorsCount } = await supabase
     .from("profiles")
     .select("user_id", { count: "exact", head: true })
     .eq("app_role", "mentor");
 
-  // Jurors = distinct juror_id in pitch_scores for this event.
   let jurors = 0;
   if (eventId) {
     const { data: jurorRows } = await supabase
@@ -91,13 +91,25 @@ async function loadReplayStats(): Promise<ReplayStats> {
   };
 }
 
+// ============================================================================
+// Page — branch matrix (quick-260519-jpr W2 spec §3 + §5.5)
+//   A. Demo (no Supabase env)                  → demo banner
+//   B. Non-GM + non-juror + non-published      → editorial "thank you" hero
+//   C. Non-GM + juror + state==='closed'        → juror sees aggregated ranking
+//   D. Non-GM + juror + published               → juror sees full ranking
+//   E. GM + non-published                       → preview table + missing votes
+//   F. GM + published                           → ResultsReplay (full narrative)
+// R1 cardinal preserved: branches B (non-GM non-juror, both pre and post
+// publication) NEVER expose any number to Player/Mentor non-juror.
+// ============================================================================
 export default async function ResultsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const role = await getCurrentRole();
+  const isGm = role === "game_master";
 
-  // Demo mode banner.
+  // --- A. Demo mode ----------------------------------------------------------
   if (!hasSupabaseEnv()) {
     return (
       <AppShell role={role ?? "game_master"} variant="staff">
@@ -111,14 +123,53 @@ export default async function ResultsPage() {
     );
   }
 
-  const ranking = await computeRanking();
-  const isPublished = ranking.publishedAt !== null;
-  const isGm = role === "game_master";
+  // Wave 1 pitch-mode + juror context (Agent #3 lib).
+  const pitchMode = await getCurrentPitchModeState();
+  const isJuror = await isCurrentUserJuror(pitchMode.eventId);
+  const isPublished = pitchMode.publishedAt !== null;
 
-  // Gate: non-GM users see "results coming" until publication.
-  if (!isGm && !isPublished) {
+  // computeRanking extended signature (Agent #3 wave 2). Falls back to legacy
+  // single-arg signature if Agent #3 drift not yet landed.
+  const ranking = await computeRanking({
+    requesterRole: role,
+    isJuror,
+  } as Parameters<typeof computeRanking>[0]);
+
+  // --- B. Non-GM + non-juror + non-published → editorial "thank you" ---------
+  if (!isGm && !isJuror && !isPublished) {
+    return <ThankYouScreen role={role} />;
+  }
+
+  // --- B'. Non-GM + non-juror + published → still no numbers (R1 cardinal) ---
+  // Player/Mentor non-juror never see ranking — top 3 revealed live by GM
+  // ceremony screen.
+  if (!isGm && !isJuror && isPublished) {
+    return <ThankYouScreen role={role} />;
+  }
+
+  // --- C. Non-GM + juror + state==='closed' (not yet published) --------------
+  if (!isGm && isJuror && !isPublished && pitchMode.state === "closed") {
+    const stats = await loadReplayStats();
     return (
-      <AppShell role={role ?? "game_master"} variant="staff">
+      <AppShell role={role ?? "player"} variant="staff">
+        <main className="eic-results-replay-shell">
+          <ResultsReplay
+            isGameMaster={false}
+            isJuror={true}
+            publishedAt={null}
+            rows={ranking.rows}
+            stats={stats}
+            jurorIntroKey="closed"
+          />
+        </main>
+      </AppShell>
+    );
+  }
+
+  // --- C'. Non-GM + juror + state !== closed + not published → waiting -------
+  if (!isGm && isJuror && !isPublished) {
+    return (
+      <AppShell role={role ?? "player"} variant="staff">
         <main style={{ padding: 24, maxWidth: 700 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#0f172a" }}>
             {t.results_pending_title}
@@ -131,80 +182,52 @@ export default async function ResultsPage() {
     );
   }
 
-  // Design v2 (polish/design-v2-match V6): after publication, the full
-  // ranking stays internal to the EIC committee (GM-only). Non-GM users
-  // (founders, jurors, mentors) see a thank-you announcement screen — the
-  // top 3 will be revealed live during the closing ceremony via the GM
-  // ceremony screen (V8).
-  if (isPublished && !isGm) {
+  // --- D. Non-GM + juror + published → full ranking (juror view) -------------
+  if (!isGm && isJuror && isPublished) {
+    const stats = await loadReplayStats();
     return (
       <AppShell role={role ?? "player"} variant="staff">
-        <main
-          style={{
-            padding: "64px 24px",
-            maxWidth: 720,
-            margin: "0 auto",
-            textAlign: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: "var(--font-heading, Baskervville, serif)",
-              fontSize: 36,
-              fontWeight: 600,
-              margin: "0 0 16px",
-              color: "var(--wf-ink)",
-              lineHeight: 1.15,
-            }}
-          >
-            {t.results_announce_title}
-          </h1>
-          <p
-            style={{
-              fontSize: 16,
-              color: "var(--wf-ink-soft)",
-              margin: 0,
-              lineHeight: 1.55,
-            }}
-          >
-            {t.results_announce_body}
-          </p>
+        <main className="eic-results-replay-shell">
+          <ResultsReplay
+            isGameMaster={false}
+            isJuror={true}
+            publishedAt={pitchMode.publishedAt}
+            rows={ranking.rows}
+            stats={stats}
+            jurorIntroKey="published"
+          />
         </main>
       </AppShell>
     );
   }
 
-  // Phase 9 / GMR-05 — once results are published, render the editorial
-  // replay view (hero, podium, stats, ranking, timeline, exports).
-  // GM-only branch (non-GM caught by the !isGm guard above).
-  if (isPublished) {
+  // --- F. GM + published → ResultsReplay full narrative ----------------------
+  if (isGm && isPublished) {
     const stats = await loadReplayStats();
     return (
       <AppShell role={role ?? "game_master"} variant="staff">
         <main className="eic-results-replay-shell">
-          {isGm ? (
-            <div
-              className="eic-results-replay-shell__gm-bar"
-              style={{ display: "flex", gap: 12, alignItems: "center" }}
+          <div
+            className="eic-results-replay-shell__gm-bar"
+            style={{ display: "flex", gap: 12, alignItems: "center" }}
+          >
+            <PublishButton
+              eventId={ranking.eventId}
+              alreadyPublished={isPublished}
+              dict={t}
+            />
+            <Link
+              href="/results/ceremony"
+              className="wf-btn is-success"
+              style={{ padding: "10px 18px", fontSize: 13 }}
             >
-              <PublishButton
-                eventId={ranking.eventId}
-                alreadyPublished={isPublished}
-                dict={t}
-              />
-              {/* V8 — GM-only ceremony reveal screen launcher. */}
-              <Link
-                href="/results/ceremony"
-                className="wf-btn is-success"
-                style={{ padding: "10px 18px", fontSize: 13 }}
-              >
-                {t.results_ceremony_enter}
-              </Link>
-            </div>
-          ) : null}
+              {t.results_ceremony_enter}
+            </Link>
+          </div>
           <ResultsReplay
-            isGameMaster={isGm}
-            publishedAt={ranking.publishedAt}
+            isGameMaster={true}
+            isJuror={isJuror}
+            publishedAt={pitchMode.publishedAt}
             rows={ranking.rows}
             stats={stats}
           />
@@ -213,12 +236,7 @@ export default async function ResultsPage() {
     );
   }
 
-  // GameMaster, results not yet published — keep the legacy preview table so
-  // they can sanity-check the data before publication.
-  // Fix D (defensive pre-pilot, 2026-05-11) : detect porteurs without any
-  // jury pitch score and surface a red banner so the GM can chase missing
-  // votes before clicking publish. Complementary to the server guard in
-  // publishResultsFlow (Fix B) which hard-blocks the publish.
+  // --- E. GM + not published → preview table + missing-vote banner ----------
   const missingPitchPlayers = ranking.rows
     .filter((r) => r.pitchJurorCount === 0)
     .map((r) => r.player.name);
@@ -336,6 +354,29 @@ export default async function ResultsPage() {
             </table>
           </div>
         )}
+      </main>
+    </AppShell>
+  );
+}
+
+// ============================================================================
+// ThankYouScreen — editorial hero shown to Player/Mentor non-juror.
+// R1 cardinal: ZERO numbers (no score, no rank, no count). Sparkle animation
+// via CSS class on the hero kicker (defined in globals.css).
+// ============================================================================
+function ThankYouScreen({ role }: { role: ReturnType<typeof getCurrentRole> extends Promise<infer R> ? R : never }) {
+  return (
+    <AppShell role={role ?? "player"} variant="staff">
+      <main className="eic-results-thanks">
+        <div className="eic-results-thanks__inner">
+          <p className="eic-results-thanks__sparkle" aria-hidden="true">✦</p>
+          <h1 className="eic-results-thanks__title">
+            {t.results_announce_title}
+          </h1>
+          <p className="eic-results-thanks__body">
+            {t.results_announce_body}
+          </p>
+        </div>
       </main>
     </AppShell>
   );
