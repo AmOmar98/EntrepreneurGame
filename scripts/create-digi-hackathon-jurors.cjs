@@ -30,11 +30,16 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const CSV_PATH = path.join(REPO_ROOT, "cohorte-digi-hackathon-creds.csv");
 const ENV_PATH = path.join(REPO_ROOT, ".env.local");
 
+// Email format ALIGNED with existing placeholders in PROD (`jury-01@digi.uemf.ma`).
+// J01..J03 already exist as auth.users + profiles with passwords in
+// cohorte-digi-hackathon-creds.csv. The script will detect them via
+// "already registered" and only UPSERT into the new `jurors` table.
+// Only J04 will be fully created (auth.user + profile + jurors row + CSV line).
 const JURORS = [
-  { teamId: "J01", slug: "jury-tamwilcom", name: "Tamwilcom", email: "jury-j01@digi.uemf.ma" },
-  { teamId: "J02", slug: "jury-boa", name: "Bank of Africa Academy", email: "jury-j02@digi.uemf.ma" },
-  { teamId: "J03", slug: "jury-innov", name: "Innov Invest", email: "jury-j03@digi.uemf.ma" },
-  { teamId: "J04", slug: "jury-bluespace", name: "Bluespace", email: "jury-j04@digi.uemf.ma" },
+  { teamId: "J01", slug: "jury-tamwilcom", name: "Tamwilcom", email: "jury-01@digi.uemf.ma" },
+  { teamId: "J02", slug: "jury-boa", name: "Bank of Africa Academy", email: "jury-02@digi.uemf.ma" },
+  { teamId: "J03", slug: "jury-innov", name: "Innov Invest", email: "jury-03@digi.uemf.ma" },
+  { teamId: "J04", slug: "jury-bluespace", name: "Bluespace", email: "jury-04@digi.uemf.ma" },
 ];
 
 function loadEnv() {
@@ -181,13 +186,14 @@ async function provisionJuror(supabase, eventId, juror) {
 
   const existingIds = readExistingTeamIds();
   console.log(`[csv] existing juror team_ids in CSV: ${[...existingIds].join(",") || "(none)"}`);
+  // NOTE: we no longer skip jurors that already appear in the CSV — the
+  // provisionJuror() function is fully idempotent (upsert profile, upsert
+  // jurors row, append CSV only if auth.user was actually created). This
+  // ensures J01..J03 (existing auth.users absent from `jurors` table) get
+  // their `jurors` row inserted on this run.
 
   const summary = [];
   for (const juror of JURORS) {
-    if (existingIds.has(juror.teamId)) {
-      console.log(`[${juror.teamId}] skipped — already in CSV`);
-      continue;
-    }
     try {
       const out = await provisionJuror(supabase, event.id, juror);
       summary.push(out);
