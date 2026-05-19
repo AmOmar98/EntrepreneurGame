@@ -337,6 +337,9 @@ export const dictionaries = {
     evaluation_already_evaluated: "Vous avez deja evalue cette soumission.",
     evaluation_total_score: "Total",
     deliverable_score_title: "Note du mentor",
+    // quick-260519-uuy / Task 1 — mentor feedback card on detail page.
+    mentor_feedback_card_title: "Commentaire de votre mentor",
+    mentor_feedback_expected_action_label: "Action attendue",
     evaluation_demo_disabled: "Mode demo : evaluation desactivee.",
     evaluation_not_found: "Submission introuvable.",
     evaluation_existing_summary: "Votre evaluation",
@@ -1052,6 +1055,9 @@ export const dictionaries = {
     evaluation_already_evaluated: "You already evaluated this submission.",
     evaluation_total_score: "Total",
     deliverable_score_title: "Mentor score",
+    // quick-260519-uuy / Task 1 — mentor feedback card on detail page.
+    mentor_feedback_card_title: "Your mentor's comment",
+    mentor_feedback_expected_action_label: "Expected action",
     evaluation_demo_disabled: "Demo mode: evaluation disabled.",
     evaluation_not_found: "Submission not found.",
     evaluation_existing_summary: "Your evaluation",
