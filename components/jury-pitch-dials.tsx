@@ -9,6 +9,7 @@ import { useActionState, useEffect, useState } from "react";
 import { Dial } from "@/components/wf/dial";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import { dictionaries } from "@/lib/i18n";
+import type { JuryAggregate } from "@/lib/jury";
 import type { PitchScore, Player } from "@/lib/types";
 
 const t = dictionaries.fr;
@@ -22,6 +23,11 @@ type Props = {
   eventId: string;
   existing: PitchScore | null;
   jurorVotedCount: number;
+  /**
+   * Cross-juror aggregate, populated only when `pitch_mode_state = 'closed'`
+   * (cf. lib/jury.ts step 4 + RLS `pitch_scores_select_visibility`).
+   */
+  aggregate?: JuryAggregate | null;
 };
 
 type CriterionDef = { key: CriterionKey; label: string; help: string };
@@ -38,7 +44,7 @@ function clamp20(v: number | null | undefined): number {
   return Math.max(0, Math.min(20, Math.round(v)));
 }
 
-export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: Props) {
+export function JuryPitchDials({ player, eventId, existing, jurorVotedCount, aggregate }: Props) {
   const [state, formAction, pending] = useActionState(savePitchScoreFlow, initialState);
   const [scores, setScores] = useState<Record<CriterionKey, number>>({
     c1: clamp20(existing?.c1),
@@ -177,6 +183,38 @@ export function JuryPitchDials({ player, eventId, existing, jurorVotedCount }: P
             </span>
           </div>
         </div>
+        {aggregate ? (
+          <div
+            className="wf-stack"
+            style={{ gap: 2, alignItems: "flex-end" }}
+            aria-label={t.jury_pitch_aggregate_label}
+          >
+            <div className="wf-kicker">{t.jury_pitch_aggregate_label}</div>
+            <div
+              style={{
+                fontFamily: "var(--font-heading, Baskervville, serif)",
+                fontSize: 22,
+                fontWeight: 700,
+                color: "var(--wf-green, #2E7D32)",
+                lineHeight: 1,
+              }}
+            >
+              {aggregate.avg100.toFixed(1)}
+              <span
+                style={{ fontSize: 12, color: "var(--wf-ink-faint)", fontWeight: 500 }}
+              >
+                {" "}
+                / 100
+              </span>
+            </div>
+            <div className="wf-faint" style={{ fontSize: 10 }}>
+              {t.jury_pitch_aggregate_juror_count.replace(
+                "{n}",
+                String(aggregate.jurorCount),
+              )}
+            </div>
+          </div>
+        ) : null}
         <span className="wf-grow" />
         <span className="wf-faint" style={{ fontSize: 11 }}>
           {t.jury_pitch_score_anonymous}

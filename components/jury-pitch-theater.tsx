@@ -198,6 +198,7 @@ export function JuryPitchTheater({ rows, eventId, pitchModeState = "off" }: Prop
 
               <div style={{ padding: "16px 20px" }}>
                 <JuryPitchDials
+                  aggregate={current.aggregate}
                   eventId={eventId}
                   existing={current.existing}
                   jurorVotedCount={current.existing ? 1 : 0}

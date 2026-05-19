@@ -16,9 +16,26 @@ import type { PitchScore, Player, LevelId, PitchModeState } from "@/lib/types";
 // Public types
 // ============================================================================
 
+/**
+ * Aggregate of all jurors' scores for a single player, visible to jurors
+ * only when `pitch_mode_state = 'closed'` or results are published. RLS
+ * (`pitch_scores_select_visibility`) enforces this server-side.
+ */
+export type JuryAggregate = {
+  c1Avg: number;
+  c2Avg: number;
+  c3Avg: number;
+  c4Avg: number;
+  /** Weighted average on /100 (sum × 5 / 4 — mirrors lib/results.ts pitchAvg). */
+  avg100: number;
+  jurorCount: number;
+};
+
 export type JuryPlayerRow = {
   player: Player;
   existing: PitchScore | null;
+  /** Populated only when `pitchModeState === 'closed'`. */
+  aggregate: JuryAggregate | null;
 };
 
 // ============================================================================
@@ -194,9 +211,67 @@ export async function getJuryOverview(): Promise<{
     scoresByPlayer.set(r.player_id, mapPitchScore(r));
   }
 
+  // 4. Closed mode only: fetch all jurors' scores to compute per-player
+  // aggregates. RLS (`pitch_scores_select_visibility`) only authorises the
+  // wider SELECT once `events.pitch_mode_state = 'closed'` (or results are
+  // published), so this read is privacy-safe in live/off mode (returns []).
+  const aggregateByPlayer = new Map<string, JuryAggregate>();
+  if (pitchModeState === "closed") {
+    const { data: allScoreRows, error: aggErr } = await supabase
+      .from("pitch_scores")
+      .select("player_id, c1, c2, c3, c4")
+      .eq("event_id", eventId);
+    if (aggErr) {
+      console.error("[jury] pitch_scores aggregate query failed", aggErr);
+    } else {
+      const buckets = new Map<
+        string,
+        { c1Sum: number; c2Sum: number; c3Sum: number; c4Sum: number; count: number }
+      >();
+      for (const r of (allScoreRows ?? []) as Array<{
+        player_id: string;
+        c1: number;
+        c2: number;
+        c3: number;
+        c4: number;
+      }>) {
+        const b = buckets.get(r.player_id) ?? {
+          c1Sum: 0,
+          c2Sum: 0,
+          c3Sum: 0,
+          c4Sum: 0,
+          count: 0,
+        };
+        b.c1Sum += Number(r.c1) || 0;
+        b.c2Sum += Number(r.c2) || 0;
+        b.c3Sum += Number(r.c3) || 0;
+        b.c4Sum += Number(r.c4) || 0;
+        b.count += 1;
+        buckets.set(r.player_id, b);
+      }
+      for (const [playerId, b] of buckets) {
+        const c1Avg = b.c1Sum / b.count;
+        const c2Avg = b.c2Sum / b.count;
+        const c3Avg = b.c3Sum / b.count;
+        const c4Avg = b.c4Sum / b.count;
+        // 4 critères × 20 = 80 max ; normalise × 5/4 → /100 (cf. lib/results.ts).
+        const avg100 = ((c1Avg + c2Avg + c3Avg + c4Avg) * 5) / 4;
+        aggregateByPlayer.set(playerId, {
+          c1Avg,
+          c2Avg,
+          c3Avg,
+          c4Avg,
+          avg100,
+          jurorCount: b.count,
+        });
+      }
+    }
+  }
+
   const rows: JuryPlayerRow[] = players.map((player) => ({
     player,
     existing: scoresByPlayer.get(player.id) ?? null,
+    aggregate: aggregateByPlayer.get(player.id) ?? null,
   }));
   return { eventId, rows, pitchModeState, notInvited: false };
 }
