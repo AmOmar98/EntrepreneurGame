@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Guide pilote AgreenTech 2026 — GameMaster / Mentor / Jury</title>
+<style>
+  :root {
+    --brand-primary: #0B2545;
+    --brand-primary-hover: #163A6E;
+    --brand-accent: #C9A227;
+    --brand-bg: #FAFAF7;
+    --brand-surface: #FFFFFF;
+    --brand-border: #E5E7EB;
+    --brand-text: #111827;
+    --brand-text-muted: #6B7280;
+    --brand-success: #16A34A;
+    --brand-warning: #D97706;
+    --brand-danger: #DC2626;
+    --brand-radius: 8px;
+    --brand-radius-lg: 12px;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 12mm 16mm 12mm 16mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--brand-bg);
+    color: var(--brand-text);
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.42;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------- COVER PAGE ---------- */
+  .cover {
+    page-break-after: always;
+    background: var(--brand-primary);
+    color: #fff;
+    min-height: 186mm;
+    padding: 36px 48px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    margin: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 5px;
+    background: var(--brand-accent);
+  }
+  .cover .badge {
+    display: inline-block;
+    background: rgba(201, 162, 39, 0.18);
+    color: var(--brand-accent);
+    border: 1px solid rgba(201, 162, 39, 0.5);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 11pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .cover h1 {
+    font-size: 36pt;
+    line-height: 1.1;
+    margin: 0 0 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .cover h1 .accent { color: var(--brand-accent); }
+  .cover .sub {
+    font-size: 14pt;
+    color: #ecf2fa;
+    margin: 0 0 10px;
+    max-width: 580px;
+  }
+  .cover .lead {
+    font-size: 11pt;
+    color: #e2e8f3;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  .cover-logos {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 40px;
+  }
+  .cover-logo {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cover-logo .mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--brand-accent);
+    color: var(--brand-primary);
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    font-size: 13pt;
+    letter-spacing: 0.5px;
+  }
+  .cover-logo .lbl { font-size: 10pt; }
+  .cover-logo .lbl strong { display: block; font-size: 12pt; }
+  .cover-logo .lbl span { color: #ecf2fa; }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 32px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255,255,255,0.14);
+  }
+  .cover-meta .item span {
+    display: block;
+    text-transform: uppercase;
+    font-size: 8.5pt;
+    letter-spacing: 1px;
+    color: var(--brand-accent);
+    margin-bottom: 4px;
+  }
+  .cover-meta .item strong {
+    font-size: 11pt;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* ---------- CONTENT ---------- */
+  .container { max-width: 100%; }
+
+  h2 {
+    font-size: 15pt;
+    color: var(--brand-primary);
+    margin: 0 0 4px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  h2 .section-num {
+    display: inline-block;
+    background: var(--brand-primary);
+    color: #fff;
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 10pt;
+    margin-right: 6px;
+    font-weight: 700;
+    vertical-align: 2px;
+  }
+  .accent-bar {
+    display: block;
+    width: 36px;
+    height: 3px;
+    background: var(--brand-accent);
+    margin: 4px 0 10px;
+    border-radius: 2px;
+  }
+  h3 {
+    font-size: 11pt;
+    color: var(--brand-primary);
+    margin: 12px 0 4px;
+    font-weight: 700;
+  }
+  h4 {
+    font-size: 10pt;
+    margin: 10px 0 4px;
+    color: var(--brand-text);
+    font-weight: 700;
+  }
+  p { margin: 0 0 6px; }
+  ul, ol { margin: 0 0 6px 0; padding-left: 20px; }
+  li { margin-bottom: 2px; }
+  code {
+    background: #eef2f8;
+    color: var(--brand-primary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 9.5pt;
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  a { color: var(--brand-primary-hover); text-decoration: underline; }
+
+  /* Section page break */
+  section { }
+  section.role { }
+  .new-page { page-break-before: always; }
+
+  /* Cards */
+  .card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--brand-radius-lg);
+    padding: 10px 12px;
+    margin: 8px 0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .card.tinted {
+    background: #f7f5ee;
+    border-color: #e2dcc6;
+  }
+  .card.tinted-blue {
+    background: #f0f4fa;
+    border-color: #d0dbeb;
+  }
+  .card-title {
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: 6px;
+    font-size: 11pt;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: "";
+    width: 6px;
+    height: 18px;
+    background: var(--brand-accent);
+    border-radius: 2px;
+  }
+
+  /* Role banner */
+  .role-banner {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, #163A6E 100%);
+    color: #fff;
+    border-radius: var(--brand-radius-lg);
+    padding: 10px 14px;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 5px solid var(--brand-accent);
+  }
+  .role-banner .role-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--brand-accent);
+    display: grid;
+    place-items: center;
+    font-size: 15pt;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .role-banner h2 { color: #fff; margin: 0; font-size: 14pt; }
+  .role-banner p { margin: 2px 0 0; color: #c8d2e2; font-size: 9pt; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px;
+    font-size: 10pt;
+  }
+  th {
+    text-align: left;
+    background: var(--brand-primary);
+    color: #fff;
+    padding: 5px 8px;
+    font-weight: 600;
+    font-size: 8.5pt;
+    letter-spacing: 0.3px;
+  }
+  th:first-child { border-top-left-radius: 6px; }
+  th:last-child { border-top-right-radius: 6px; }
+  td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--brand-border);
+    vertical-align: top;
+    font-size: 9pt;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #fafaf5; }
+
+  /* Checklist */
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 12px;
+  }
+  .checklist li {
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 8px;
+    line-height: 1.45;
+  }
+  .checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 3px;
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  /* Step list */
+  .steps {
+    counter-reset: stepc;
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  .steps li {
+    counter-increment: stepc;
+    padding: 10px 12px 10px 44px;
+    position: relative;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid var(--brand-border);
+    border-left: 3px solid var(--brand-accent);
+    border-radius: 6px;
+  }
+  .steps li::before {
+    content: counter(stepc);
+    position: absolute;
+    left: 12px; top: 10px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 10pt;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Callouts */
+  .callout {
+    border-radius: var(--brand-radius);
+    padding: 7px 10px;
+    margin: 8px 0;
+    border-left: 3px solid;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+  .card { page-break-inside: avoid; }
+  table { page-break-inside: avoid; }
+  .callout strong { display: block; margin-bottom: 2px; font-size: 9.5pt; }
+  .callout.info { background: #eef4fc; border-color: #2b6cb0; color: #1b3a5f; }
+  .callout.warn { background: #fef5e7; border-color: var(--brand-warning); color: #7a4a08; }
+  .callout.danger { background: #fdecec; border-color: var(--brand-danger); color: #7c1d1d; }
+  .callout.success { background: #ecfdf3; border-color: var(--brand-success); color: #145c2e; }
+  .callout.gold { background: #fdf8e7; border-color: var(--brand-accent); color: #6b500e; }
+
+  /* KPI grid */
+  .kpi {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .kpi .item {
+    background: #fff;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--brand-radius);
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .kpi .item span {
+    display: block;
+    font-size: 9pt;
+    color: var(--brand-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .kpi .item strong {
+    color: var(--brand-primary);
+    font-size: 16pt;
+    font-weight: 700;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Footer note */
+  .footnote {
+    color: var(--brand-text-muted);
+    font-size: 9.5pt;
+    border-top: 1px solid var(--brand-border);
+    margin-top: 22px;
+    padding-top: 10px;
+    font-style: italic;
+  }
+
+  .tag {
+    display: inline-block;
+    background: #eef2f8;
+    color: var(--brand-primary);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .tag.gold { background: rgba(201, 162, 39, 0.18); color: #6b500e; }
+  .tag.green { background: #dcf5e6; color: #145c2e; }
+  .tag.red { background: #fde2e2; color: #7c1d1d; }
+
+  hr.sep { border: none; border-top: 1px dashed var(--brand-border); margin: 14px 0; }
+
+  /* Screenshots — compact mode */
+  figure.shot {
+    margin: 10px 0 12px;
+    page-break-inside: avoid;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--brand-radius-lg);
+    padding: 6px 8px 4px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  figure.shot img {
+    width: 100%;
+    max-height: 130px;
+    height: auto;
+    object-fit: cover;
+    object-position: top left;
+    display: block;
+    border-radius: 4px;
+    border: 1px solid var(--brand-border);
+  }
+  figure.shot.tall img { max-height: 200px; }
+  .two-col { display: flex; gap: 18px; align-items: flex-start; }
+  .two-col > * { flex: 1; min-width: 0; }
+  .two-col figure.shot { margin-top: 0; }
+  figure.shot figcaption {
+    margin-top: 8px;
+    padding: 4px 6px 6px;
+    font-size: 9.5pt;
+    color: var(--brand-text-muted);
+    line-height: 1.4;
+    border-left: 3px solid var(--brand-accent);
+    padding-left: 10px;
+  }
+  figure.shot figcaption strong {
+    display: block;
+    color: var(--brand-primary);
+    font-size: 10pt;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  figure.shot.half {
+    display: inline-block;
+    width: 49%;
+    vertical-align: top;
+    margin-right: 1.5%;
+  }
+  figure.shot.half:last-of-type { margin-right: 0; }
+</style>
+</head>
+<body>
+
+<!-- ============= COVER ============= -->
+<div class="cover">
+  <div>
+    <span class="badge">Hack-Days · 13-14 mai 2026</span>
+    <h1>Guide pilote<br/><span class="accent">AgreenTech 2026</span></h1>
+    <p class="sub">Plateforme <strong style="color:#fff">Entrepreneur Game</strong> · GameMaster · Mentor · Jury</p>
+    <p class="lead">Manuel d'animation et fiches de poste pour les Hack-Days <strong style="color:#fff">AgreenTech</strong> organisés par l'<strong style="color:#fff">Euromed Innovation Center (EIC)</strong>, Université Euro-Méditerranéenne de Fès (UEMF). Tout ce qu'il vous faut pour onboarder, animer, évaluer et nous remonter ce qui doit être amélioré.</p>
+
+    <div class="cover-logos">
+      <div class="cover-logo">
+        <div class="mark">E</div>
+        <div class="lbl"><strong>EIC</strong><span>UEMF</span></div>
+      </div>
+      <div class="cover-logo">
+        <div class="mark" style="background:#fff;color:var(--brand-primary)">EG</div>
+        <div class="lbl"><strong>Entrepreneur Game</strong><span>Plateforme pilote</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="cover-meta">
+      <div class="item"><span>Cohorte</span><strong>11 porteurs AgreenTech</strong></div>
+      <div class="item"><span>Plateforme</span><strong>entrepreneur-game-six.vercel.app</strong></div>
+      <div class="item"><span>Version</span><strong>pilote · 1ère édition</strong></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============= 1. AVANT J1 ============= -->
+<section>
+<h2><span class="section-num">1</span>Avant J1 — Préparation & Onboarding</h2>
+<span class="accent-bar"></span>
+
+<p>Bienvenue dans le pilote AgreenTech 2026. Ce guide vous accompagne pas à pas pendant les deux jours du Hack-Days. Vos identifiants vous arrivent par email avant le 12 mai 23h.</p>
+
+<div class="two-col">
+  <div>
+    <div class="card tinted">
+      <div class="card-title">Vos accès</div>
+      <ul>
+        <li><strong>Adresse du site :</strong> <code>entrepreneur-game-six.vercel.app</code></li>
+        <li><strong>Identifiant :</strong> votre email professionnel UEMF/EIC.</li>
+        <li><strong>Mot de passe initial :</strong> Omar vous le transmet par email. Vous pouvez le conserver tel quel pour la durée du pilote.</li>
+        <li><strong>Navigateur recommandé :</strong> Chrome ou Edge à jour. Firefox/Safari fonctionnent aussi.</li>
+        <li><strong>Connexion réseau :</strong> wifi UEMF prioritaire ; partage 4G en backup.</li>
+      </ul>
+    </div>
+
+    <h3>Checklist d'onboarding (à faire avant le 12 mai 23h)</h3>
+    <ul class="checklist">
+      <li>Recevoir et tester ses identifiants sur la page de login.</li>
+      <li>Confirmer son rôle attendu (GameMaster, Mentor, ou Jury).</li>
+      <li>Parcourir ce guide en entier, en particulier la section dédiée à son rôle.</li>
+      <li>Lire la section « Beta · Remonter une gêne » pour savoir comment signaler tout problème.</li>
+      <li>Confirmer à Omar (par email ou WhatsApp) que tout est en ordre.</li>
+    </ul>
+  </div>
+  <figure class="shot tall">
+    <img src="img/login.png" alt="Page de connexion Entrepreneur Game" />
+    <figcaption><strong>Votre page d'accueil</strong>L'écran d'entrée, le même pour les trois rôles. Saisissez votre email et le mot de passe transmis par Omar.</figcaption>
+  </figure>
+</div>
+
+<h3>Les 3 règles cardinales du pilote</h3>
+<p>Quel que soit votre rôle, ces trois principes encadrent l'expérience porteur :</p>
+
+<div class="card tinted-blue">
+  <div class="card-title">R1 — Le score est invisible côté porteur</div>
+  <p>Les porteurs ne voient ni leur note, ni leur rang, ni les scores des autres équipes. Ils reçoivent une <em>annonce qualitative</em> (« validé », « à retravailler ») et un retour rédigé. Le ranking complet reste GameMaster / jury uniquement. <strong>Ne communiquez pas un score chiffré à un porteur.</strong></p>
+</div>
+<div class="card tinted-blue">
+  <div class="card-title">R2 — Les validateurs sont en avertissement, jamais bloquants</div>
+  <p>Si l'app affiche un avertissement sur un livrable (champ trop court, lien manquant), c'est un signal pour le mentor — pas un blocage pour le porteur. Le porteur peut toujours soumettre. Vous, mentor / GameMaster, décidez ensuite si le livrable passe ou retourne en review.</p>
+</div>
+<div class="card tinted-blue">
+  <div class="card-title">R3 — Aucune mission ne bloque les suivantes</div>
+  <p>Un porteur peut travailler sur le modèle économique même si la mission Solution n'est pas encore validée. La progression idéale reste séquentielle, mais la plateforme ne l'impose pas. Si un message conseille « à débloquer après la mission précédente », c'est une suggestion — pas une barrière.</p>
+</div>
+
+</section>
+
+
+<!-- ============= 2. GAMEMASTER ============= -->
+<section class="role new-page">
+<div class="role-banner">
+  <div class="role-icon">GM</div>
+  <div>
+    <h2>Rôle GameMaster</h2>
+    <p>Pilotage cohorte, configuration des missions, suivi temps réel, publication des résultats.</p>
+  </div>
+</div>
+
+<p>Vous êtes le chef d'orchestre du Hack-Days. Vous voyez tout : l'avancement des 11 équipes, les soumissions, les évaluations mentors, le classement final. Vous êtes le seul rôle autorisé à voir les scores chiffrés.</p>
+
+<div class="two-col">
+  <div>
+    <h3>À quoi ressemble votre tableau de bord</h3>
+    <p>En vous connectant, vous arrivez sur le <strong>cockpit cohorte</strong>. En haut : compteurs globaux (soumissions, en review, validées). Au centre : la liste des 11 porteurs avec leur statut. Sur le côté : boutons pour importer, exporter et diffuser des annonces.</p>
+    <p>Cliquez sur un porteur pour ouvrir sa fiche détaillée (missions soumises, statuts, notes mentors).</p>
+    <h3>Le mode live, votre outil de vigilance</h3>
+    <p>Un interrupteur en haut de la page bascule la vue en <strong>radar temps réel</strong> : chaque équipe devient un point (taille = score projet, vibration = activité récente, gris = silence depuis plus de 15 min). À garder ouvert pendant les ateliers pour repérer les équipes décrochées.</p>
+  </div>
+  <figure class="shot tall">
+    <img src="img/admin-cockpit.png" alt="Tableau de bord GameMaster" />
+    <figcaption><strong>Le cockpit GameMaster</strong>Vue d'ensemble cohorte : KPI globaux, liste des porteurs, accès rapide aux outils.</figcaption>
+  </figure>
+</div>
+
+<h3>Ce que vous pouvez faire depuis votre cockpit</h3>
+<ul>
+  <li><strong>Suivre l'avancement</strong> de chaque équipe et ouvrir sa fiche détaillée.</li>
+  <li><strong>Parcourir la queue de tous les livrables</strong> soumis (tri, recherche, accès au détail).</li>
+  <li><strong>Composer une annonce qualitative</strong> diffusée à toute la cohorte — sans score chiffré.</li>
+  <li><strong>Consulter le classement final</strong> (20 % livrables mentors + 80 % pitch jury) avec podium et scores — visible uniquement par vous.</li>
+  <li><strong>Exporter un CSV</strong> de la cohorte pour archivage.</li>
+</ul>
+
+<div class="callout danger">
+  <strong>À ne jamais faire</strong>
+  Soumettre manuellement à la place d'un porteur (ça casse la traçabilité) · Modifier un livrable déjà validé · Laisser une équipe en gris depuis plus de 15 min sans aller voir physiquement.
+</div>
+
+</section>
+
+
+<!-- ============= 3. MENTOR ============= -->
+<section class="role new-page">
+<div class="role-banner">
+  <div class="role-icon">M</div>
+  <div>
+    <h2>Rôle Mentor</h2>
+    <p>Vous accompagnez des porteurs sur table, vous évaluez leurs livrables, vous décidez : validé ou à retravailler.</p>
+  </div>
+</div>
+
+<p>Vous suivez 4 à 6 porteurs assignés. Chaque fois qu'un de vos porteurs soumet un livrable, il atterrit dans votre file d'attente. Vous l'évaluez avec une grille de 5 critères notés sur 5 (soit 25 points au total), puis vous décidez : <strong>validé</strong> ou <strong>à retravailler</strong>.</p>
+
+<div class="two-col">
+  <div>
+    <h3>Comment ça se passe concrètement</h3>
+    <p>En vous connectant, vous arrivez sur votre <strong>espace mentor</strong>. Vous y voyez la liste des soumissions de vos porteurs, triées par ancienneté. Le badge à gauche indique le statut (en attente, en cours, validée).</p>
+    <p>Cliquez sur une ligne pour ouvrir la fiche : vous voyez le livrable, vous avez accès au lien soumis (Google Doc, Figma, Notion…), et le formulaire de notation s'affiche sur le côté.</p>
+    <p>Il existe aussi une mission <em>bonus</em> optionnelle (typiquement un entretien terrain) que vous validez à part.</p>
+  </div>
+  <figure class="shot tall">
+    <img src="img/mentor-dashboard.png" alt="Espace mentor" />
+    <figcaption><strong>Votre espace mentor</strong>La file des soumissions de vos porteurs, triée par ancienneté.</figcaption>
+  </figure>
+</div>
+
+<h3>La rubric d'évaluation 5×5 (25 points)</h3>
+<table>
+  <thead>
+    <tr><th style="width:38%">Critère</th><th style="width:36%">Ce qu'on évalue</th><th>Barème</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Clarté / argumentation</strong></td><td>Le livrable est-il compréhensible sans contexte additionnel ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Pertinence AgreenTech</strong></td><td>L'idée est-elle cohérente avec le défi AgriTech proposé ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Profondeur / preuves</strong></td><td>Données, sources, terrain, entretiens — y a-t-il du concret ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Faisabilité</strong></td><td>Réaliste sur 12 mois compte tenu de l'équipe et des ressources ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Originalité / valeur</strong></td><td>Distinctif vs solutions existantes ? Apport pour la chaîne agro ?</td><td>0 à 5</td></tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <strong>Comment commenter</strong>
+  Pour chaque critère, laissez un court commentaire (1-2 phrases). C'est cette parole qui revient au porteur — pas le score chiffré. Soyez direct, bienveillant, et toujours actionnable (« ajoute une donnée chiffrée sur la consommation d'eau »).
+</div>
+
+<h3>Deux verdicts possibles</h3>
+<p><span class="tag green">Validé</span> — le livrable est accepté en l'état, le porteur passe à la mission suivante. &nbsp;·&nbsp; <span class="tag gold">À retravailler</span> — vos commentaires guideront le porteur. Pas de pénalité : seule la dernière version validée compte.</p>
+
+<div class="callout warn">
+  <strong>Si vous voyez un avertissement sur un livrable :</strong> c'est R2 — l'application a détecté un détail (champ court, lien suspect). Ce n'est pas un blocage. À vous de juger : validez quand même, demandez une itération, ou consultez le GameMaster.
+</div>
+
+</section>
+
+
+<!-- ============= 4. JURY ============= -->
+<section class="role new-page">
+<div class="role-banner">
+  <div class="role-icon">J</div>
+  <div>
+    <h2>Rôle Jury</h2>
+    <p>Évaluation des pitchs J2 après-midi. 80 % du score final pondéré.</p>
+  </div>
+</div>
+
+<p>Vous intervenez le 14 mai après-midi pour assister aux pitchs : 4 minutes de présentation + 3 minutes de questions/réponses par équipe. Vous notez chaque équipe sur la même grille de 5 critères × 5 points (25 max) que les mentors, transposée au format pitch. Votre note pèse <strong>80 %</strong> du classement final — c'est la décision la plus structurante.</p>
+
+<div class="two-col">
+  <div>
+    <h3>Comment ça se passe concrètement</h3>
+    <p>Vous vous connectez avec les mêmes identifiants que les mentors. En arrivant sur votre espace, vous voyez la <strong>liste des équipes dans l'ordre des pitchs</strong> (annoncé en plénière J2). Cliquez sur une équipe pour ouvrir sa fiche de notation.</p>
+    <p>La grille apparaît : 5 critères, vous mettez chaque note, vous ajoutez un court commentaire libre. Validez et passez à la suivante.</p>
+    <p>Un <strong>mode plein écran</strong> existe pour la projection pendant l'animation — l'équipe à l'écran, focus visuel. Utilisez l'écran normal pour saisir vos notes.</p>
+  </div>
+  <figure class="shot tall">
+    <img src="img/jury.png" alt="Espace jury" />
+    <figcaption><strong>Votre espace jury</strong>Une fiche de notation par équipe : 5 critères × 5 points + commentaire libre.</figcaption>
+  </figure>
+</div>
+
+<h3>La rubric pitch (25 points)</h3>
+<table>
+  <thead><tr><th style="width:38%">Critère</th><th>Ce qu'on évalue lors du pitch</th><th>Barème</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Clarté du problème</strong></td><td>Le problème agricole est-il bien posé, avec un client cible identifiable ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Solution &amp; différenciation</strong></td><td>L'offre est-elle claire, et différenciée de l'existant ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Marché &amp; modèle</strong></td><td>Taille de marché crédible, modèle économique cohérent ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Équipe &amp; exécution</strong></td><td>L'équipe a-t-elle ce qu'il faut, le plan 12 mois tient-il debout ?</td><td>0 à 5</td></tr>
+    <tr><td><strong>Pitch &amp; impact</strong></td><td>Qualité de la présentation orale, énergie, capacité à embarquer.</td><td>0 à 5</td></tr>
+  </tbody>
+</table>
+
+<div class="callout danger">
+  <strong>Ne communiquez jamais une note à un porteur</strong>
+  Même en off, même en débrief informel. Le porteur reçoit une annonce qualitative gérée par le GameMaster. Votre rôle s'arrête à la saisie de vos scores et commentaires dans la plateforme.
+</div>
+
+</section>
+
+
+<!-- ============= 5. BETA · FEEDBACK ============= -->
+<section class="role new-page">
+<div class="role-banner">
+  <div class="role-icon">β</div>
+  <div>
+    <h2>Beta · Remonter une gêne, un bug, une suggestion</h2>
+    <p>Vous êtes les premiers à utiliser Entrepreneur Game en conditions réelles. Vos retours valent de l'or.</p>
+  </div>
+</div>
+
+<div class="card tinted">
+  <p style="margin:0">Entrepreneur Game est une plateforme toute neuve, en <strong>version pilote</strong>. Tout fonctionne pour vous accompagner pendant ces deux jours, mais certains détails peuvent vous gêner, vous surprendre, ou même se casser. <strong>C'est attendu</strong>, et nous voulons tout savoir.</p>
+</div>
+
+<h3>Comment nous remonter quelque chose</h3>
+
+<ol class="steps">
+  <li><strong>Faites une capture d'écran si possible.</strong> Une image vaut mille mots, surtout pour un bug visuel ou un message d'erreur. Sur Windows : touche <code>Impr.écran</code> ou <code>Win + Shift + S</code>. Sur Mac : <code>Cmd + Shift + 4</code>. Sur mobile : combinaison habituelle de votre téléphone.</li>
+  <li><strong>Dites à Omar.</strong> Par WhatsApp pour les urgences pendant les Hack-Days, par email pour le reste : <code>omar.ameur98@gmail.com</code>. Mentionnez votre rôle (GameMaster / Mentor / Jury), l'écran concerné, et ce que vous tentiez de faire.</li>
+  <li><strong>Continuez votre travail.</strong> Sauf blocage total, ne vous arrêtez pas pour remonter. Le pilote prime, le bug peut être fixé après ou contourné.</li>
+</ol>
+
+<h3>Ce qui nous intéresse particulièrement</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Type</th><th>Exemples concrets</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Bugs</strong></td><td>Écran blanc, message d'erreur rouge, soumission qui ne part pas, bouton qui ne fait rien, score mal calculé.</td></tr>
+    <tr><td><strong>Gênes UX</strong></td><td>« Je ne trouve pas où cliquer pour X », « le texte est trop petit », « je m'attendais à voir Y ici », « le wording est ambigu ».</td></tr>
+    <tr><td><strong>Suggestions</strong></td><td>Idées d'écrans manquants, raccourcis utiles, ce qui ferait gagner du temps, ce qui rendrait l'animation plus agréable côté partenaire / porteur.</td></tr>
+    <tr><td><strong>Doutes pédagogiques</strong></td><td>« Cette mission est-elle bien calibrée ? », « le wording du livrable est-il compréhensible pour un porteur ? », « la rubric est-elle juste ? ».</td></tr>
+    <tr><td><strong>Cardinal cassé</strong></td><td>Très important : si vous voyez un score visible côté porteur (R1), un validateur qui bloque (R2), ou un blocage inter-mission codé en dur (R3), <strong>signalez tout de suite</strong>.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout success">
+  <strong>Pas de honte, pas de filtre — sauf urgence physique</strong>
+  Si ça vous paraît « petit » ou « bête », remontez quand même : c'est exactement ce dont la beta a besoin. <strong>Exception :</strong> un blocage total qui empêche un porteur de soumettre pendant un atelier → foncez voir le GameMaster en physique, pas le temps d'écrire.
+</div>
+
+</section>
+
+
+<!-- ============= 6. ANNEXES / FOOTER ============= -->
+<section class="role new-page">
+<h2><span class="section-num">6</span>Annexes utiles</h2>
+<span class="accent-bar"></span>
+
+<h3>Petit lexique pour s'y retrouver</h3>
+<table>
+  <thead><tr><th style="width:24%">Terme</th><th>Ce que ça veut dire</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Le parcours porteur</strong></td><td>6 missions à traverser dans l'ordre idéal : Problème → Personae → Solution → Marché → Modèle économique → Pitch final.</td></tr>
+    <tr><td><strong>Mission bonus</strong></td><td>Une mission optionnelle (typiquement un entretien terrain) que le mentor peut valider en plus.</td></tr>
+    <tr><td><strong>Livrable</strong></td><td>Le rendu concret d'une mission. Un lien partagé vers un Google Doc, une page Figma ou Notion.</td></tr>
+    <tr><td><strong>Soumission</strong></td><td>Quand un porteur envoie son livrable au mentor pour évaluation.</td></tr>
+    <tr><td><strong>Grille 5×5</strong></td><td>5 critères notés sur 5 points chacun, soit 25 points max par évaluation.</td></tr>
+    <tr><td><strong>Classement pondéré</strong></td><td>20 % moyenne des notes mentors (livrables) + 80 % moyenne des notes jury (pitch).</td></tr>
+    <tr><td><strong>Mode live</strong></td><td>La vue radar du GameMaster, en temps réel : taille du point = score, gris = équipe silencieuse.</td></tr>
+    <tr><td><strong>Annonce qualitative</strong></td><td>Un message envoyé aux porteurs sans aucun score chiffré (rappel : règle R1).</td></tr>
+  </tbody>
+</table>
+
+<h3>Contact pilote</h3>
+<div class="card">
+  <p style="margin:0"><strong>Omar Ameur</strong> — owner plateforme &amp; animation Hack-Days<br/>
+  <code>omar.ameur98@gmail.com</code><br/>
+  WhatsApp : à demander lors de l'onboarding.<br/>
+  <em>Toute remontée beta passe par ce contact.</em></p>
+</div>
+
+<p class="footnote">Guide rédigé pour le pilote AgreenTech 2026 (Hack-Days 13-14 mai) par l'Euromed Innovation Center (EIC), Université Euro-Méditerranéenne de Fès (UEMF).<br/>
+Plateforme Entrepreneur Game · version pilote · classement 20/80 · 6 missions + bonus optionnel · grille 5×5 = 25 points.<br/>
+Ce document évolue avec la plateforme. Version PDF générée le 11 mai 2026.</p>
+
+</section>
+
+</body>
+</html>

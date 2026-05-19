@@ -1,0 +1,11 @@
+level_id,slug,title,template_id
+L1_problem,personae-v1,Persona AgriTech (fiche tableau sourcee),93a41fa0-7a10-49a3-b4a2-b70701c4e5c3
+L1_problem,probleme-v1,Hypothese VP cible (formulation Lean + pitch 1min),00521778-c653-4ba9-ae62-7e1b09582299
+L2_solution,esquisse-solution-v1,Business Model Canvas (9 blocs),8bcd5217-3234-4c0d-8781-44a3e788e13f
+L2_solution,fiche-produit-plan-dev-v1,MoSCoW prototype (format Kanban link),f17b2fa8-86b2-4af5-8368-b431fcd52c5d
+L3_market,etude-marche-v1,Analyse concurrentielle + carte de positionnement,f83c203c-ae5d-4a8d-979b-f2a952e17d5d
+L3_market,tam-sam-som-v1,TAM / SAM / SOM (avec hypotheses de calcul),daf7a471-a2ec-41c4-925e-3d59a1ff708f
+L4_business_model,bmc-v1,ROI / ha + modele de portage,79bcde1b-f5cb-40e4-a428-3e266a9b7879
+L4_business_model,couts-previsions-v1,Couts agronomiques detail (CAPEX/OPEX/ha),d93b25c9-19ab-407c-a078-b22ca4b71ef5
+L4_business_model,strategie-commerciale-v1,Plan acquisition AgriTech (3-5 relais),7548a92b-6e2b-4867-a1f9-c3fdd70c7923
+L5_pitch,pitch-deck-v1,Pitch deck final AgriTech (10-12 slides),cb6cb0f2-97a8-400b-8881-5b17e34aaabc

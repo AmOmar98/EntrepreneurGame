@@ -31,3 +31,10 @@ playwright/.cache/
 # Archive locale exports PROD (data porteurs, RGPD)
 .planning/exports/
 
+# Runtime lock (scheduled tasks)
+.claude/scheduled_tasks.lock
+
+# Données porteurs réelles (RGPD — ne jamais commit)
+porteurs-agreentech-*.xlsx
+porteurs-agreentech-*.extracted.md
+livrables-post-bootcamp/
