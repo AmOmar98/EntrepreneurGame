@@ -284,3 +284,17 @@ export type HelpRequest = {
   resolvedBy: string | null;
   updatedAt: string;
 };
+
+// ============================================================================
+// Pitch mode + Jurors (quick-260519-jpr — jury pitch replay)
+// Mirror events.pitch_mode column + event_jurors table.
+// ============================================================================
+
+export type PitchModeState = "off" | "live" | "closed";
+
+export type Juror = {
+  eventId: string;
+  userId: string;
+  invitedAt: string;
+  invitedBy: string | null;
+};
