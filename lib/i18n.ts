@@ -266,6 +266,10 @@ export const dictionaries = {
     submission_submit: "Soumettre V1",
     submission_submitting: "Soumission en cours...",
     submission_locked_banner: "Livrable verrouille - en attente du feedback Mentor.",
+    // quick-260519-uuy / Task 2 — WCAG 1.4.1 : textual prefix so success/error
+    // is not conveyed by color alone. Unicode (U+2713 / U+26A0), not ASCII.
+    submission_form_success_prefix: "✓ ",
+    submission_form_error_prefix: "⚠ ",
     submission_readonly_title: "Soumission",
     submission_readonly_kind: "Type",
     submission_readonly_proof_url: "Lien soumis",
@@ -1012,6 +1016,10 @@ export const dictionaries = {
     submission_submit: "Submit V1",
     submission_submitting: "Submitting...",
     submission_locked_banner: "Deliverable locked - awaiting Mentor feedback.",
+    // quick-260519-uuy / Task 2 — WCAG 1.4.1 : textual prefix so success/error
+    // is not conveyed by color alone. Unicode (U+2713 / U+26A0), not ASCII.
+    submission_form_success_prefix: "✓ ",
+    submission_form_error_prefix: "⚠ ",
     submission_readonly_title: "Submission",
     submission_readonly_kind: "Type",
     submission_readonly_proof_url: "Submitted link",

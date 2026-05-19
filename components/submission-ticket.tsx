@@ -55,10 +55,15 @@ export function SubmissionTicket({
 }: SubmissionTicketProps) {
   const proof = getProofPreview(submission);
   const isUrl = submission.kind === "proof_url";
+  // quick-260519-uuy / Task 2 — descriptive aria-label for screen readers
+  // (NVDA / VoiceOver). The base label stays in i18n; we append title,
+  // version, and submission date for context. Decorative stamp + rays
+  // remain aria-hidden.
+  const ariaLabel = `${t.submission_ticket_aria} : ${deliverableTitle} - V${submission.version} - ${formatDateFr(submission.submittedAt)}`;
 
   return (
     <section
-      aria-label={t.submission_ticket_aria}
+      aria-label={ariaLabel}
       className="eic-submission-ticket"
     >
       <div aria-hidden="true" className="eic-submission-ticket__rays" />

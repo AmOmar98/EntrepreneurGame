@@ -131,6 +131,12 @@ export function SubmissionForm({
             color: state.ok ? "#15803d" : "#b91c1c",
           }}
         >
+          {/* quick-260519-uuy / Task 2 — WCAG 1.4.1 defense in depth:
+              prefix message with a textual marker (check / warn) so the
+              status is not conveyed by color alone. */}
+          {state.ok
+            ? t.submission_form_success_prefix
+            : t.submission_form_error_prefix}
           {state.message}
         </p>
       ) : null}
