@@ -71,7 +71,7 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 ### Constraints
 
-- **Timeline** : 13 mai 2026 8h30 → premier Player se logue. Toute fonction MUST doit marcher à cette date. **Deadline freeze interne : mardi 13 mai 2026 04h00** (T-1, dernier moment pour merger un fix B1-B5 + redéployer Vercel + smoke validation). 
+- **Timeline** : pilote AgreenTech 13-14 mai 2026 **livré** (cf. section archive ci-dessous). Événement courant : **Digi-Hackathon** — PROD restructuré 12→13 livrables alignés 8 PDFs Welcome Guide, seed `database/seed_event_digi_hackathon.sql` (cf. memory `project_digi_hackathon_13_deliverables.md`).
 - **Tech stack** : Next.js 15 + React 19 + TypeScript + Supabase + Vercel (figés, héritage codebase).
 - **Équipe** : solo dev (Omar) avec Claude Code en pair. Triple casquette : code + setup pilote + animation workshop le 13. Pas de débogage en live possible.
 - **Volume pilote** : 6-15 Players, 2-4 Mentors, 1 GameMaster — concurrence max ~30 sessions.
@@ -81,34 +81,24 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 - **Crédibilité partenaires** : aucune mention « démo » apparente, aucun seed (`atlas-soil` etc.) ne doit fuiter en prod. Branding EIC professionnel attendu.
 <!-- GSD:project-end -->
 
-## Pilote AgreenTech — READY AND OPERATIONAL (2026-05-11)
+## Archive — Pilote AgreenTech (13-14 mai 2026, livré)
 
-> **Milestone v0.2 archivé**, tag `v0.2-pilot-ready` (commit `ccdc2bc`) poussé sur `origin/main`. Voir `.planning/milestones/v0.2-MILESTONE-AUDIT.md` pour le rapport complet.
+> Milestone **v0.2 archivé**, tag `v0.2-pilot-ready` (commit `ccdc2bc`) sur `origin/main`. Rapport complet : `.planning/milestones/v0.2-MILESTONE-AUDIT.md`. Rétro T-3 : `RETROSPECTIVE-T3-2026-05-10.md`. Memory : `project_agreentech_pilot.md`, `project_pilot_status.md`, `project_v02_status.md`.
 
-- **PROD vérifiée** : https://entrepreneur-game-six.vercel.app (région cdg1) — 20 auth.users provisionnés (11P + 2M + 3J + 4GM)
-- **Bloquants T-3 B1-B5** : **tous fermés** (voir rétro `RETROSPECTIVE-T3-2026-05-10.md` + memory `project_agreentech_pilot.md`)
-- **6 gates humains** : **tous validés** (visual review v0.2 phases 7/8/9 → frontmatter `status: verified` 2026-05-11)
-- **Smoke E2E PROD** : swarm 2026-05-10 — 27 livrables P01/P02/P04 + M01 mentor parcours validés
-- **Bug RLS evaluation_comments F-16-01** : fixé via quick `260511-sbt` (commit `2b78801`)
+- **PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — 20 auth.users (11P + 2M + 3J + 4GM)
+- **B1-B5 + 6 gates humains** : tous fermés/validés avant pilote ; **ne pas re-fixer sans vérifier le SHA cité d'abord**
+- **Post-pilote** : événement courant = Digi-Hackathon (cf. Constraints) ; MSU RLS fix `f9939b4` propagation verdict→submissions livré 2026-05-12 (cf. memory `project_msu_rls_status_propagation_fix.md`)
 
-**Ne pas re-fixer B1-B5 sans vérifier le SHA cité d'abord** — risque de double-fix / régression.
+**Rollback distant disponible** : tag `v0.2-pilot-ready` (`git push origin --force HEAD:main` après reset — uniquement avec accord explicite Omar).
 
-**Hotfix protocol J1/J2 (13-14/05)** : commit hotfix + push + smoke prod Vercel + monitoring 30 min. Tag rollback disponible : `v0.2-pilot-ready` (rollback distant `git push origin --force HEAD:main` après reset, à utiliser uniquement avec accord explicite Omar).
+## Merge policy courante
 
-## Polish post-pilot-ready — merge autorisé (2026-05-12)
+1. **Smoke régression obligatoire** avant tout merge : `npm run typecheck && npm run lint && npm run build` + revue visuelle Player/Mentor/GM si surface UI touchée.
+2. **Tag avant merge risqué** : `v0.X.Y-pre-<merge>` local + push avant merge d'une branche volumineuse (>20 commits ou zones sensibles R1/R2/R3).
+3. **Commits atomiques** : merge sans squash, rollback `git revert <sha>` chirurgical.
+4. **Pre-edit guards** (section suivante) toujours actifs sur zones sensibles.
 
-> **Mise à jour 2026-05-12** : la policy "NO MERGE jusqu'au 14/05 soir" est **levée**. Les branches `polish/*` peuvent être merge sur `main` + push origin dès que le smoke régression passe. Tag `v0.2-pilot-ready` (commit `ccdc2bc`) reste disponible pour rollback distant en cas de besoin.
-
-**Règles courantes (post-levée) :**
-1. **Smoke régression obligatoire** avant tout merge : `npm run typecheck && npm run lint && npm run build` minimum + revue visuelle Player/Mentor/GM si surface UI touchée.
-2. **Tag avant merge risqué** : créer `v0.2.X-pre-<merge>` local + push avant de merger une branche polish volumineuse (>20 commits ou touchant zones sensibles R1/R2/R3).
-3. **Commits atomiques** : préférer merge sans squash pour conserver l'historique granulaire (rollback `git revert <sha>` chirurgical).
-4. **Hotfix pilote J1/J2 (13-14/05)** : commit hotfix direct sur `main` + push + smoke prod Vercel + monitoring 30 min reste prioritaire si bug bloquant R1/R2/R3 détecté en live.
-5. **Pre-edit guards** (cf. section suivante) toujours actifs sur zones sensibles, indépendamment du merge.
-
-**Why:** À T-1 du pilote (13/05), bloquer le merge des refinements design + fixes accumulés sur `polish/*` est plus coûteux que de les livrer — meilleure crédibilité partenaires avec polish appliqué. Tag `v0.2-pilot-ready` garantit le rollback gratuit si régression détectée.
-
-**How to apply:** Avant merge, `git checkout main && git pull && npm run typecheck && npm run lint && npm run build`. Si OK, `git merge polish/<topic>` puis `git push origin main`. Si zone sensible touchée, créer tag pré-merge d'abord.
+**How to apply** : `git checkout main && git pull && npm run typecheck && npm run lint && npm run build`. Si OK, `git merge <branch>` puis `git push origin main`.
 
 ## Pre-edit guards (zones sensibles)
 
@@ -127,18 +117,16 @@ Toute session `/gsd-quick` produit un dossier `.planning/quick/YYMMDD-XXX-slug/`
 
 ## Default = ship + push (no defer, no anxiety)
 
-**Policy 2026-05-10** : avant le pilote AgreenTech (13-14 mai), **default = exécuter, commit, push origin** dès qu'un plan est approuvé. Pas de "freeze", pas de "deferring v0.3", pas de "cutoff anxiety". Si du temps reste, on l'utilise pour livrer — c'est le contrat.
+**Default = exécuter, commit, push origin** dès qu'un plan est approuvé. Pas de defer "par précaution", pas de batching local.
 
 **Règles** :
-1. **Pas de defer "par précaution"** — si une review revient `OK` ou `WARN with notes`, on incorpore les notes et on exécute. `BLOCK` = on adresse le block, pas on reporte.
-2. **Push remote systématique** — chaque commit atomique push immédiat sur `origin main` après vérif `typecheck/lint/build`. Pas de batching local "au cas où".
-3. **Tag avant phase risquée** — créer `v0.X.Y-pre-<phase>` localement + push tag avant la première édition, pour rollback distant.
-4. **Rollback granulaire** — commits atomiques (1 sub-task = 1 commit). `git revert <sha>` chirurgical possible.
-5. **Smoke après chaque wave** — `npm run typecheck && npm run lint && npm run build` minimum. Smoke E2E swarm-harness sur surfaces critiques.
+1. **Pas de defer "par précaution"** — review `OK` ou `WARN with notes` → incorporer + exécuter. `BLOCK` = adresser, pas reporter.
+2. **Push remote systématique** — chaque commit atomique push immédiat sur `origin main` après `typecheck/lint/build` OK.
+3. **Tag avant phase risquée** — `v0.X.Y-pre-<phase>` local + push tag avant première édition.
+4. **Rollback granulaire** — commits atomiques (1 sub-task = 1 commit), `git revert <sha>` chirurgical.
+5. **Smoke après chaque wave** — `npm run typecheck && npm run lint && npm run build` minimum ; swarm-harness sur surfaces critiques.
 
-**Hotfix protocol** (post-pilote 14/05 soir) reste : commit hotfix + push + smoke prod Vercel + monitoring 30min.
-
-**Décision EIC manager** : la fenêtre 10/05 → 12/05 23h00 doit être maximisée pour livrer la qualité visuelle + cardinaux (R1/R2/R3) — pas pour conserver. Le pilote sera meilleur avec 13 refinements design appliqués qu'avec un repo "stable mais incomplet".
+**Hotfix protocol événement live** : commit hotfix direct sur `main` + push + smoke prod Vercel + monitoring 30 min si bug bloquant R1/R2/R3 détecté.
 
 <!-- GSD:stack-start source:codebase/STACK.md -->
 ## Technology Stack

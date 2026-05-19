@@ -53,7 +53,6 @@
       "Edit(database/**)",
       "Edit(.env*)",
       "Edit(vercel.json)",
-      "Edit(CLAUDE.md)",
       "Edit(lib/types.ts)",
       "Write(database/**)",
       "Write(.env*)"
