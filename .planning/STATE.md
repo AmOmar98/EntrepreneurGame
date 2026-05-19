@@ -20,7 +20,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 
 **Milestone** : v0.3 Digi-Hackathon
 **Phase courante** : Prep T-1 (complete) → bascule "Event live" 2026-05-20 00h00
-**PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — 20 auth.users inchangés depuis pilote AgreenTech 13-14/05
+**PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — **22 auth.users Digi-Hackathon en place** (10P + 5M + 3J + 4GM, creds `cohorte-digi-hackathon-creds.csv` gitignored, GM inchangés depuis AgreenTech)
 
 **Dernière activité** : 2026-05-19 — quick 260519-uuy completed (UI/UX detail livrable, 3 commits atomiques 4a2a0ff/282b9ec/7338ae4)
 

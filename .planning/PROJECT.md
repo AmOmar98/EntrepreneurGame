@@ -20,7 +20,7 @@ Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 202
 
 **Approche** : mode quick par défaut ; phases formelles uniquement post-event (post-mortem).
 
-**Source PROD** : https://entrepreneur-game-six.vercel.app — 20 auth.users (11P + 2M + 3J + 4GM) inchangés depuis pilote AgreenTech 13-14 mai 2026.
+**Source PROD** : https://entrepreneur-game-six.vercel.app — **22 auth.users Digi-Hackathon** (10P + 5M + 3J + 4GM). Cohorte refresh post-AgreenTech : 10 nouvelles équipes (Simock/Graph-Anomal/Shihty+/AddictLess/NAFAS/MedNova/HASSANA/MindBot/FokusMind/Bla Dwa), 5 mentors (M01..M05), 3 jurys placeholder, GM inchangés. Creds : `cohorte-digi-hackathon-creds.csv` (gitignored).
 
 **Milestones précédents archivés** : v0.1 (tag `v0.1-pilot-ready`, archive `milestones/v0.1-*`) et v0.2 (tag `v0.2-pilot-ready`, archive `milestones/v0.2-*`).
 
