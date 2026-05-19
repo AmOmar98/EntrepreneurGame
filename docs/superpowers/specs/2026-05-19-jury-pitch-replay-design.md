@@ -84,6 +84,9 @@ Un **juror** = un user présent dans `public.jurors` pour l'event courant. Peut 
 Wave 1 (parallel, 2 agents) — DB + types
 ├─ Agent #1 (DB)    : migration table jurors + helper is_juror + pitch_mode_state
 │                     + refonte 3 policies pitch_scores (corrige faille)
+│                     → APPLIQUÉE AUTOMATIQUEMENT via MCP `mcp__plugin_supabase_supabase__apply_migration`
+│                     (pas d'intervention Omar, MCP a sa propre config Claude Code)
+│                     Snapshot SQL écrit en parallèle dans .planning/quick/.../migrations/01-*.sql
 └─ Agent #2 (types) : types TS Juror + PitchModeState dans lib/types.ts
                        + i18n keys dans lib/i18n.ts
 
@@ -94,18 +97,55 @@ Wave 2 (parallel, 3 agents) — Backend + UI
 ├─ Agent #4 (UI jury) : refresh JuryPitchTheater + sous-composants (mockup 1)
 └─ Agent #5 (UI results) : refresh ResultsReplay + ResultsCeremonyScreen (mockup 2)
 
-Wave 3 (sequential) — GM toggles + CSV + audit
+Wave 3 (sequential) — GM toggles + CSV + provisioning + audit
 ├─ Agent #6 (GM admin) : AdminPitchModeToggle + AdminJurorsManager (mini UI)
 │                        + integration /admin + /admin/export/results.csv
+│                        + script scripts/create-digi-hackathon-jurors.ts (Lot 5.7)
+├─ Provisioning auto    : Claude lance `npx tsx scripts/create-digi-hackathon-jurors.ts`
+│                        via Bash UNIQUEMENT si SUPABASE_SERVICE_ROLE_KEY présent
+│                        dans .env.local (vérif `grep -c` en pré-check). Sinon →
+│                        skip avec message « ajoute SUPABASE_SERVICE_ROLE_KEY dans
+│                        .env.local et relance `npx tsx ...` ». Le fichier
+│                        jurors-digi-hackathon-creds.csv est généré localement par
+│                        le script lui-même (gitignored).
 ├─ Advisor eic-pedagogical-advisor : audit R1/R2/R3 — VERDICT obligatoire
 └─ Smoke local + commits atomiques + push origin main
 ```
 
 ## 5. Détail des lots
 
-### Lot 5.1 — DB migration (Agent #1)
+### Lot 5.1 — DB migration (Agent #1, AUTOMATIQUE via MCP)
 
-**Application** : via `mcp__plugin_supabase_supabase__apply_migration` (cf. `feedback_database_deny_workaround` — edits `database/**` deny). Snapshot SQL pour traçabilité dans `.planning/quick/260519-XXX-pitch-mode/migrations/01-jurors-and-pitch-mode.sql`.
+**Application** : Agent #1 (subagent `gsd-executor`) appelle directement le tool
+`mcp__plugin_supabase_supabase__apply_migration` avec le SQL ci-dessous comme
+payload. Aucune intervention Omar requise — le MCP Supabase est déjà configuré
+au niveau Claude Code et pointe sur le projet PROD Digi-Hackathon (preuve
+d'usage récent : memory `project_msu_rls_status_propagation_fix` 2026-05-12).
+
+Pattern d'appel attendu (séquentiel pour ordre strict des parts) :
+```
+1. mcp__plugin_supabase_supabase__apply_migration({
+     name: 'jurors_table_and_helper',
+     query: '<Part A SQL>'
+   })
+2. mcp__plugin_supabase_supabase__apply_migration({
+     name: 'pitch_mode_state_column_and_trigger',
+     query: '<Part B SQL>'
+   })
+3. mcp__plugin_supabase_supabase__apply_migration({
+     name: 'pitch_scores_rls_refonte',
+     query: '<Part C SQL>'
+   })
+4. mcp__plugin_supabase_supabase__execute_sql({
+     query: 'SELECT policyname, cmd FROM pg_policies WHERE tablename IN ...'
+   })  -- validation post-apply
+```
+
+Snapshot SQL en parallèle dans
+`.planning/quick/260519-XXX-pitch-mode/migrations/01-jurors-and-pitch-mode.sql`
+pour traçabilité (text-only, jamais appliqué depuis le filesystem — cf.
+`feedback_database_deny_workaround` : edits `database/**` deny, donc fichier
+posté ailleurs).
 
 ```sql
 -- ============================================================================
@@ -441,10 +481,19 @@ export async function removeJuror(eventId: string, userId: string): Promise<{ ok
 
 **Décision Omar** : pour Digi-Hackathon, on créé 4 comptes juror dédiés (J01..J04) avec creds aléatoires, distribués physiquement aux jurys partenaires en début d'événement. Pas de backfill auto depuis les mentors AgreenTech.
 
-**Script** : `scripts/create-digi-hackathon-jurors.ts` (Node script Supabase admin, type `tsx scripts/...`). À exécuter une fois en amont via :
+**Script** : `scripts/create-digi-hackathon-jurors.ts` (Node script Supabase admin, type `tsx scripts/...`).
+
+**Pré-check Claude** (Wave 3, avant lancement) :
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-digi-hackathon-jurors.ts
+grep -c "^SUPABASE_SERVICE_ROLE_KEY=" .env.local
 ```
+- Si retourne `1` → Claude exécute directement :
+  ```bash
+  npx tsx scripts/create-digi-hackathon-jurors.ts
+  ```
+- Si retourne `0` → Claude skip et affiche : « Ajoute `SUPABASE_SERVICE_ROLE_KEY=...` dans `.env.local` (récupère la valeur depuis Supabase dashboard > Settings > API > service_role secret), puis relance `npx tsx scripts/create-digi-hackathon-jurors.ts`. »
+
+**Pourquoi pas via MCP** : le MCP Supabase n'expose pas `auth.admin.createUser` (uniquement SQL DML/DDL + advisors + logs). Alternative SQL pure (INSERT direct dans `auth.users` + `auth.identities` avec password hashé via `crypt()`) techniquement faisable mais hacky et risque de corrompre les sessions. Le script Node via API admin est le pattern Supabase officiel.
 
 **Logique** :
 ```ts
@@ -519,7 +568,8 @@ console.log('✓ 4 jurys created, creds → jurors-digi-hackathon-creds.csv (git
 |---|---|---|---|
 | RLS policy mal écrite → fuite cross-juror | Moyenne | **Critique** | Test SQL explicite avant push ; fail-closed par défaut |
 | Migration faille RLS casse smoke prod existant | Moyenne | Élevé | Tag `v0.X.Y-pre-pitch-mode` avant edits ; backfill jurors immédiat pour préserver flux mentor jury |
-| Script provisioning oublié → 0 juror → `live` impossible | Élevée | Critique | Garde `setPitchModeStateFlow(live)` rejette si 0 juror + checklist runbook avant event |
+| Script provisioning oublié → 0 juror → `live` impossible | Élevée | Critique | Garde `setPitchModeStateFlow(live)` rejette si 0 juror + checklist runbook avant event + pré-check Claude en Wave 3 |
+| SUPABASE_SERVICE_ROLE_KEY absent de .env.local → script provisioning skip | Élevée (état actuel) | Élevé | Pré-check Claude avec `grep -c` + message explicite pour Omar ; mise à jour `.env.example` si besoin |
 | GM ferme `closed` par erreur | Moyenne | Moyen | `confirm()` JS + rollback `closed→live` autorisé |
 | CSV creds leakés sur git | Moyenne | **Critique** | Ajout pattern `jurors-*-creds.csv` dans `.gitignore` avant exécution du script ; vérif `git status` ne mentionne pas le fichier |
 | Mentor AgreenTech historique tente de noter Digi-Hackathon | Faible | Faible | Garde `jury_not_invited` UI + RLS DB-enforced (pas de fuite) |
