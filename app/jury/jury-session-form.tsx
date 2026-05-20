@@ -574,7 +574,7 @@ export function JurySessionForm({
               </p>
               <p className="eic-jury-session__aggregate-count">
                 {dict.jury_pitch_aggregate_juror_count.replace(
-                  "{count}",
+                  "{n}",
                   String(aggregate.jurorCount),
                 )}
               </p>
