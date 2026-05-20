@@ -10,7 +10,7 @@ import { useActionState, useState } from "react";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import type { dictionaries } from "@/lib/i18n";
 import type { JuryAggregate } from "@/lib/jury";
-import type { PitchScore, Player } from "@/lib/types";
+import type { PitchScore, Player, PitchModeState } from "@/lib/types";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -23,6 +23,8 @@ type Props = {
   dict: Dict;
   /** Cross-juror aggregate, populated only when pitch_mode_state === 'closed'. */
   aggregate?: JuryAggregate | null;
+  /** quick-260520-124 F3 — banner state mapping (live vs closed). */
+  pitchModeState?: PitchModeState;
 };
 
 function clamp(v: number): number {
@@ -281,12 +283,24 @@ function Dial({ id, name, label, help, value, onChange }: DialProps) {
 // JuryDialForm — top recap + 4 dials grid + submit.
 // ---------------------------------------------------------------------------
 
-export function JuryDialForm({ player, existing, eventId, dict, aggregate }: Props) {
+export function JuryDialForm({
+  player,
+  existing,
+  eventId,
+  dict,
+  aggregate,
+  pitchModeState,
+}: Props) {
   const [state, formAction, pending] = useActionState(savePitchScoreFlow, initialState);
   const [c1, setC1] = useState<number>(existing?.c1 ?? 0);
   const [c2, setC2] = useState<number>(existing?.c2 ?? 0);
   const [c3, setC3] = useState<number>(existing?.c3 ?? 0);
   const [c4, setC4] = useState<number>(existing?.c4 ?? 0);
+  // quick-260520-124 F3 — pick the banner string based on pitch mode state.
+  const bannerLabel =
+    pitchModeState === "closed"
+      ? dict.jury_pitch_mode_closed_banner
+      : dict.jury_pitch_mode_live_banner;
 
   const total = clamp(c1) + clamp(c2) + clamp(c3) + clamp(c4);
   const score100 = Math.round(total * 1.25);
@@ -353,11 +367,22 @@ export function JuryDialForm({ player, existing, eventId, dict, aggregate }: Pro
             <span style={{ fontSize: 14, color: "var(--wf-ink-faint, #94a3b8)" }}>
               /100
             </span>
+            {/* quick-260520-124 F4 — visible separator + bullet to break the
+                cramped "0/1000.0 /20" rendering seen during smoke. */}
+            <span
+              aria-hidden="true"
+              style={{
+                color: "var(--wf-ink-faint, #cbd5e1)",
+                margin: "0 8px",
+                fontFamily: "inherit",
+              }}
+            >
+              ·
+            </span>
             <span
               style={{
                 fontSize: 13,
                 color: "var(--wf-ink-soft, #475569)",
-                marginLeft: 12,
                 fontFamily: "inherit",
               }}
             >
@@ -463,7 +488,7 @@ export function JuryDialForm({ player, existing, eventId, dict, aggregate }: Pro
             textAlign: "center",
           }}
         >
-          {dict.jury_pitch_mode_live_banner}
+          {bannerLabel}
         </p>
       </div>
 

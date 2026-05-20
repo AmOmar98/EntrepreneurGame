@@ -10,7 +10,7 @@ import { useActionState, useState } from "react";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import type { dictionaries } from "@/lib/i18n";
 import type { JuryAggregate } from "@/lib/jury";
-import type { PitchScore, Player } from "@/lib/types";
+import type { PitchScore, Player, PitchModeState } from "@/lib/types";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -23,6 +23,8 @@ type Props = {
   dict: Dict;
   /** Cross-juror aggregate, populated only when pitch_mode_state === 'closed'. */
   aggregate?: JuryAggregate | null;
+  /** quick-260520-124 F3 — banner state mapping (live vs closed). */
+  pitchModeState?: PitchModeState;
 };
 
 function clamp(v: number): number {
@@ -41,7 +43,19 @@ function activePillIndex(value: number): number {
   return Math.min(3, Math.floor(value / 5.5));
 }
 
-export function JuryForm({ player, existing, eventId, dict, aggregate }: Props) {
+export function JuryForm({
+  player,
+  existing,
+  eventId,
+  dict,
+  aggregate,
+  pitchModeState,
+}: Props) {
+  // quick-260520-124 F3 — pick the banner string based on pitch mode state.
+  const bannerLabel =
+    pitchModeState === "closed"
+      ? dict.jury_pitch_mode_closed_banner
+      : dict.jury_pitch_mode_live_banner;
   const [state, formAction, pending] = useActionState(savePitchScoreFlow, initialState);
   const [c1, setC1] = useState<number>(existing?.c1 ?? 0);
   const [c2, setC2] = useState<number>(existing?.c2 ?? 0);
@@ -362,7 +376,7 @@ export function JuryForm({ player, existing, eventId, dict, aggregate }: Props) 
               lineHeight: 1.4,
             }}
           >
-            {dict.jury_pitch_mode_live_banner}
+            {bannerLabel}
           </p>
         </aside>
       </div>
