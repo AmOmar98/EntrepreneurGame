@@ -1159,6 +1159,13 @@ const pitchScoreSchema = z.object({
   c3: z.coerce.number().int().min(0).max(20),
   c4: z.coerce.number().int().min(0).max(20),
   c5: z.coerce.number().int().min(0).max(20).optional().default(0),
+  // quick-260520-124 V4 — optional per-criterion + global comments (session mode).
+  commentC1: z.string().max(500).optional().nullable(),
+  commentC2: z.string().max(500).optional().nullable(),
+  commentC3: z.string().max(500).optional().nullable(),
+  commentC4: z.string().max(500).optional().nullable(),
+  commentC5: z.string().max(500).optional().nullable(),
+  commentGlobal: z.string().max(2000).optional().nullable(),
 });
 
 export async function savePitchScoreFlow(
@@ -1176,6 +1183,13 @@ export async function savePitchScoreFlow(
     c3: formData.get("c3"),
     c4: formData.get("c4"),
     c5: formData.get("c5"),
+    // quick-260520-124 V4 — optional comments. Empty strings normalised to null.
+    commentC1: formData.get("commentC1") || null,
+    commentC2: formData.get("commentC2") || null,
+    commentC3: formData.get("commentC3") || null,
+    commentC4: formData.get("commentC4") || null,
+    commentC5: formData.get("commentC5") || null,
+    commentGlobal: formData.get("commentGlobal") || null,
   });
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
@@ -1208,19 +1222,38 @@ export async function savePitchScoreFlow(
 
   // Upsert with onConflict on the triple key (event_id, player_id, juror_id).
   // juror_id is set from auth.uid() server-side, never read from FormData.
-  const { error: upsertErr } = await supabase.from("pitch_scores").upsert(
-    {
-      event_id: parsed.data.eventId,
-      player_id: parsed.data.playerId,
-      juror_id: user.id,
-      c1: parsed.data.c1,
-      c2: parsed.data.c2,
-      c3: parsed.data.c3,
-      c4: parsed.data.c4,
-      c5: parsed.data.c5,
-    },
-    { onConflict: "event_id,player_id,juror_id" },
-  );
+  // quick-260520-124 V4 — include optional comment fields. Upsert payload only
+  // contains comment keys if NOT undefined, so the JSON serialisation skips
+  // them when V1/V3 (no comments) submits, keeping the legacy path
+  // schema-tolerant if the migration is not yet applied.
+  const hasComments =
+    parsed.data.commentC1 !== undefined ||
+    parsed.data.commentC2 !== undefined ||
+    parsed.data.commentC3 !== undefined ||
+    parsed.data.commentC4 !== undefined ||
+    parsed.data.commentC5 !== undefined ||
+    parsed.data.commentGlobal !== undefined;
+  const payload: Record<string, unknown> = {
+    event_id: parsed.data.eventId,
+    player_id: parsed.data.playerId,
+    juror_id: user.id,
+    c1: parsed.data.c1,
+    c2: parsed.data.c2,
+    c3: parsed.data.c3,
+    c4: parsed.data.c4,
+    c5: parsed.data.c5,
+  };
+  if (hasComments) {
+    payload.comment_c1 = parsed.data.commentC1 ?? null;
+    payload.comment_c2 = parsed.data.commentC2 ?? null;
+    payload.comment_c3 = parsed.data.commentC3 ?? null;
+    payload.comment_c4 = parsed.data.commentC4 ?? null;
+    payload.comment_c5 = parsed.data.commentC5 ?? null;
+    payload.comment_global = parsed.data.commentGlobal ?? null;
+  }
+  const { error: upsertErr } = await supabase
+    .from("pitch_scores")
+    .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
   if (upsertErr) {
     return { ok: false, message: upsertErr.message };
   }

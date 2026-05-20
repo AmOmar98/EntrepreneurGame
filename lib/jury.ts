@@ -10,7 +10,38 @@ import { createClient } from "@/utils/supabase/server";
 import { getPlayerSlot, type PitchOrder } from "@/lib/pitch-order";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { isCurrentUserJuror } from "@/lib/jurors";
-import type { PitchScore, Player, LevelId, PitchModeState } from "@/lib/types";
+import type {
+  PitchScore,
+  Player,
+  LevelId,
+  PitchModeState,
+  SubmissionStatus,
+} from "@/lib/types";
+
+// ============================================================================
+// quick-260520-124 V4 — PitchScore extension with optional comments.
+// lib/types.ts is deny-protected ; we extend at consumer level instead.
+// ============================================================================
+
+export type PitchScoreWithComments = PitchScore & {
+  commentC1?: string | null;
+  commentC2?: string | null;
+  commentC3?: string | null;
+  commentC4?: string | null;
+  commentC5?: string | null;
+  commentGlobal?: string | null;
+};
+
+// SubmissionRef — slim shape passed to V4 jury session for deliverable links.
+export type SubmissionRef = {
+  id: string;
+  levelId: LevelId;
+  templateSlug: string;
+  templateTitle: string;
+  status: SubmissionStatus;
+  proofUrl: string | null;
+  submittedAt: string;
+};
 
 // ============================================================================
 // Public types
@@ -33,9 +64,11 @@ export type JuryAggregate = {
 
 export type JuryPlayerRow = {
   player: Player;
-  existing: PitchScore | null;
+  existing: PitchScoreWithComments | null;
   /** Populated only when `pitchModeState === 'closed'`. */
   aggregate: JuryAggregate | null;
+  /** quick-260520-124 V4 — list of submissions for this player (links opened by jury during pitch). */
+  submissions: SubmissionRef[];
 };
 
 // ============================================================================
@@ -85,9 +118,16 @@ type PitchScoreRow = {
   c4: number;
   c5: number;
   total_score: number | string;
+  // quick-260520-124 V4 — optional, present only when migration applied.
+  comment_c1?: string | null;
+  comment_c2?: string | null;
+  comment_c3?: string | null;
+  comment_c4?: string | null;
+  comment_c5?: string | null;
+  comment_global?: string | null;
 };
 
-export function mapPitchScore(row: PitchScoreRow): PitchScore {
+export function mapPitchScore(row: PitchScoreRow): PitchScoreWithComments {
   return {
     id: row.id,
     eventId: row.event_id,
@@ -99,6 +139,12 @@ export function mapPitchScore(row: PitchScoreRow): PitchScore {
     c4: row.c4,
     c5: row.c5,
     totalScore: typeof row.total_score === "string" ? Number(row.total_score) : row.total_score,
+    commentC1: row.comment_c1 ?? null,
+    commentC2: row.comment_c2 ?? null,
+    commentC3: row.comment_c3 ?? null,
+    commentC4: row.comment_c4 ?? null,
+    commentC5: row.comment_c5 ?? null,
+    commentGlobal: row.comment_global ?? null,
   };
 }
 
@@ -206,9 +252,139 @@ export async function getJuryOverview(): Promise<{
     console.error("[jury] pitch_scores query failed", scoreErr);
     return { eventId, rows: [], pitchModeState, notInvited: false };
   }
-  const scoresByPlayer = new Map<string, PitchScore>();
+  const scoresByPlayer = new Map<string, PitchScoreWithComments>();
   for (const r of (scoreRows ?? []) as PitchScoreRow[]) {
     scoresByPlayer.set(r.player_id, mapPitchScore(r));
+  }
+
+  // 3.b quick-260520-124 V4 — fetch comments separately. Tolerant : if the
+  // migration has not been applied yet, the query errors and we silently
+  // proceed without comments (existing rows still load via the legacy SELECT
+  // above). This keeps V1/V3 unaffected.
+  const { data: commentRows } = await supabase
+    .from("pitch_scores")
+    .select(
+      "player_id, comment_c1, comment_c2, comment_c3, comment_c4, comment_c5, comment_global",
+    )
+    .eq("event_id", eventId)
+    .eq("juror_id", user.id);
+  if (commentRows) {
+    for (const cr of commentRows as Array<{
+      player_id: string;
+      comment_c1?: string | null;
+      comment_c2?: string | null;
+      comment_c3?: string | null;
+      comment_c4?: string | null;
+      comment_c5?: string | null;
+      comment_global?: string | null;
+    }>) {
+      const existing = scoresByPlayer.get(cr.player_id);
+      if (existing) {
+        existing.commentC1 = cr.comment_c1 ?? null;
+        existing.commentC2 = cr.comment_c2 ?? null;
+        existing.commentC3 = cr.comment_c3 ?? null;
+        existing.commentC4 = cr.comment_c4 ?? null;
+        existing.commentC5 = cr.comment_c5 ?? null;
+        existing.commentGlobal = cr.comment_global ?? null;
+      }
+    }
+  }
+
+  // 3.c quick-260520-124 V4 — fetch all submissions for the cohort's players,
+  // joined to deliverable_templates + missions for level + ord ordering.
+  const submissionsByPlayer = new Map<string, SubmissionRef[]>();
+  const playerIds = players.map((p) => p.id);
+  if (playerIds.length > 0) {
+    const { data: subRows, error: subErr } = await supabase
+      .from("submissions")
+      .select(
+        "id, player_id, proof_url, status, submitted_at, deliverable_template_id, deliverable_templates(slug, title, ord, missions(level_id))",
+      )
+      .in("player_id", playerIds);
+    if (subErr) {
+      console.error("[jury] submissions query failed", subErr);
+    } else {
+      type SubRow = {
+        id: string;
+        player_id: string;
+        proof_url: string | null;
+        status: SubmissionStatus;
+        submitted_at: string;
+        deliverable_template_id: string;
+        // Supabase nested join returns arrays for joined tables ; we coerce
+        // to first element when present.
+        deliverable_templates:
+          | {
+              slug: string;
+              title: string;
+              ord: number | null;
+              missions:
+                | { level_id: LevelId }
+                | { level_id: LevelId }[]
+                | null;
+            }
+          | {
+              slug: string;
+              title: string;
+              ord: number | null;
+              missions:
+                | { level_id: LevelId }
+                | { level_id: LevelId }[]
+                | null;
+            }[]
+          | null;
+      };
+      const flat: Array<SubmissionRef & { playerId: string; ord: number }> = [];
+      for (const r of (subRows ?? []) as unknown as SubRow[]) {
+        const rawTpl = r.deliverable_templates;
+        const tpl = Array.isArray(rawTpl) ? rawTpl[0] ?? null : rawTpl;
+        const rawMissions = tpl?.missions ?? null;
+        const mission = Array.isArray(rawMissions)
+          ? rawMissions[0] ?? null
+          : rawMissions;
+        const levelId: LevelId = mission?.level_id ?? "L0_diagnostic";
+        flat.push({
+          id: r.id,
+          playerId: r.player_id,
+          levelId,
+          templateSlug: tpl?.slug ?? "",
+          templateTitle: tpl?.title ?? "",
+          status: r.status,
+          proofUrl: r.proof_url,
+          submittedAt: r.submitted_at,
+          ord: tpl?.ord ?? 0,
+        });
+      }
+      // Sort by level ASC then template.ord ASC (stable).
+      const levelOrder: Record<LevelId, number> = {
+        L0_diagnostic: 0,
+        L1_problem: 1,
+        L2_solution: 2,
+        L3_market: 3,
+        L4_business_model: 4,
+        L5_pitch: 5,
+        L6_traction: 6,
+        L7_alumni: 7,
+      };
+      flat.sort((a, b) => {
+        const dl = (levelOrder[a.levelId] ?? 99) - (levelOrder[b.levelId] ?? 99);
+        if (dl !== 0) return dl;
+        return a.ord - b.ord;
+      });
+      for (const s of flat) {
+        const arr = submissionsByPlayer.get(s.playerId) ?? [];
+        arr.push({
+          id: s.id,
+          levelId: s.levelId,
+          templateSlug: s.templateSlug,
+          templateTitle: s.templateTitle,
+          status: s.status,
+          proofUrl: s.proofUrl,
+          submittedAt: s.submittedAt,
+        });
+        submissionsByPlayer.set(s.playerId, arr);
+      }
+    }
   }
 
   // 4. Closed mode only: fetch all jurors' scores to compute per-player
@@ -272,6 +448,7 @@ export async function getJuryOverview(): Promise<{
     player,
     existing: scoresByPlayer.get(player.id) ?? null,
     aggregate: aggregateByPlayer.get(player.id) ?? null,
+    submissions: submissionsByPlayer.get(player.id) ?? [],
   }));
   return { eventId, rows, pitchModeState, notInvited: false };
 }
