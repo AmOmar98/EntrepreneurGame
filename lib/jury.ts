@@ -23,6 +23,10 @@ import type {
 // lib/types.ts is deny-protected ; we extend at consumer level instead.
 // ============================================================================
 
+// quick-260520-124 ext (2026-05-20) — verdict literal union for jury panel.
+// 4 valeurs autorisees, side-channel CHECK constraint cote DB.
+export type Verdict = "not_convinced" | "needs_work" | "convinced" | "favorite";
+
 export type PitchScoreWithComments = PitchScore & {
   commentC1?: string | null;
   commentC2?: string | null;
@@ -30,6 +34,10 @@ export type PitchScoreWithComments = PitchScore & {
   commentC4?: string | null;
   commentC5?: string | null;
   commentGlobal?: string | null;
+  /** quick-260520-124 ext — true = brouillon (defaut nouveau row), false = vote valide. */
+  isDraft?: boolean;
+  /** quick-260520-124 ext — verdict global cote panel, null si non choisi. */
+  verdict?: Verdict | null;
 };
 
 // SubmissionRef — slim shape passed to V4 jury session for deliverable links.
@@ -125,6 +133,9 @@ type PitchScoreRow = {
   comment_c4?: string | null;
   comment_c5?: string | null;
   comment_global?: string | null;
+  // quick-260520-124 ext (2026-05-20) — is_draft + verdict (optional pre-migration).
+  is_draft?: boolean | null;
+  verdict?: Verdict | null;
 };
 
 export function mapPitchScore(row: PitchScoreRow): PitchScoreWithComments {
@@ -145,6 +156,9 @@ export function mapPitchScore(row: PitchScoreRow): PitchScoreWithComments {
     commentC4: row.comment_c4 ?? null,
     commentC5: row.comment_c5 ?? null,
     commentGlobal: row.comment_global ?? null,
+    // quick-260520-124 ext — is_draft + verdict (tolerant : undefined if migration not applied).
+    isDraft: row.is_draft ?? undefined,
+    verdict: row.verdict ?? null,
   };
 }
 
@@ -231,14 +245,34 @@ export async function getJuryOverview(): Promise<{
     return { eventId, rows: [], pitchModeState, notInvited: false };
   }
 
-  // Sort by GameMaster-set pitch order when present; players without a slot
-  // go after those with one. Stable tie-breaker on name ASC.
+  // quick-260520-124 ext (#9) — smart upNext queue.
+  // Priority order :
+  //   1. GameMaster `pitch_order_json` slot ASC (when set)
+  //   2. Among non-slotted (or no order at all) : players ranked by level DESC
+  //      then score_project DESC. Tie-break on name ASC.
+  // Rationale : juror naturally sees the most advanced teams first
+  // ("matures d'abord") in absence of an explicit GM-set order.
+  const levelRank: Record<LevelId, number> = {
+    L0_diagnostic: 0,
+    L1_problem: 1,
+    L2_solution: 2,
+    L3_market: 3,
+    L4_business_model: 4,
+    L5_pitch: 5,
+    L6_traction: 6,
+    L7_alumni: 7,
+  };
   const players = [...playersUnsorted].sort((a, b) => {
     const sa = getPlayerSlot(pitchOrder, a.id);
     const sb = getPlayerSlot(pitchOrder, b.id);
     if (sa !== null && sb !== null) return sa - sb;
     if (sa !== null) return -1;
     if (sb !== null) return 1;
+    // Smart fallback : level DESC, then score_project DESC, then name ASC.
+    const dl = (levelRank[b.currentLevel] ?? -1) - (levelRank[a.currentLevel] ?? -1);
+    if (dl !== 0) return dl;
+    const ds = (b.scoreProject ?? 0) - (a.scoreProject ?? 0);
+    if (ds !== 0) return ds;
     return a.name.localeCompare(b.name);
   });
 
@@ -286,6 +320,27 @@ export async function getJuryOverview(): Promise<{
         existing.commentC4 = cr.comment_c4 ?? null;
         existing.commentC5 = cr.comment_c5 ?? null;
         existing.commentGlobal = cr.comment_global ?? null;
+      }
+    }
+  }
+
+  // 3.b.ext quick-260520-124 ext — fetch is_draft + verdict separately, same
+  // tolerant pattern (silent skip if migration not applied yet).
+  const { data: draftRows } = await supabase
+    .from("pitch_scores")
+    .select("player_id, is_draft, verdict")
+    .eq("event_id", eventId)
+    .eq("juror_id", user.id);
+  if (draftRows) {
+    for (const dr of draftRows as Array<{
+      player_id: string;
+      is_draft?: boolean | null;
+      verdict?: Verdict | null;
+    }>) {
+      const existing = scoresByPlayer.get(dr.player_id);
+      if (existing) {
+        existing.isDraft = dr.is_draft ?? undefined;
+        existing.verdict = dr.verdict ?? null;
       }
     }
   }

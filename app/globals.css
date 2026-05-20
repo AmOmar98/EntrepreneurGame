@@ -8919,6 +8919,16 @@ a.eic-button:focus-visible {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* quick-260520-124 ext (Task 6) — ghost variant for "Brouillon" button. */
+.eic-jury-session__cta--draft {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+.eic-jury-session__cta--draft:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
 
 .eic-jury-session__feedback {
   margin: 0;

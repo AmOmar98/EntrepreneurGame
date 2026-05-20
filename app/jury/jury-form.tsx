@@ -9,8 +9,8 @@
 import { useActionState, useState } from "react";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import type { dictionaries } from "@/lib/i18n";
-import type { JuryAggregate } from "@/lib/jury";
-import type { PitchScore, Player, PitchModeState } from "@/lib/types";
+import type { JuryAggregate, PitchScoreWithComments } from "@/lib/jury";
+import type { Player, PitchModeState } from "@/lib/types";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -18,7 +18,8 @@ type Dict = (typeof dictionaries)["fr"];
 
 type Props = {
   player: Player;
-  existing: PitchScore | null;
+  // quick-260520-124 ext — PitchScoreWithComments to read isDraft for badge.
+  existing: PitchScoreWithComments | null;
   eventId: string;
   dict: Dict;
   /** Cross-juror aggregate, populated only when pitch_mode_state === 'closed'. */
@@ -353,20 +354,73 @@ export function JuryForm({
             </div>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="eic-button eic-button--primary"
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              fontSize: 14,
-              cursor: pending ? "not-allowed" : "pointer",
-              opacity: pending ? 0.6 : 1,
-            }}
-          >
-            {pending ? dict.jury_saving : dict.jury_save}
-          </button>
+          {/* quick-260520-124 ext (Task 6) — Brouillon / Valider dual submit. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <button
+              type="submit"
+              name="isDraft"
+              value="true"
+              disabled={pending}
+              className="eic-button"
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                fontSize: 13,
+                cursor: pending ? "not-allowed" : "pointer",
+                opacity: pending ? 0.6 : 1,
+              }}
+            >
+              {dict.jury_save_draft}
+            </button>
+            <button
+              type="submit"
+              name="isDraft"
+              value="false"
+              disabled={pending}
+              className="eic-button eic-button--primary"
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                fontSize: 14,
+                cursor: pending ? "not-allowed" : "pointer",
+                opacity: pending ? 0.6 : 1,
+              }}
+            >
+              {pending ? dict.jury_saving : dict.jury_save}
+            </button>
+          </div>
+
+          {/* Status badge if existing row (draft vs validated) */}
+          {existing ? (
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: 0.6,
+                textTransform: "uppercase",
+                margin: 0,
+                padding: "4px 8px",
+                borderRadius: 4,
+                background:
+                  existing.isDraft === false
+                    ? "#dcfce7"
+                    : "#fef3c7",
+                color:
+                  existing.isDraft === false
+                    ? "#15803d"
+                    : "#92400e",
+                border:
+                  existing.isDraft === false
+                    ? "1px solid #86efac"
+                    : "1px solid #fde68a",
+                textAlign: "center",
+              }}
+            >
+              {existing.isDraft === false
+                ? dict.jury_status_validated
+                : dict.jury_status_draft}
+            </p>
+          ) : null}
 
           <p
             style={{

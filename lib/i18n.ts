@@ -875,6 +875,16 @@ export const dictionaries = {
     jury_session_toggle_session: "Session",
     jury_session_toggle_sliders: "Sliders",
     jury_session_toggle_dial: "Molettes",
+    // quick-260520-124 ext (Task 5/6, 2026-05-20) — verdict pills + brouillon/valider.
+    jury_verdict_label: "Verdict global",
+    jury_verdict_not_convinced: "Pas convaincu",
+    jury_verdict_needs_work: "À retravailler",
+    jury_verdict_convinced: "Convaincu",
+    jury_verdict_favorite: "Coup de cœur",
+    jury_save_draft: "Enregistrer brouillon",
+    jury_status_draft: "BROUILLON",
+    jury_status_validated: "VOTE VALIDÉ",
+    jury_session_queue_sort_hint: "Triées par niveau atteint",
     results_export_csv_label: "Exporter le classement (CSV)",
     results_export_csv_gate_message: "Disponible une fois tous les pitches clos.",
     // ---- /results narrative refresh (quick-260519-jpr W2 #5) ---------------

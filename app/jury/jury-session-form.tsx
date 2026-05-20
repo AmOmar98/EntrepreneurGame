@@ -19,6 +19,7 @@ import type {
   SubmissionRef,
 } from "@/lib/jury";
 import type { Player } from "@/lib/types";
+import { JuryVerdictPills } from "@/components/jury-verdict-pills";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -386,12 +387,24 @@ export function JurySessionForm({
           </div>
 
           {/* Navigateur d'équipes — toutes les équipes cliquables (V4 quick-260520-124) */}
+          {/* quick-260520-124 ext (Task #9) — sort hint when smart queue active. */}
           <div className="eic-jury-session__queue">
             <h3 className="eic-jury-session__queue-title">
               {teamsList && teamsList.length > 0
                 ? "TOUTES LES ÉQUIPES"
                 : dict.jury_session_queue_label}
             </h3>
+            <p
+              style={{
+                fontSize: 10,
+                margin: "0 0 6px",
+                color: "rgba(255,255,255,0.55)",
+                letterSpacing: 0.4,
+              }}
+              aria-hidden="true"
+            >
+              {dict.jury_session_queue_sort_hint}
+            </p>
             {teamsList && teamsList.length > 0 ? (
               <ul className="eic-jury-session__queue-list" role="list">
                 {teamsList.map((t) => (
@@ -536,14 +549,67 @@ export function JurySessionForm({
             aria-label="Commentaire global"
           />
 
-          {/* CTA */}
-          <button
-            type="submit"
-            disabled={pending}
-            className="eic-jury-session__cta"
+          {/* quick-260520-124 ext (Task 5) — Verdict pills V4. */}
+          <JuryVerdictPills initial={existing?.verdict ?? null} dict={dict} />
+
+          {/* Status badge (existing row : draft or validated). */}
+          {existing ? (
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: 0.6,
+                textTransform: "uppercase",
+                margin: "8px 0 0",
+                padding: "4px 8px",
+                borderRadius: 4,
+                background:
+                  existing.isDraft === false ? "#dcfce7" : "#fef3c7",
+                color:
+                  existing.isDraft === false ? "#15803d" : "#92400e",
+                border:
+                  existing.isDraft === false
+                    ? "1px solid #86efac"
+                    : "1px solid #fde68a",
+                textAlign: "center",
+              }}
+            >
+              {existing.isDraft === false
+                ? dict.jury_status_validated
+                : dict.jury_status_draft}
+            </p>
+          ) : null}
+
+          {/* quick-260520-124 ext (Task 6) — Brouillon / Valider dual submit. */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              marginTop: 8,
+            }}
           >
-            {pending ? dict.jury_saving : ctaLabel}
-          </button>
+            <button
+              type="submit"
+              name="isDraft"
+              value="true"
+              disabled={pending}
+              className="eic-jury-session__cta eic-jury-session__cta--draft"
+              style={{ flex: "1 1 140px" }}
+            >
+              {dict.jury_save_draft}
+            </button>
+            <button
+              type="submit"
+              name="isDraft"
+              value="false"
+              disabled={pending}
+              className="eic-jury-session__cta"
+              style={{ flex: "2 1 200px" }}
+            >
+              {pending ? dict.jury_saving : ctaLabel}
+            </button>
+          </div>
 
           {state.message ? (
             <p

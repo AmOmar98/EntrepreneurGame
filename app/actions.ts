@@ -1166,6 +1166,14 @@ const pitchScoreSchema = z.object({
   commentC4: z.string().max(500).optional().nullable(),
   commentC5: z.string().max(500).optional().nullable(),
   commentGlobal: z.string().max(2000).optional().nullable(),
+  // quick-260520-124 ext (Task 2, 2026-05-20) — isDraft + verdict (panel session).
+  // isDraft default false (submit explicite via "Valider") ; "true" string en
+  // provenance de <button name="isDraft" value="true"> coerce en boolean.
+  isDraft: z.coerce.boolean().optional().default(false),
+  verdict: z
+    .enum(["not_convinced", "needs_work", "convinced", "favorite"])
+    .optional()
+    .nullable(),
 });
 
 export async function savePitchScoreFlow(
@@ -1190,6 +1198,10 @@ export async function savePitchScoreFlow(
     commentC4: formData.get("commentC4") || null,
     commentC5: formData.get("commentC5") || null,
     commentGlobal: formData.get("commentGlobal") || null,
+    // quick-260520-124 ext — isDraft + verdict (panel session V3/V4).
+    // FormData.get returns null when absent ; Zod default kicks in for isDraft.
+    isDraft: formData.get("isDraft"),
+    verdict: formData.get("verdict") || null,
   });
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
@@ -1251,16 +1263,43 @@ export async function savePitchScoreFlow(
     payload.comment_c5 = parsed.data.commentC5 ?? null;
     payload.comment_global = parsed.data.commentGlobal ?? null;
   }
+  // quick-260520-124 ext — is_draft + verdict (panel session). Always include
+  // is_draft so the column reflects intent. Verdict only included if non-null
+  // to keep payload schema-tolerant (pre-migration : column may not exist).
+  payload.is_draft = parsed.data.isDraft;
+  if (parsed.data.verdict) {
+    payload.verdict = parsed.data.verdict;
+  }
   const { error: upsertErr } = await supabase
     .from("pitch_scores")
     .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
   if (upsertErr) {
-    return { ok: false, message: upsertErr.message };
+    // quick-260520-124 ext — graceful degradation if migration not yet applied
+    // (column does not exist). Retry without is_draft/verdict.
+    const msg = upsertErr.message ?? "";
+    if (msg.includes("is_draft") || msg.includes("verdict")) {
+      delete payload.is_draft;
+      delete payload.verdict;
+      const { error: retryErr } = await supabase
+        .from("pitch_scores")
+        .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
+      if (retryErr) {
+        return { ok: false, message: retryErr.message };
+      }
+    } else {
+      return { ok: false, message: upsertErr.message };
+    }
   }
 
   revalidatePath("/jury");
   revalidatePath("/results");
-  return { ok: true, message: "Notes enregistrees." };
+  // quick-260520-124 ext — toast varies by isDraft.
+  return {
+    ok: true,
+    message: parsed.data.isDraft
+      ? "Brouillon enregistre. Tu peux ajuster et valider plus tard."
+      : "Notes enregistrees.",
+  };
 }
 
 // ============================================================================

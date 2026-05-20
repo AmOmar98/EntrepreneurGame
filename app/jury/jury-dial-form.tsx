@@ -6,11 +6,12 @@
 // pour KB+a11y + boutons +/- visibles. Décision plan ligne 241.
 // Score total double affichage : /100 (canonique) + /20 (cosmétique).
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import type { dictionaries } from "@/lib/i18n";
-import type { JuryAggregate } from "@/lib/jury";
-import type { PitchScore, Player, PitchModeState } from "@/lib/types";
+import type { JuryAggregate, PitchScoreWithComments } from "@/lib/jury";
+import type { Player, PitchModeState } from "@/lib/types";
+import { JuryVerdictPills } from "@/components/jury-verdict-pills";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -18,7 +19,8 @@ type Dict = (typeof dictionaries)["fr"];
 
 type Props = {
   player: Player;
-  existing: PitchScore | null;
+  // quick-260520-124 ext — switched to PitchScoreWithComments for isDraft/verdict.
+  existing: PitchScoreWithComments | null;
   eventId: string;
   dict: Dict;
   /** Cross-juror aggregate, populated only when pitch_mode_state === 'closed'. */
@@ -59,12 +61,76 @@ function polar(cx: number, cy: number, r: number, deg: number): [number, number]
   return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
 }
 
+// quick-260520-124 ext (Task 4) — angle -> value mapping (clockwise -135..+135).
+// Knob centre is at 90deg in SVG referentiel ; we re-base so 12 o'clock = mid.
+function angleToValue(angleDeg: number): number {
+  // Wrap to -180..+180
+  let a = angleDeg;
+  while (a > 180) a -= 360;
+  while (a < -180) a += 360;
+  // Dead zone : top half (angle outside [-135, +135]) → clamp to nearest end.
+  if (a < -135) {
+    // top-left → snap depending on which side closer to -135 or to +135 wrap
+    return a < -157.5 ? 20 : 0;
+  }
+  if (a > 135) {
+    return a > 157.5 ? 0 : 20;
+  }
+  return Math.round(((a + 135) / 270) * 20);
+}
+
+function pointerToAngle(
+  clientX: number,
+  clientY: number,
+  svgEl: SVGSVGElement,
+): number {
+  const rect = svgEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+  // atan2 returns radians from +X axis (3 o'clock). We want 12 o'clock = 0deg,
+  // clockwise positive. So: angle_from_12 = atan2(dx, -dy) (since y inverted).
+  return (Math.atan2(dx, -dy) * 180) / Math.PI;
+}
+
 function Dial({ id, name, label, help, value, onChange }: DialProps) {
   const cx = 60;
   const cy = 60;
   const progressLength = (value / 20) * ARC_CIRCUMFERENCE;
   const indicatorAngle = ARC_START_DEG + (value / 20) * ARC_TOTAL_DEG;
   const [ix, iy] = polar(cx, cy, DIAL_RADIUS - 4, indicatorAngle);
+
+  // quick-260520-124 ext (Task 4) — native drag rotatif on SVG knob.
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const draggingRef = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return;
+    draggingRef.current = true;
+    try {
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+    } catch {
+      // ignore — Safari may throw on non-element target.
+    }
+    const a = pointerToAngle(e.clientX, e.clientY, svgRef.current);
+    onChange(clamp(angleToValue(a)));
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!draggingRef.current || !svgRef.current) return;
+    const a = pointerToAngle(e.clientX, e.clientY, svgRef.current);
+    onChange(clamp(angleToValue(a)));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    draggingRef.current = false;
+    try {
+      (e.target as Element).releasePointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div
@@ -95,11 +161,16 @@ function Dial({ id, name, label, help, value, onChange }: DialProps) {
         }}
       >
         <svg
+          ref={svgRef}
           width={120}
           height={120}
           viewBox="0 0 120 120"
           aria-hidden="true"
-          style={{ display: "block" }}
+          style={{ display: "block", touchAction: "none", cursor: "grab" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
           <defs>
             <radialGradient id={`${id}-grad`} cx="50%" cy="40%" r="60%">
@@ -179,7 +250,9 @@ function Dial({ id, name, label, help, value, onChange }: DialProps) {
           </text>
         </svg>
 
-        {/* Input range invisible — KB + a11y native, drag/click natif. */}
+        {/* quick-260520-124 ext (Task 4) — Input range KB-focusable mais sous
+            le SVG (pointer-events: none) : drag rotatif natif sur SVG, fleches
+            clavier toujours possibles via Tab. */}
         <input
           id={id}
           type="range"
@@ -194,13 +267,14 @@ function Dial({ id, name, label, help, value, onChange }: DialProps) {
           aria-valuemin={0}
           aria-valuemax={20}
           aria-valuenow={value}
+          inputMode="numeric"
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             opacity: 0,
-            cursor: "pointer",
+            pointerEvents: "none",
           }}
         />
       </div>
@@ -458,6 +532,9 @@ export function JuryDialForm({
         ))}
       </div>
 
+      {/* quick-260520-124 ext (Task 5) — Verdict pills (V3 only). */}
+      <JuryVerdictPills initial={existing?.verdict ?? null} dict={dict} />
+
       <div
         style={{
           marginTop: 12,
@@ -466,19 +543,69 @@ export function JuryDialForm({
           gap: 8,
         }}
       >
-        <button
-          type="submit"
-          disabled={pending}
-          className="eic-button eic-button--primary"
-          style={{
-            padding: "10px 16px",
-            fontSize: 14,
-            cursor: pending ? "not-allowed" : "pointer",
-            opacity: pending ? 0.6 : 1,
-          }}
-        >
-          {pending ? dict.jury_saving : dict.jury_save}
-        </button>
+        {/* quick-260520-124 ext (Task 6) — Brouillon / Valider dual submit. */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            type="submit"
+            name="isDraft"
+            value="true"
+            disabled={pending}
+            className="eic-button"
+            style={{
+              flex: "1 1 140px",
+              padding: "10px 16px",
+              fontSize: 13,
+              cursor: pending ? "not-allowed" : "pointer",
+              opacity: pending ? 0.6 : 1,
+            }}
+          >
+            {dict.jury_save_draft}
+          </button>
+          <button
+            type="submit"
+            name="isDraft"
+            value="false"
+            disabled={pending}
+            className="eic-button eic-button--primary"
+            style={{
+              flex: "1 1 140px",
+              padding: "10px 16px",
+              fontSize: 14,
+              cursor: pending ? "not-allowed" : "pointer",
+              opacity: pending ? 0.6 : 1,
+            }}
+          >
+            {pending ? dict.jury_saving : dict.jury_save}
+          </button>
+        </div>
+
+        {existing ? (
+          <p
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 0.6,
+              textTransform: "uppercase",
+              margin: 0,
+              padding: "4px 8px",
+              borderRadius: 4,
+              background:
+                existing.isDraft === false ? "#dcfce7" : "#fef3c7",
+              color:
+                existing.isDraft === false ? "#15803d" : "#92400e",
+              border:
+                existing.isDraft === false
+                  ? "1px solid #86efac"
+                  : "1px solid #fde68a",
+              textAlign: "center",
+            }}
+          >
+            {existing.isDraft === false
+              ? dict.jury_status_validated
+              : dict.jury_status_draft}
+          </p>
+        ) : null}
+
         <p
           style={{
             fontSize: 10,
