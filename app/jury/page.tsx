@@ -18,6 +18,8 @@ type SearchParams = {
   theater?: string;
   /** quick-260520-124 — "dial" toggles V3 molettes ; default = V1 sliders. */
   ui?: string;
+  /** quick-260520-124 V4 — index de l'équipe en cours (0-based) en mode session. */
+  team?: string;
 };
 
 export default async function JuryPage({
@@ -33,8 +35,9 @@ export default async function JuryPage({
     redirect(pathForRole(role));
   }
 
-  const { theater, ui } = await searchParams;
+  const { theater, ui, team } = await searchParams;
   const isTheater = theater === "1";
+  const teamIndexRaw = Number.parseInt(team ?? "0", 10);
   // quick-260520-124 — V1 sliders default, V3 molettes via ?ui=dial, V4 session via ?ui=session.
   const variant: "slider" | "dial" | "session" =
     ui === "dial" ? "dial" : ui === "session" ? "session" : "slider";
@@ -178,9 +181,49 @@ export default async function JuryPage({
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_demo_disabled}</p>
         ) : rows.length === 0 || !eventId ? (
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_empty}</p>
+        ) : variant === "session" ? (
+          // V4 single-team focus mode — render only the current team.
+          // Index clamped to [0, rows.length-1]. Navigation via ?ui=session&team=N.
+          (() => {
+            const safeIdx = Math.max(0, Math.min(rows.length - 1, Number.isNaN(teamIndexRaw) ? 0 : teamIndexRaw));
+            const currentRow = rows[safeIdx];
+            return (
+              <JurySessionForm
+                aggregate={currentRow.aggregate}
+                player={currentRow.player}
+                existing={currentRow.existing}
+                eventId={eventId}
+                dict={t}
+                juror={{
+                  fullName: user.email ?? "Juré",
+                  role: t.jury_session_juror_role_default,
+                }}
+                position={{ current: safeIdx + 1, total: rows.length }}
+                submissions={currentRow.submissions}
+                otherJurors={[]}
+                upNext={rows
+                  .slice(safeIdx + 1, safeIdx + 5)
+                  .map((r, k) => ({
+                    name: r.player.name,
+                    etaMinutes: k === 0 ? null : k * 5 + 3,
+                    level: r.player.currentLevel.replace(/^L(\d).*/, "L$1"),
+                  }))}
+                topbarLabel={`${t.jury_session_mode_label} · ${t.jury_session_topbar_event}`}
+                navPrevHref={safeIdx > 0 ? `/jury?ui=session&team=${safeIdx - 1}` : null}
+                navNextHref={safeIdx + 1 < rows.length ? `/jury?ui=session&team=${safeIdx + 1}` : null}
+                teamsList={rows.map((r, i) => ({
+                  idx: i,
+                  name: r.player.name,
+                  level: r.player.currentLevel.replace(/^L(\d).*/, "L$1"),
+                  scored: r.existing !== null,
+                  isCurrent: i === safeIdx,
+                }))}
+              />
+            );
+          })()
         ) : (
           <div className="eic-jury-grid">
-            {rows.map((row, idx) => (
+            {rows.map((row) => (
               <article key={row.player.id} className="eic-jury-card">
                 <header className="eic-jury-card__header">
                   <h2 className="eic-jury-card__name">{row.player.name}</h2>
@@ -191,30 +234,7 @@ export default async function JuryPage({
                     <p className="eic-jury-card__already-scored">{t.jury_already_scored}</p>
                   ) : null}
                 </header>
-                {variant === "session" ? (
-                  <JurySessionForm
-                    aggregate={row.aggregate}
-                    player={row.player}
-                    existing={row.existing}
-                    eventId={eventId}
-                    dict={t}
-                    juror={{
-                      fullName: user.email ?? "Juré",
-                      role: t.jury_session_juror_role_default,
-                    }}
-                    position={{ current: idx + 1, total: rows.length }}
-                    submissions={row.submissions}
-                    otherJurors={[]}
-                    upNext={rows
-                      .slice(idx + 1, idx + 5)
-                      .map((r, k) => ({
-                        name: r.player.name,
-                        etaMinutes: k === 0 ? null : k * 5 + 3,
-                        level: r.player.currentLevel.replace(/^L(\d).*/, "L$1"),
-                      }))}
-                    topbarLabel={`${t.jury_session_mode_label} · ${t.jury_session_topbar_event}`}
-                  />
-                ) : variant === "dial" ? (
+                {variant === "dial" ? (
                   <JuryDialForm
                     aggregate={row.aggregate}
                     player={row.player}

@@ -55,6 +55,18 @@ type Props = {
   upNext: QueueEntry[];
   /** Static label rendered in topbar (event name + level). */
   topbarLabel?: string;
+  /** quick-260520-124 V4 — href vers l'équipe précédente (null si première). */
+  navPrevHref?: string | null;
+  /** quick-260520-124 V4 — href vers l'équipe suivante (null si dernière). */
+  navNextHref?: string | null;
+  /** quick-260520-124 V4 — toutes les équipes pour navigation directe. */
+  teamsList?: ReadonlyArray<{
+    idx: number;
+    name: string;
+    level: string;
+    scored: boolean;
+    isCurrent: boolean;
+  }>;
 };
 
 // ---------------------------------------------------------------------------
@@ -117,6 +129,10 @@ export function JurySessionForm({
   otherJurors,
   upNext,
   topbarLabel,
+  aggregate,
+  navPrevHref,
+  navNextHref,
+  teamsList,
 }: Props) {
   const [state, formAction, pending] = useActionState(
     savePitchScoreFlow,
@@ -257,14 +273,33 @@ export function JurySessionForm({
           >
             {dict.jury_session_pause}
           </button>
-          <button
-            type="button"
-            className="eic-jury-session__topbar-btn eic-jury-session__topbar-btn--primary"
-            disabled
-            aria-label={dict.jury_session_next_team}
-          >
-            {dict.jury_session_next_team}
-          </button>
+          {navPrevHref ? (
+            <a
+              href={navPrevHref}
+              className="eic-jury-session__topbar-btn"
+              aria-label="Équipe précédente"
+            >
+              ← Précédente
+            </a>
+          ) : null}
+          {navNextHref ? (
+            <a
+              href={navNextHref}
+              className="eic-jury-session__topbar-btn eic-jury-session__topbar-btn--primary"
+              aria-label={dict.jury_session_next_team}
+            >
+              {dict.jury_session_next_team}
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="eic-jury-session__topbar-btn eic-jury-session__topbar-btn--primary"
+              disabled
+              aria-label={dict.jury_session_next_team}
+            >
+              {dict.jury_session_next_team}
+            </button>
+          )}
         </div>
       </header>
 
@@ -350,12 +385,47 @@ export function JurySessionForm({
             )}
           </div>
 
-          {/* File de passage (queue) */}
+          {/* Navigateur d'équipes — toutes les équipes cliquables (V4 quick-260520-124) */}
           <div className="eic-jury-session__queue">
             <h3 className="eic-jury-session__queue-title">
-              {dict.jury_session_queue_label}
+              {teamsList && teamsList.length > 0
+                ? "TOUTES LES ÉQUIPES"
+                : dict.jury_session_queue_label}
             </h3>
-            {upNext.length === 0 ? (
+            {teamsList && teamsList.length > 0 ? (
+              <ul className="eic-jury-session__queue-list" role="list">
+                {teamsList.map((t) => (
+                  <li
+                    key={`team-${t.idx}`}
+                    className={
+                      "eic-jury-session__queue-row" +
+                      (t.isCurrent ? " is-current" : "") +
+                      (t.scored ? " is-scored" : "")
+                    }
+                  >
+                    {t.isCurrent ? (
+                      <span
+                        className="eic-jury-session__queue-name"
+                        aria-current="true"
+                      >
+                        ▶ {t.name}
+                      </span>
+                    ) : (
+                      <a
+                        href={`/jury?ui=session&team=${t.idx}`}
+                        className="eic-jury-session__queue-name eic-jury-session__queue-link"
+                      >
+                        {t.name}
+                      </a>
+                    )}
+                    <span className="eic-jury-session__queue-eta">
+                      {t.scored ? "✓ noté" : "— à noter"}
+                    </span>
+                    <span className="eic-jury-session__queue-level">{t.level}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : upNext.length === 0 ? (
               <p className="eic-jury-session__queue-empty">—</p>
             ) : (
               <ul className="eic-jury-session__queue-list">
@@ -486,6 +556,29 @@ export function JurySessionForm({
             >
               {state.message}
             </p>
+          ) : null}
+
+          {/* Cross-juror aggregate (closed mode only) */}
+          {aggregate ? (
+            <div
+              className="eic-jury-session__aggregate"
+              role="status"
+              aria-label={dict.jury_pitch_aggregate_label}
+            >
+              <p className="eic-jury-session__aggregate-header">
+                {dict.jury_pitch_aggregate_label}
+              </p>
+              <p className="eic-jury-session__aggregate-value">
+                <strong>{aggregate.avg100.toFixed(1)}</strong>
+                <span className="eic-jury-session__aggregate-unit">/100</span>
+              </p>
+              <p className="eic-jury-session__aggregate-count">
+                {dict.jury_pitch_aggregate_juror_count.replace(
+                  "{count}",
+                  String(aggregate.jurorCount),
+                )}
+              </p>
+            </div>
           ) : null}
 
           {/* Other jurors progress */}

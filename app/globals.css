@@ -8697,6 +8697,67 @@ a.eic-button:focus-visible {
   font-size: 10px;
 }
 
+/* quick-260520-124 V4 — team navigator highlighting */
+.eic-jury-session__queue-row.is-current {
+  background: rgba(240, 137, 12, 0.15);
+  border: 1px solid rgba(240, 137, 12, 0.5);
+}
+.eic-jury-session__queue-row.is-current .eic-jury-session__queue-name {
+  color: #F0890C;
+}
+.eic-jury-session__queue-row.is-scored {
+  opacity: 0.7;
+}
+.eic-jury-session__queue-row.is-scored .eic-jury-session__queue-eta {
+  color: #4CAF50;
+}
+.eic-jury-session__queue-link {
+  color: var(--js-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.eic-jury-session__queue-link:hover {
+  color: #F0890C;
+  text-decoration: underline;
+}
+
+/* quick-260520-124 V4 — aggregate block (closed mode only) */
+.eic-jury-session__aggregate {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.eic-jury-session__aggregate-header {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #4CAF50;
+  margin: 0 0 4px;
+}
+.eic-jury-session__aggregate-value {
+  margin: 0;
+  color: #4CAF50;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.eic-jury-session__aggregate-value strong {
+  font-family: var(--font-heading, Baskervville, serif);
+}
+.eic-jury-session__aggregate-unit {
+  font-size: 14px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+.eic-jury-session__aggregate-count {
+  font-size: 11px;
+  color: var(--js-text-soft);
+  margin: 4px 0 0;
+}
+
 /* ============ RIGHT COLUMN ============ */
 
 .eic-jury-session__juror-card {
