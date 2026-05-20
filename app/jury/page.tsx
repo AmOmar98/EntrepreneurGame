@@ -10,6 +10,7 @@ import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { isCurrentUserJuror } from "@/lib/jurors";
 import { JuryForm } from "./jury-form";
 import { JuryDialForm } from "./jury-dial-form";
+import { JurySessionForm } from "./jury-session-form";
 
 const t = dictionaries.fr;
 
@@ -34,8 +35,9 @@ export default async function JuryPage({
 
   const { theater, ui } = await searchParams;
   const isTheater = theater === "1";
-  // quick-260520-124 — V1 sliders default, V3 molettes via ?ui=dial.
-  const variant: "slider" | "dial" = ui === "dial" ? "dial" : "slider";
+  // quick-260520-124 — V1 sliders default, V3 molettes via ?ui=dial, V4 session via ?ui=session.
+  const variant: "slider" | "dial" | "session" =
+    ui === "dial" ? "dial" : ui === "session" ? "session" : "slider";
 
   const { eventId, rows } = hasSupabaseEnv()
     ? await getJuryOverview()
@@ -139,16 +141,30 @@ export default async function JuryPage({
               quick-260520-124 — add discreet V1↔V3 UI toggle (eic-button standard,
               not --primary per advisor WARN_NOTES). */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {/* quick-260520-124 — 3-way toggle V1 sliders / V3 dials / V4 session. */}
             <Link
               className="eic-button"
-              href={`/jury?ui=${variant === "dial" ? "slider" : "dial"}`}
-              aria-label={
-                variant === "dial"
-                  ? "Basculer en sliders"
-                  : "Basculer en molettes"
-              }
+              href="/jury"
+              aria-current={variant === "slider" ? "page" : undefined}
+              aria-label="Basculer en sliders"
             >
-              {variant === "dial" ? "Sliders" : "Molettes"}
+              {t.jury_session_toggle_sliders}
+            </Link>
+            <Link
+              className="eic-button"
+              href="/jury?ui=dial"
+              aria-current={variant === "dial" ? "page" : undefined}
+              aria-label="Basculer en molettes"
+            >
+              {t.jury_session_toggle_dial}
+            </Link>
+            <Link
+              className="eic-button"
+              href="/jury?ui=session"
+              aria-current={variant === "session" ? "page" : undefined}
+              aria-label="Basculer en mode session"
+            >
+              {t.jury_session_toggle_session}
             </Link>
             <Link
               className="eic-button eic-button--primary"
@@ -164,7 +180,7 @@ export default async function JuryPage({
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>{t.jury_empty}</p>
         ) : (
           <div className="eic-jury-grid">
-            {rows.map((row) => (
+            {rows.map((row, idx) => (
               <article key={row.player.id} className="eic-jury-card">
                 <header className="eic-jury-card__header">
                   <h2 className="eic-jury-card__name">{row.player.name}</h2>
@@ -175,13 +191,37 @@ export default async function JuryPage({
                     <p className="eic-jury-card__already-scored">{t.jury_already_scored}</p>
                   ) : null}
                 </header>
-                {variant === "dial" ? (
+                {variant === "session" ? (
+                  <JurySessionForm
+                    aggregate={row.aggregate}
+                    player={row.player}
+                    existing={row.existing}
+                    eventId={eventId}
+                    dict={t}
+                    juror={{
+                      fullName: user.email ?? "Juré",
+                      role: t.jury_session_juror_role_default,
+                    }}
+                    position={{ current: idx + 1, total: rows.length }}
+                    submissions={row.submissions}
+                    otherJurors={[]}
+                    upNext={rows
+                      .slice(idx + 1, idx + 5)
+                      .map((r, k) => ({
+                        name: r.player.name,
+                        etaMinutes: k === 0 ? null : k * 5 + 3,
+                        level: r.player.currentLevel.replace(/^L(\d).*/, "L$1"),
+                      }))}
+                    topbarLabel={`${t.jury_session_mode_label} · ${t.jury_session_topbar_event}`}
+                  />
+                ) : variant === "dial" ? (
                   <JuryDialForm
                     aggregate={row.aggregate}
                     player={row.player}
                     existing={row.existing}
                     eventId={eventId}
                     dict={t}
+                    pitchModeState={pitchModeState}
                   />
                 ) : (
                   <JuryForm
@@ -190,6 +230,7 @@ export default async function JuryPage({
                     existing={row.existing}
                     eventId={eventId}
                     dict={t}
+                    pitchModeState={pitchModeState}
                   />
                 )}
               </article>

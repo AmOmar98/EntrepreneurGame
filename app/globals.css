@@ -8367,3 +8367,549 @@ a.eic-button:focus-visible {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* =========================================================================
+   quick-260520-124 V4 — Jury session mode (dark theater).
+   ========================================================================= */
+
+.eic-jury-session {
+  --js-ink-deep: #0F1827;
+  --js-paper-deep-dark: #1A2536;
+  --js-line-dark: #2A3C57;
+  --js-orange: #F0890C;
+  --js-orange-soft: rgba(240, 137, 12, 0.18);
+  --js-text: #E8EAEE;
+  --js-text-soft: #B4BBC6;
+  --js-text-faint: #7A8499;
+  --js-red: #DC2626;
+
+  background: var(--js-ink-deep);
+  color: var(--js-text);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.eic-jury-session__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #0B121E;
+  border-bottom: 1px solid var(--js-line-dark);
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+
+.eic-jury-session__topbar-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.eic-jury-session__topbar-brand strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--js-text);
+}
+.eic-jury-session__topbar-event {
+  font-size: 11px;
+  color: var(--js-text-soft);
+  letter-spacing: 0.3px;
+}
+
+.eic-jury-session__topbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.eic-jury-session__live-pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  background: var(--js-red);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.eic-jury-session__timer {
+  font-variant-numeric: tabular-nums;
+  color: var(--js-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.eic-jury-session__timer span {
+  color: var(--js-text-faint);
+  font-weight: 400;
+}
+.eic-jury-session__topbar-btn {
+  background: transparent;
+  color: var(--js-text);
+  border: 1px solid var(--js-line-dark);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.eic-jury-session__topbar-btn--primary {
+  background: var(--js-orange);
+  color: #1B1100;
+  border-color: var(--js-orange);
+}
+
+.eic-jury-session__main {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  padding: 16px;
+}
+
+.eic-jury-session__left,
+.eic-jury-session__right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eic-jury-session__pill-now {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--js-orange);
+  color: #1B1100;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+.eic-jury-session__pill-position {
+  background: rgba(0, 0, 0, 0.18);
+  color: #1B1100;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: none;
+}
+
+.eic-jury-session__team {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.eic-jury-session__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--js-paper-deep-dark);
+  color: var(--js-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Baskervville", Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+  border: 1px solid var(--js-line-dark);
+}
+.eic-jury-session__team-info h2 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--js-text);
+  font-weight: 700;
+}
+.eic-jury-session__team-info em {
+  display: block;
+  font-style: italic;
+  color: var(--js-text-soft);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.eic-jury-session__team-meta {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--js-text-faint);
+  letter-spacing: 0.2px;
+}
+
+.eic-jury-session__big-timer {
+  background: var(--js-paper-deep-dark);
+  border: 1px solid var(--js-line-dark);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.eic-jury-session__big-timer-value {
+  font-family: "Baskervville", Georgia, serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--js-orange);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.eic-jury-session__big-timer-label {
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--js-text-faint);
+}
+.eic-jury-session__progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--js-line-dark);
+  border-radius: 999px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.eic-jury-session__progress-bar-fill {
+  height: 100%;
+  background: var(--js-orange);
+  border-radius: 999px;
+}
+
+.eic-jury-session__deliverables,
+.eic-jury-session__queue,
+.eic-jury-session__juror-card,
+.eic-jury-session__grille-header,
+.eic-jury-session__criterion,
+.eic-jury-session__other-jurors {
+  background: var(--js-paper-deep-dark);
+  border: 1px solid var(--js-line-dark);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.eic-jury-session__deliverables-title,
+.eic-jury-session__queue-title,
+.eic-jury-session__other-jurors-header {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--js-text-soft);
+  font-weight: 600;
+}
+.eic-jury-session__deliverables-empty,
+.eic-jury-session__queue-empty,
+.eic-jury-session__other-jurors-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--js-text-faint);
+  font-style: italic;
+}
+.eic-jury-session__deliverables-list,
+.eic-jury-session__queue-list,
+.eic-jury-session__other-jurors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eic-jury-session__deliverable-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12px;
+}
+.eic-jury-session__deliverable-level {
+  font-weight: 700;
+  color: var(--js-orange);
+  font-size: 11px;
+}
+.eic-jury-session__deliverable-title {
+  color: var(--js-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.eic-jury-session__deliverable-status {
+  font-size: 10px;
+  letter-spacing: 0.2px;
+  color: var(--js-text-soft);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--js-line-dark);
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.eic-jury-session__deliverable-link {
+  font-size: 11px;
+  color: var(--js-orange);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.eic-jury-session__deliverable-link:hover,
+.eic-jury-session__deliverable-link:focus-visible {
+  text-decoration: underline;
+}
+.eic-jury-session__deliverable-no-link {
+  font-size: 11px;
+  color: var(--js-text-faint);
+}
+
+.eic-jury-session__queue-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12px;
+}
+.eic-jury-session__queue-name {
+  color: var(--js-text);
+  font-weight: 600;
+}
+.eic-jury-session__queue-eta {
+  color: var(--js-text-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.eic-jury-session__queue-level {
+  color: var(--js-text-faint);
+  font-size: 10px;
+}
+
+/* ============ RIGHT COLUMN ============ */
+
+.eic-jury-session__juror-card {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+}
+.eic-jury-session__juror-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--js-orange);
+  color: #1B1100;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eic-jury-session__juror-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--js-text);
+}
+.eic-jury-session__juror-role {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--js-text-faint);
+  text-transform: lowercase;
+}
+
+.eic-jury-session__grille-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.eic-jury-session__grille-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--js-text);
+  text-transform: uppercase;
+}
+.eic-jury-session__grille-progress {
+  margin: 0;
+  font-size: 12px;
+  color: var(--js-orange);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.eic-jury-session__criterion {
+  border: 1px solid var(--js-line-dark);
+  margin: 0;
+}
+.eic-jury-session__criterion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.eic-jury-session__criterion-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--js-text);
+  padding: 0;
+  float: none;
+}
+.eic-jury-session__criterion-score {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--js-orange);
+  font-variant-numeric: tabular-nums;
+}
+.eic-jury-session__criterion-help {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--js-text-faint);
+  line-height: 1.4;
+}
+.eic-jury-session__criterion-help em {
+  font-style: italic;
+}
+.eic-jury-session__criterion-rubric {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.eic-jury-session__rubric-button {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--js-text-soft);
+  border: 1px solid var(--js-line-dark);
+  border-radius: 4px;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+.eic-jury-session__rubric-button:hover,
+.eic-jury-session__rubric-button:focus-visible {
+  background: var(--js-orange-soft);
+  color: var(--js-text);
+  outline: none;
+  border-color: var(--js-orange);
+}
+.eic-jury-session__rubric-button--active {
+  background: var(--js-orange);
+  color: #1B1100;
+  border-color: var(--js-orange);
+}
+.eic-jury-session__criterion-comment,
+.eic-jury-session__comment-global {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--js-text);
+  border: 1px solid var(--js-line-dark);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.eic-jury-session__criterion-comment::placeholder,
+.eic-jury-session__comment-global::placeholder {
+  color: var(--js-text-faint);
+  font-style: italic;
+}
+.eic-jury-session__criterion-comment:focus-visible,
+.eic-jury-session__comment-global:focus-visible {
+  outline: 2px solid var(--js-orange);
+  outline-offset: 1px;
+}
+.eic-jury-session__comment-global {
+  margin-top: 4px;
+}
+
+.eic-jury-session__cta {
+  background: var(--js-orange);
+  color: #1B1100;
+  border: 1px solid var(--js-orange);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.eic-jury-session__cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.eic-jury-session__feedback {
+  margin: 0;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.eic-jury-session__feedback--ok {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+}
+.eic-jury-session__feedback--err {
+  background: rgba(220, 38, 38, 0.12);
+  color: #FCA5A5;
+}
+
+.eic-jury-session__other-jurors-row {
+  display: grid;
+  grid-template-columns: 1fr 80px auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+}
+.eic-jury-session__other-jurors-name {
+  font-size: 12px;
+  color: var(--js-text);
+}
+.eic-jury-session__other-jurors-progress {
+  height: 6px;
+  background: var(--js-line-dark);
+  border-radius: 999px;
+  overflow: hidden;
+  display: block;
+}
+.eic-jury-session__other-jurors-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--js-orange);
+  border-radius: 999px;
+}
+.eic-jury-session__other-jurors-count {
+  font-size: 11px;
+  color: var(--js-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .eic-jury-session__main {
+    grid-template-columns: 1fr;
+  }
+  .eic-jury-session__criterion-rubric {
+    gap: 6px;
+  }
+}
+
