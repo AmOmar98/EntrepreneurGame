@@ -102,17 +102,6 @@ export function levelOrd(levelId: LevelId): number {
   return LEVEL_ORDS[levelId] ?? 0;
 }
 
-// Same calendar day in local time. We do not store timezone separately; pilot
-// runs in a single TZ (Africa/Casablanca) and the server runs UTC, so this is
-// intentionally a "best effort" same-date match.
-function sameLocalDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 // ============================================================================
 // Row mappers (snake_case -> camelCase, mirrors the pattern used in app/actions.ts)
 // ============================================================================
@@ -253,12 +242,18 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
 
   const allMissions = ((missionRows ?? []) as MissionRow[]).map(mapMission);
 
-  // Filter to today's missions (or unscheduled, treated as "a_venir" today).
+  // Hotfix 2026-05-21 (BMC access) — show past + today missions, hide future.
+  // Players who didn't finish J1 ateliers (M3-M5 scheduled 2026-05-20) need to
+  // keep accessing their deliverables on J2/J3 to complete them. Previously
+  // the filter was strict same-day, which made every prior-day mission card
+  // disappear and broke the journey for Players still working on M3+.
+  const endOfToday = new Date(now);
+  endOfToday.setHours(23, 59, 59, 999);
   const todayMissions = allMissions.filter((m) => {
     if (!m.scheduledAt) return true;
     const dt = new Date(m.scheduledAt);
     if (Number.isNaN(dt.getTime())) return false;
-    return sameLocalDay(dt, now);
+    return dt <= endOfToday;
   });
 
   // Fallback : pre-pilot preview / post-pilot recap. When no mission lands on
