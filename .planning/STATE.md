@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Digi-Hackathon (20-22 mai 2026)
 status: in_progress
-last_updated: "2026-05-19T22:00:00.000Z"
-last_activity: 2026-05-19
-phase: prep-t-1
+last_updated: "2026-05-23T11:40:00.000Z"
+last_activity: 2026-05-23
+phase: post-mortem
 ---
 
 # Project State
@@ -22,15 +22,15 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 **Phase courante** : Prep T-1 (complete) → bascule "Event live" 2026-05-20 00h00
 **PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — **22 auth.users Digi-Hackathon en place** (10P + 5M + 3J + 4GM, creds `cohorte-digi-hackathon-creds.csv` gitignored, GM inchangés depuis AgreenTech)
 
-**Dernière activité** : 2026-05-19 — quick 260519-uuy completed (UI/UX detail livrable, 3 commits atomiques 4a2a0ff/282b9ec/7338ae4)
+**Dernière activité** : 2026-05-23 — quick 260523-hjc completed (preflight doc, fix post-mortem catégorie A, commit efe4ac3)
 
 ## Phase Status (v0.3)
 
 | Phase | Goal | Status |
 |---|---|---|
 | Prep T-1 | Restructure 13 livrables + reskin + smoke prod | ✅ complete (13 quicks 12-19/05) |
-| Event live | Pilote 3j stable, hotfixes via quicks sur main | 🟡 planned 20-22/05 |
-| Post-mortem | Audit + backfill résultats + archive | 🟡 planned 23-25/05 |
+| Event live | Pilote 3j stable, hotfixes via quicks sur main | ✅ complete (1 hotfix ad86675 J1, 0 downtime) |
+| Post-mortem | Audit + backfill résultats + archive | 🟡 in_progress (design fixes brainstormé 23/05, quick A done) |
 
 ## Next Action
 
@@ -72,6 +72,12 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 | 260519-tqd | DB perf baseline + pooler verdict (Option 1) | 2026-05-19 | 9ca673f |
 | 260519-uuy | UI/UX quick-wins detail livrable (3 commits atomiques) | 2026-05-19 | 7338ae4 |
 
+## Quick Tasks Completed — v0.3 post-mortem (2026-05-23 →)
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260523-hjc | Preflight doc J-2 (fix post-mortem catégorie A) | 2026-05-23 | efe4ac3 | [260523-hjc-pilot-preflight-doc](./quick/260523-hjc-pilot-preflight-doc/) |
+
 ## Seeds Planted
 
 | ID | Title | Trigger | Date |
@@ -90,4 +96,4 @@ _None_
 
 ---
 
-*Last updated: 2026-05-19 — milestone v0.3 ouvert formellement, archive v0.2 propre. 13 quicks Digi T-1 listés rétroactivement. Prep T-1 complete, attente bascule Event live 2026-05-20. Spec source : `docs/superpowers/specs/2026-05-19-planning-reorganisation-v03-design.md`.*
+*Last updated: 2026-05-23 — Event live clos (3j, 0 downtime, 1 hotfix). Phase post-mortem in_progress. Quick A (preflight doc) complete, fixes B/C/D restants. Source design : `.planning/post-mortem/2026-05-23-digi-hackathon-fixes-design.md`. Quick C (RLS announcements) en attente reconnexion MCP Supabase.*
