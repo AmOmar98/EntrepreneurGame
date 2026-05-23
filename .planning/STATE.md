@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Digi-Hackathon (20-22 mai 2026)
 status: in_progress
-last_updated: "2026-05-23T11:40:00.000Z"
+last_updated: "2026-05-23T13:00:00.000Z"
 last_activity: 2026-05-23
 phase: post-mortem
 ---
@@ -22,7 +22,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 **Phase courante** : Prep T-1 (complete) → bascule "Event live" 2026-05-20 00h00
 **PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — **22 auth.users Digi-Hackathon en place** (10P + 5M + 3J + 4GM, creds `cohorte-digi-hackathon-creds.csv` gitignored, GM inchangés depuis AgreenTech)
 
-**Dernière activité** : 2026-05-23 — quick 260523-hjc completed (preflight doc, fix post-mortem catégorie A, commit efe4ac3)
+**Dernière activité** : 2026-05-23 — quick 260523-hhy completed (RLS announcements anon SELECT + grants, fix post-mortem C, commit e4416ee)
 
 ## Phase Status (v0.3)
 
@@ -77,6 +77,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260523-hjc | Preflight doc J-2 (fix post-mortem catégorie A) | 2026-05-23 | efe4ac3 | [260523-hjc-pilot-preflight-doc](./quick/260523-hjc-pilot-preflight-doc/) |
+| 260523-hhy | RLS announcements anon SELECT + minimum grants (fix post-mortem catégorie C) | 2026-05-23 | e4416ee | [260523-hhy-rls-announcements](./quick/260523-hhy-rls-announcements/) |
 
 ## Seeds Planted
 
@@ -96,4 +97,4 @@ _None_
 
 ---
 
-*Last updated: 2026-05-23 — Event live clos (3j, 0 downtime, 1 hotfix). Phase post-mortem in_progress. Quick A (preflight doc) complete, fixes B/C/D restants. Source design : `.planning/post-mortem/2026-05-23-digi-hackathon-fixes-design.md`. Quick C (RLS announcements) en attente reconnexion MCP Supabase.*
+*Last updated: 2026-05-23 — Event live clos (3j, 0 downtime, 1 hotfix). Phase post-mortem in_progress. Quicks A (preflight) + C (RLS announcements) complete (2/4 fixes). Restent B (schema drift mgmt-api, nécessite clavier Omar sur Studio) et D (advisors triple migration). Source design : `.planning/post-mortem/2026-05-23-digi-hackathon-fixes-design.md`.*
