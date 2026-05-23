@@ -19,7 +19,7 @@
   - `read:logs`
   - `read:deployment`
   - `read:project`
-  - Team : `team_bMVjT78eJ6bKCCpFJiJLwT7o`
+  - Team : `team_pSzfPqCUMFSVOCzDhJTXxFHq` (confirmé live par erreur 403 du watcher 2026-05-23 — le post-mortem cite par erreur `team_bMVjT78eJ6bKCCpFJiJLwT7o`, l'ignorer)
 - [ ] Expiration : 30 jours (ou minimum permis par Vercel — éviter "no expiration" pour limiter l'exposition)
 - [ ] Coller le token dans la config MCP Claude Code (panel `/mcp` → plugin Vercel → reconnect)
 - [ ] Révoquer l'ancien token dans le dashboard Vercel
