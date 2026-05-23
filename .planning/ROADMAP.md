@@ -1,18 +1,14 @@
 # Roadmap — Entrepreneur Game
 
-## v0.3 Digi-Hackathon (20-22 mai 2026, current)
+## v0.4 (à définir — `/gsd-new-milestone`)
 
-Mode T-1 : pas de phases formelles avant event. Travail traçable via `.planning/quick/`.
+Aucun milestone actif. Lancer `/gsd-new-milestone` pour cadrer v0.4.
 
-| Phase | Goal | Status | Quand |
-|---|---|---|---|
-| Prep T-1 | Restructure 13 livrables + reskin Digi + smoke prod | **complete** (13 quicks 260512→260519) | jusqu'au 2026-05-19 |
-| Event live | Pilote 3 jours stable, hotfixes via /gsd-quick sur main | **planned** | 2026-05-20 → 2026-05-22 |
-| Post-mortem | Audit milestone, backfill résultats, archive v0.3 | **planned** | 2026-05-23 → 2026-05-25 |
+---
 
-Plans détaillés : aucun pré-event. Quicks live = source de vérité.
+## ✅ v0.3 Digi-Hackathon — archivé 2026-05-23
 
-Source spec : `docs/superpowers/specs/2026-05-19-planning-reorganisation-v03-design.md`.
+Voir `milestones/v0.3-MILESTONE-AUDIT.md` + `milestones/v0.3-ROADMAP.md` + `milestones/v0.3-REQUIREMENTS.md`. Tag `v0.3-pilot-shipped`. Event 3 jours livré 0 downtime, 1 hotfix, R1/R2/R3 préservés. Tech debt deferred v0.4 : DIGI-08 backfill + B post-mortem (schema drift mgmt-api).
 
 ---
 

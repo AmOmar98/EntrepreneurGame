@@ -8,21 +8,34 @@ L'Entrepreneur Game est la plateforme d'accompagnement entrepreneurial gamifiée
 
 Permettre à 6-15 équipes réelles de vivre un Hack-Days 2 jours (13-14 mai 2026) où chaque livrable produit pendant les ateliers est soumis, évalué et noté en ligne, avec un classement final calculé et publié — sans perte de données, sans honte devant les partenaires (Tamwilcom, Bank of Africa Academy, Innov Invest, Bluespace).
 
-## Current Milestone: v0.3 Digi-Hackathon (20-22 mai 2026)
+## Current State
 
-**Goal :** Livrer le pilote Digi-Hackathon (3 jours, 20-22 mai 2026) sur la base PROD AgreenTech (v0.2-pilot-ready) restructurée 13 livrables alignés 8 PDFs Welcome Guide. Mode T-1 : stabilité + smoke prod > nouvelles features.
+**Shipped** : v0.3 Digi-Hackathon (20-22 mai 2026, livré 2026-05-23, tag `v0.3-pilot-shipped`)
 
-**Scope cardinal** :
-- 13 livrables (5 bonus) répartis sur 7 missions M1→M7
-- Exception R3 unique : `prep-questions-v1` → `fiches-entretien-v1` hard-block pédagogique (signée Omar 19/05)
-- Reskin Digi appliqué (quick 260519-dgh)
-- One-pagers PDF cohorte imprimables (workflow `docs/templates/event-onepager/`)
+**PROD** : https://entrepreneur-game-six.vercel.app — 22 auth.users Digi-Hackathon (10P + 5M + 3J + 4GM)
 
-**Approche** : mode quick par défaut ; phases formelles uniquement post-event (post-mortem).
+## Next Milestone Goals (v0.4 — à cadrer)
 
-**Source PROD** : https://entrepreneur-game-six.vercel.app — **22 auth.users Digi-Hackathon** (10P + 5M + 3J + 4GM). Cohorte refresh post-AgreenTech : 10 nouvelles équipes (Simock/Graph-Anomal/Shihty+/AddictLess/NAFAS/MedNova/HASSANA/MindBot/FokusMind/Bla Dwa), 5 mentors (M01..M05), 3 jurys placeholder, GM inchangés. Creds : `cohorte-digi-hackathon-creds.csv` (gitignored).
+Tech debt à reprendre :
+- **DIGI-08** : backfill pitch_scores post-event (clarifier publish pré-event 15/05 suffisant ou re-backfill)
+- **Catégorie B post-mortem** : schema drift mgmt-api Supabase Studio cleanup (session Omar UI Studio)
+- **Smoke E2E post-event** : non joué (rolling watcher J1-J3 seulement)
 
-**Milestones précédents archivés** : v0.1 (tag `v0.1-pilot-ready`, archive `milestones/v0.1-*`) et v0.2 (tag `v0.2-pilot-ready`, archive `milestones/v0.2-*`).
+Cadrer la suite via `/gsd-new-milestone`.
+
+<details>
+<summary>Archive v0.3 Digi-Hackathon</summary>
+
+**Goal livré** : Pilote Digi-Hackathon (3 jours, 20-22 mai 2026) sur base PROD AgreenTech (v0.2-pilot-ready) restructurée 13 livrables alignés 8 PDFs Welcome Guide. Mode T-1. Event 0 downtime, 1 hotfix mineur (j2-bmc-access), R1/R2/R3 préservés. 8/9 DIGI requirements satisfaits.
+
+Scope cardinal : 13 livrables (5 bonus) sur 7 missions M1→M7, exception R3 unique L2 hard-block (signée Omar 19/05), reskin Digi, one-pagers PDF cohorte. ~20 quicks dans `.planning/quick/`.
+
+Cohorte post-AgreenTech : 10 équipes (Simock/Graph-Anomal/Shihty+/AddictLess/NAFAS/MedNova/HASSANA/MindBot/FokusMind/Bla Dwa), 5 mentors, 3 jurys placeholder.
+
+Archives : `milestones/v0.3-MILESTONE-AUDIT.md`, `milestones/v0.3-ROADMAP.md`, `milestones/v0.3-REQUIREMENTS.md`.
+</details>
+
+**Milestones précédents archivés** : v0.1 (tag `v0.1-pilot-ready`), v0.2 (tag `v0.2-pilot-ready`), v0.3 (tag `v0.3-pilot-shipped`).
 
 ## Requirements
 

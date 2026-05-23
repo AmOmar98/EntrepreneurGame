@@ -4,17 +4,21 @@ Changelog des milestones livrés. Détails dans `milestones/<vX.Y>-MILESTONE-AUD
 
 ---
 
-## v0.3 Digi-Hackathon (in_progress depuis 2026-05-19, event 20-22 mai 2026)
+## ✅ v0.3 Digi-Hackathon (livré 2026-05-23)
 
-**Goal** : Livrer pilote Digi-Hackathon 3 jours sur base PROD AgreenTech restructurée 13 livrables alignés 8 PDFs Welcome Guide.
+**Goal livré** : Pilote Digi-Hackathon 3 jours (20-22 mai 2026) sur base PROD AgreenTech restructurée 13 livrables alignés 8 PDFs Welcome Guide. Event 0 downtime, 1 hotfix mineur, R1/R2/R3 préservés.
 
-**Status** : Prep T-1 complete (13 quicks 12→19/05), Event live 20-22/05 planned, Post-mortem 23-25/05 planned.
+**Tag** : `v0.3-pilot-shipped`
 
-**Mode** : pas de phases formelles pré-event, travail traçable via `.planning/quick/`.
+**Mode** : T-1 (zéro phases formelles, ~20 quicks via `.planning/quick/`).
 
-**Tag prévu post-event** : `v0.3-digi-pilot-ready` (à poser 2026-05-22 soir si pilote stable).
+**Score** : 8/9 DIGI requirements satisfaits + DIGI-09 via audit. DIGI-08 (backfill post-event) deferred v0.4.
 
-Audit : à créer post-event dans `milestones/v0.3-MILESTONE-AUDIT.md`.
+**Tech debt v0.4** : Catégorie B post-mortem (schema drift mgmt-api Studio cleanup).
+
+- Audit : `milestones/v0.3-MILESTONE-AUDIT.md`
+- Roadmap archive : `milestones/v0.3-ROADMAP.md`
+- Requirements archive : `milestones/v0.3-REQUIREMENTS.md`
 
 ---
 
