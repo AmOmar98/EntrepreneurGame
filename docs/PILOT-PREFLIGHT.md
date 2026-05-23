@@ -31,6 +31,11 @@
 - [ ] Valider l'accès au projet PROD : `vzzbjxmfkmvqkaqxalhr` (West EU Ireland, projet utilisé par `pilot-health-watcher`)
   > Note : le post-mortem cite aussi `lpcwlgbgwjynnfgrnnxr`. Le project ID actif côté watcher est `vzzbjxmfkmvqkaqxalhr` — c'est celui qui doit fonctionner. Clarifier en post-pilote si l'autre ID est legacy.
 
+> **⚠ Token Supabase MCP — durée de vie ~1h (constat empirique 2026-05-23)** :
+> Sur 4 ticks de validation post-mortem (12h46 → 12h51 → 14h33 → 15h01), le token Supabase MCP a expiré toutes les ~60 min sans action côté Omar.
+> Pendant un event live, prévoir une reconnexion `/mcp` toutes les heures, ou activer un Personal Access Token long-lived dans `https://supabase.com/dashboard/account/tokens` (TBD si Supabase supporte tokens >24h).
+> Symptôme : `mcp__plugin_supabase_supabase__*` retourne `MCP error -32600: permission denied`. PROD continue de fonctionner — seule l'observabilité MCP est dégradée. Voir tick `.planning/pilot-alerts/OFF-PILOT-15h01-tick.md` pour preuve empirique.
+
 ## Étape 3 — Smoke test MCP (3 appels, doivent tous retourner OK)
 
 Invoquer dans Claude Code, dans l'ordre :
