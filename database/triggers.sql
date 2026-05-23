@@ -8,7 +8,8 @@
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
-as $$
+set search_path = ''
+as $
 begin
   new.updated_at = now();
   return new;
@@ -151,7 +152,8 @@ create trigger trg_evaluation_recalc
 create or replace function public.guard_player_onboarding()
 returns trigger
 language plpgsql
-as $$
+set search_path = ''
+as $
 begin
   if old.onboarded_at is not null and new.onboarded_at is null then
     raise exception 'players.onboarded_at cannot be cleared once set';
@@ -163,3 +165,14 @@ $$;
 create trigger trg_player_onboarding
   before update on public.players
   for each row execute function public.guard_player_onboarding();
+
+-- ============================================================================
+-- Quick 260523-kc2 D1 — PROD-only drift functions (not yet sourced here)
+-- ============================================================================
+-- The following 2 trigger functions exist in PROD but are NOT defined in this
+-- file (they were added via migrations under database/migrations/). PROD has
+-- `SET search_path = ''` applied to them via quick-260523-kc2 D1.sql so the
+-- function_search_path_mutable advisor is cleared for the same 4 functions.
+--   - public.set_help_requests_updated_at()  (cf. database/migrations/202605110007_phase14*)
+--   - public.set_pitch_mode_closed_at()      (cf. pitch mode migration, search history)
+-- Source them here at next consolidated refactor (SEED-001 v0.4 schemas-v2).
