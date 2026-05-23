@@ -260,10 +260,33 @@ create policy "pitch_scores_gm_delete" on public.pitch_scores
   using (public.is_game_master());
 
 -- ============================================================================
+-- announcements anon SELECT (quick-260523-hhy)
+-- ============================================================================
+-- Broadcast public content (no PII, no secrets). Required because the RSC
+-- initial render path queries announcements before the Supabase session
+-- cookie is attached, executing as anon. Without this policy + grants,
+-- postgres logs surface `permission denied for table announcements`.
+--
+-- Provenance: .planning/quick/260523-hhy-rls-announcements/NEW.sql applied
+-- PROD 2026-05-23 (project_id=vzzbjxmfkmvqkaqxalhr).
+drop policy if exists "announcements_anon_select" on public.announcements;
+create policy "announcements_anon_select" on public.announcements
+  for select to anon
+  using (true);
+
+-- ============================================================================
 -- Final grants
 -- ============================================================================
 
 revoke all on schema public from anon;
+
+-- anon minimum re-grants (quick-260523-hhy)
+-- Only `announcements` is exposed anon-readable (broadcast public content).
+-- No other table in `public` has an anon-targeted policy, so this grant
+-- alone does not expose any other table.
+grant usage on schema public to anon;
+grant select on public.announcements to anon;
+
 grant usage on schema public to authenticated;
 grant select on all tables in schema public to authenticated;
 grant insert, update, delete on all tables in schema public to authenticated;
