@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.3
 milestone_name: Digi-Hackathon (20-22 mai 2026)
 status: in_progress
-last_updated: "2026-05-23T13:00:00.000Z"
+last_updated: "2026-05-23T14:30:00.000Z"
 last_activity: 2026-05-23
 phase: post-mortem
 ---
@@ -22,7 +22,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 **Phase courante** : Prep T-1 (complete) → bascule "Event live" 2026-05-20 00h00
 **PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — **22 auth.users Digi-Hackathon en place** (10P + 5M + 3J + 4GM, creds `cohorte-digi-hackathon-creds.csv` gitignored, GM inchangés depuis AgreenTech)
 
-**Dernière activité** : 2026-05-23 — quick 260523-hhy completed (RLS announcements anon SELECT + grants, fix post-mortem C, commit e4416ee)
+**Dernière activité** : 2026-05-23 — quick 260523-kc2 completed (advisors triple migration D1+D2+D3, 26→12 security WARN, commits 0c44b31/2d09a52/fe30c6b)
 
 ## Phase Status (v0.3)
 
@@ -78,6 +78,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-19 — milestone v0.3)
 |---|-------------|------|--------|-----------|
 | 260523-hjc | Preflight doc J-2 (fix post-mortem catégorie A) | 2026-05-23 | efe4ac3 | [260523-hjc-pilot-preflight-doc](./quick/260523-hjc-pilot-preflight-doc/) |
 | 260523-hhy | RLS announcements anon SELECT + minimum grants (fix post-mortem catégorie C) | 2026-05-23 | e4416ee | [260523-hhy-rls-announcements](./quick/260523-hhy-rls-announcements/) |
+| 260523-kc2 | Advisors triple migration D1+D2+D3 (fix post-mortem catégorie D, 26→12 WARN) | 2026-05-23 | 0c44b31 / 2d09a52 / fe30c6b | [260523-kc2-advisors-fix](./quick/260523-kc2-advisors-fix/) |
 
 ## Seeds Planted
 
@@ -97,4 +98,4 @@ _None_
 
 ---
 
-*Last updated: 2026-05-23 — Event live clos (3j, 0 downtime, 1 hotfix). Phase post-mortem in_progress. Quicks A (preflight) + C (RLS announcements) complete (2/4 fixes). Restent B (schema drift mgmt-api, nécessite clavier Omar sur Studio) et D (advisors triple migration). Source design : `.planning/post-mortem/2026-05-23-digi-hackathon-fixes-design.md`.*
+*Last updated: 2026-05-23 — Event live clos (3j, 0 downtime, 1 hotfix). Phase post-mortem in_progress. Quicks A (preflight) + C (RLS announcements) + D (advisors 26→12 WARN) complete (3/4 fixes). Reste B (schema drift mgmt-api Studio cleanup, nécessite clavier Omar). 8 commits locaux non-pushés. Source design : `.planning/post-mortem/2026-05-23-digi-hackathon-fixes-design.md`.*
