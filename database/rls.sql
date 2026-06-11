@@ -420,3 +420,84 @@ GRANT EXECUTE ON FUNCTION public.recalc_player_engagement(p_player_id uuid) TO a
 
 REVOKE EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) TO authenticated;
+
+-- ============================================================================
+-- Phase 14 (v0.4) — RLS org-scope (mirror of 20260611120300_rls_org_scope.sql)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT EXISTS(
+    SELECT 1
+    FROM public.events e
+    JOIN public.cohorts c   ON c.event_id = e.id
+    JOIN public.players p   ON p.cohort_id = c.id
+    JOIN public.player_members pm ON pm.player_id = p.id
+    WHERE e.organization_id = p_org_id
+      AND pm.user_id = (select auth.uid())
+  )
+$$;
+
+-- REVOKE from PUBLIC first, then GRANT to authenticated only (kc2 pattern)
+REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 2. RLS for levels_v2: game_master can manage; authenticated can read
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "levels_v2_authenticated_select" ON public.levels_v2;
+CREATE POLICY "levels_v2_authenticated_select" ON public.levels_v2
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "levels_v2_gm_all" ON public.levels_v2;
+CREATE POLICY "levels_v2_gm_all" ON public.levels_v2
+  AS PERMISSIVE
+  FOR ALL TO authenticated
+  USING (public.is_game_master())
+  WITH CHECK (public.is_game_master());
+
+-- ----------------------------------------------------------------------------
+-- 3. Org-scoped SELECT policy on public.events
+--    Tolerates NULL organization_id (pre-backfill safety clause).
+--    Game-master sees all events regardless of org (preserves admin surfaces).
+--    Uses (select auth.uid()) inside is_in_org (via helper) and is_game_master().
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "events_org_scope_select" ON public.events;
+CREATE POLICY "events_org_scope_select" ON public.events
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (
+    organization_id IS NULL
+    OR public.is_in_org(organization_id)
+    OR public.is_game_master()
+  );
+
+-- ----------------------------------------------------------------------------
+-- 4. RLS for public.organizations
+--    Authenticated users can read orgs they belong to (via is_in_org).
+--    Game-master can read all orgs.
+-- ----------------------------------------------------------------------------
+
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "organizations_member_select" ON public.organizations;
+CREATE POLICY "organizations_member_select" ON public.organizations
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (
+    public.is_in_org(id)
+    OR public.is_game_master()
+  );
+
+DROP POLICY IF EXISTS "organizations_gm_all" ON public.organizations;
+CREATE POLICY "organizations_gm_all" ON public.organizations
+  AS PERMISSIVE
+  FOR ALL TO authenticated
+  USING (public.is_game_master())
+  WITH CHECK (public.is_game_master());

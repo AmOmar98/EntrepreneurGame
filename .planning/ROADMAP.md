@@ -12,7 +12,7 @@
 ## Phases
 
 - [x] **Phase 13: DB Consolidation + Test Infrastructure** - Résoudre le drift database/ vs PROD et installer le filet de sécurité Vitest/Playwright/CI avant tout refactor schéma (completed 2026-06-11)
-- [ ] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org
+- [x] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org (completed 2026-06-11)
 - [ ] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven
 - [ ] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés
 - [ ] **Phase 17: Observabilité + Perf** - Sentry, PostHog, perf test 500 users, vérification RLS initplan
@@ -55,7 +55,7 @@ Plans:
 - [x] 14-02-PLAN.md — Couche données TS (accessors lib/levels.ts + lib/active-event.ts, LevelId→string, champs Event, seed demo, suppression triple miroir)
 - [x] 14-03-PLAN.md — Sweep des callers level-helper (16 fichiers) + gate complète + audit R1
 - [x] 14-04-PLAN.md — Sweep active-event starts_at→is_active (13 fichiers) + gate complète
-- [ ] 14-05-PLAN.md — Checkpoint opérateur (PROD db push) + vérification RLS/archives/backfill + miroir vue déclarative (autonomous: false)
+- [x] 14-05-PLAN.md — Checkpoint opérateur (PROD db push) + vérification RLS/archives/backfill + miroir vue déclarative (autonomous: false)
 **UI hint**: yes
 
 ### Phase 15: Mission Engine no-code (éditeur GM)
@@ -111,7 +111,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
-| 14. Multi-tenant Schema + Niveaux data-driven | 4/5 | In Progress|  |
+| 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 0/? | Not started | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
