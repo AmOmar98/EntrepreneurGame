@@ -2914,6 +2914,7 @@ export async function cloneEventFlow(
 import {
   composerKindSchema,
   validationRuleSchema,
+  rubricSchema,
 } from "@/lib/schemas";
 
 // ---- createMissionFlow ------------------------------------------------------
@@ -3125,12 +3126,6 @@ function slugifyToKey(label: string): string {
     .substring(0, 64) || "criterion";
 }
 
-const rubricCriterionSchema = z.object({
-  key: z.string().min(1).optional(),
-  label: z.string().min(1),
-  max: z.coerce.number().int().min(1).max(100),
-});
-
 const saveDeliverableTemplateSchema = z.object({
   templateId: z.string().uuid().nullable().optional(),
   missionId: z.string().uuid(),
@@ -3146,7 +3141,7 @@ const saveDeliverableTemplateSchema = z.object({
   ord: z.coerce.number().int().min(0),
   isActive: z.coerce.boolean(),
   softRecommendsBefore: z.string().uuid().nullable().optional(),
-  rubric: z.array(rubricCriterionSchema).min(1),
+  rubric: rubricSchema,
   validationRules: z.array(validationRuleSchema),
 });
 

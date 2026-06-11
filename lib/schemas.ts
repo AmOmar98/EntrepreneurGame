@@ -90,6 +90,21 @@ export const validationRuleSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Rubric criterion schema (ENGINE-02 — rubric builder for saveDeliverableTemplateFlow)
+// ---------------------------------------------------------------------------
+
+// Individual rubric criterion. key is optional at input (slugified from label when absent).
+const rubricCriterionSchemaBase = z.object({
+  key: z.string().min(1).optional(),
+  label: z.string().min(1),
+  max: z.coerce.number().int().min(1).max(100),
+});
+
+// rubricSchema: the rubric array field — must have at least 1 criterion.
+// Exported so it is unit-testable without Next.js runtime (no "use server").
+export const rubricSchema = z.array(rubricCriterionSchemaBase).min(1);
+
+// ---------------------------------------------------------------------------
 // Evaluation (EVAL-02, EVAL-03, SCORE-01)
 // ---------------------------------------------------------------------------
 
