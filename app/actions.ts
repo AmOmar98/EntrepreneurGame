@@ -3,6 +3,13 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import {
+  httpsUrl,
+  onboardingSchema,
+  fichesEntretienSchema,
+  submissionSchema,
+  evaluationSchema,
+} from "@/lib/schemas";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
@@ -86,15 +93,6 @@ export async function signOut(): Promise<void> {
 // Onboarding (ONBOARD-02, ONBOARD-03, DATA-04)
 // ============================================================================
 
-const onboardingSchema = z.object({
-  teamName: z.string().min(2).max(80),
-  idea: z.string().min(10).max(500),
-  q1: z.coerce.number().int().min(1).max(5),
-  q2: z.coerce.number().int().min(1).max(5),
-  q3: z.coerce.number().int().min(1).max(5),
-  q4: z.coerce.number().int().min(1).max(5),
-  q5: z.coerce.number().int().min(1).max(5),
-});
 
 export async function saveOnboarding(
   _prev: WorkflowState,
@@ -181,11 +179,6 @@ export async function saveOnboarding(
 // Submission V1 (SUBMIT-01, SUBMIT-02, SUBMIT-04, DATA-04)
 // ============================================================================
 
-const httpsUrl = z
-  .string()
-  .url()
-  .refine((u) => u.startsWith("https://"), "URL doit commencer par https://");
-
 // quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation system
 // evaluator UUID is now hardcoded in the SECURITY DEFINER trigger
 // `trg_auto_eval_fiches_entretien` (G01 = o.ameur@ueuromed.org =
@@ -205,39 +198,7 @@ const HARD_BLOCK_DEPENDENCIES: Record<string, string> = {
 // exactly 10 entries, each a valid https:// URL. Zod errors here are *technical*
 // payload validators (R2 distinction : pedagogical rubric warnings vs payload
 // schema errors — schema errors block parsing, rubric warnings never block).
-const fichesEntretienSchema = z.object({
-  fiches: z
-    .array(z.object({ url: httpsUrl }))
-    .length(10, "10 fiches d'entretien requises (URL HTTPS chacune)"),
-});
-
-const submissionSchema = z
-  .object({
-    deliverableTemplateId: z.string().uuid(),
-    kind: z.enum(["proof_url", "proof_text"]),
-    proofUrl: z.string().optional(),
-    proofText: z.string().max(16000).optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.kind === "proof_url") {
-      const r = httpsUrl.safeParse(data.proofUrl);
-      if (!r.success) {
-        ctx.addIssue({
-          code: "custom",
-          message: "URL https:// requise",
-          path: ["proofUrl"],
-        });
-      }
-    } else {
-      if (!data.proofText || data.proofText.trim().length < 10) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Texte de preuve requis (>=10 caracteres)",
-          path: ["proofText"],
-        });
-      }
-    }
-  });
+// Schemas moved to lib/schemas.ts (pure module, importable in Vitest unit tests).
 
 export async function submitDeliverable(
   _prev: WorkflowState,
@@ -488,29 +449,7 @@ export async function submitDeliverable(
 // `trg_evaluation_recalc` recomputes `players.score_project` automatically;
 // we never touch that column from TypeScript (SCORE-01).
 
-const evaluationSchema = z
-  .object({
-    submissionId: z.string().uuid(),
-    feedback: z.string().min(0).max(4000),
-    verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
-    expectedAction: z.string().max(500).optional(),
-    // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
-    scores: z.record(z.string(), z.coerce.number().min(0).max(25)),
-  })
-  .superRefine((data, ctx) => {
-    // MNT-04 — expected_action MUST be provided (and non-empty) when the
-    // verdict is request_v2. Server-side validation; UI mirrors this.
-    if (data.verdict === "request_v2") {
-      const trimmed = (data.expectedAction ?? "").trim();
-      if (trimmed.length === 0) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["expectedAction"],
-          message: "L'action attendue est obligatoire pour une demande de revision.",
-        });
-      }
-    }
-  });
+// evaluationSchema moved to lib/schemas.ts (re-imported above).
 
 export async function evaluateSubmission(
   _prev: WorkflowState,
