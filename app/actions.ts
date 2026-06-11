@@ -14,6 +14,8 @@ import {
   validationRuleSchema,
   rubricSchema,
   slugifyToKey,
+  saveJuryGridSchema,
+  saveEventSettingsSchema,
 } from "@/lib/schemas";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
@@ -3544,4 +3546,149 @@ export async function setSimulatedDateFlow(
       ? `Simulation active : ${parsed.data.simulateDate}`
       : "Simulation desactivee.",
   };
+}
+
+// ============================================================================
+// Phase 16 / JURY-09 — saveJuryGridFlow (GM-only, delete-then-insert)
+// ============================================================================
+
+export async function saveJuryGridFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  // Parse criteria JSON from hidden input
+  let rawCriteria: unknown;
+  try {
+    rawCriteria = JSON.parse(
+      (formData.get("criteriaJson") as string | null) ?? "[]",
+    );
+  } catch {
+    return { ok: false, message: "Criteria JSON invalide." };
+  }
+
+  const parsed = saveJuryGridSchema.safeParse({
+    eventId: formData.get("eventId"),
+    criteria: rawCriteria,
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Donnees invalides.",
+    };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // Delete-then-insert (criteria is a set, not individually updated)
+  const { error: delErr } = await supabase
+    .from("pitch_criteria")
+    .delete()
+    .eq("event_id", parsed.data.eventId);
+  if (delErr) return { ok: false, message: delErr.message };
+
+  if (parsed.data.criteria.length > 0) {
+    const rows = parsed.data.criteria.map((c, i) => ({
+      event_id: parsed.data.eventId,
+      key: c.key,
+      label: c.label,
+      max: c.max,
+      ord: i,
+    }));
+    const { error: insertErr } = await supabase
+      .from("pitch_criteria")
+      .insert(rows);
+    if (insertErr) return { ok: false, message: insertErr.message };
+  }
+
+  revalidatePath("/admin/events");
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: "Grille jury enregistree." };
+}
+
+// ============================================================================
+// Phase 16 / SETTINGS-04 — saveEventSettingsFlow (GM-only, upsert on event_id)
+// ============================================================================
+
+export async function saveEventSettingsFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = saveEventSettingsSchema.safeParse({
+    eventId: formData.get("eventId"),
+    xpFirstSubmission: formData.get("xpFirstSubmission"),
+    xpValidateV1: formData.get("xpValidateV1"),
+    xpValidateV2: formData.get("xpValidateV2"),
+    engSubmitted: formData.get("engSubmitted"),
+    engReviewed: formData.get("engReviewed"),
+    engValidated: formData.get("engValidated"),
+    pitchWeight: formData.get("pitchWeight"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Donnees invalides.",
+    };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  const settingsPayload = {
+    xp_first_submission: parsed.data.xpFirstSubmission,
+    xp_validate_v1: parsed.data.xpValidateV1,
+    xp_validate_v2: parsed.data.xpValidateV2,
+    eng_submitted: parsed.data.engSubmitted,
+    eng_reviewed: parsed.data.engReviewed,
+    eng_validated: parsed.data.engValidated,
+    pitch_weight: parsed.data.pitchWeight,
+  };
+
+  const { error: upsertErr } = await supabase
+    .from("event_settings")
+    .upsert(
+      { event_id: parsed.data.eventId, ...settingsPayload },
+      { onConflict: "event_id" },
+    );
+  if (upsertErr) return { ok: false, message: upsertErr.message };
+
+  revalidatePath("/admin/events");
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: "Reglages enregistres." };
 }

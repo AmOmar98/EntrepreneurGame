@@ -122,6 +122,36 @@ const rubricCriterionSchemaBase = z.object({
 export const rubricSchema = z.array(rubricCriterionSchemaBase).min(1);
 
 // ---------------------------------------------------------------------------
+// Phase 16 / JURY-09 — Jury grid criterion + grid save schema
+// ---------------------------------------------------------------------------
+
+export const juryGridCriterionSchema = z.object({
+  key: z.string().min(1),
+  label: z.string().min(1),
+  max: z.coerce.number().int().min(1).max(100),
+});
+
+export const saveJuryGridSchema = z.object({
+  eventId: z.string().uuid(),
+  criteria: z.array(juryGridCriterionSchema).min(1).max(10),
+});
+
+// ---------------------------------------------------------------------------
+// Phase 16 / SETTINGS-04 — Event settings save schema (7 fields + pitch weight)
+// ---------------------------------------------------------------------------
+
+export const saveEventSettingsSchema = z.object({
+  eventId: z.string().uuid(),
+  xpFirstSubmission: z.coerce.number().int().min(0).max(500),
+  xpValidateV1: z.coerce.number().int().min(0).max(500),
+  xpValidateV2: z.coerce.number().int().min(0).max(500),
+  engSubmitted: z.coerce.number().int().min(0).max(500),
+  engReviewed: z.coerce.number().int().min(0).max(500),
+  engValidated: z.coerce.number().int().min(0).max(500),
+  pitchWeight: z.coerce.number().min(0).max(1),
+});
+
+// ---------------------------------------------------------------------------
 // Evaluation (EVAL-02, EVAL-03, SCORE-01)
 // ---------------------------------------------------------------------------
 
