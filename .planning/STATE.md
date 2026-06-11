@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T19:33:00Z"
+last_updated: "2026-06-11T19:42:06.438Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
   completed_plans: 8
-  percent: 22
+  percent: 17
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
-Plan: 3 of 5 (complete)
-Status: Plan 03 complete — executing Plan 04 next
+Plan: 4 of 5 (complete)
+Status: Ready to execute
 Last activity: 2026-06-11
 
 ```
@@ -54,6 +54,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 14 P01 | 5min | 3 tasks | 4 files |
 | Phase 14 P02 | 7min | 2 tasks | 8 files |
 | Phase 14 P03 | 17min | 3 tasks | 16 files |
+| Phase 14 P14-04 | 12min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 14-03 : levelLabels: Record<string,string> prop shape pour client components (short label = label.split(' - ')[1] ?? label)
 - 14-03 : LEVEL_IDS remplacé par Array.from(levelStates.keys()) dans JourneyTrack (Map insertion order = ord order)
 - 14-03 : LEVELS-03 entièrement satisfait côté consumer ; quality gate restored (typecheck/lint/build/16 unit/15 e2e green)
+- 14-04 : All 13 event-resolution sites rewired from starts_at-desc to is_active=true (TENANT-03 consumer side complete)
+- 14-04 : lib/announcements.ts:76 confirmed as event-resolution site (swapped); announcement-row created_at ordering left intact
+- 14-04 : W-3 dual-write: saveOnboardingKyc writes both current_level and current_level_text='L1_problem' to prevent enum/text FK drift post-migration
 
 ### Phase Sequence Rationale
 
@@ -119,4 +123,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 14 Plan 03 complete (LEVELS-03 consumer side). All 16 caller sites fixed, full quality gate green (typecheck/lint/build/16 unit/15 e2e). Next: Plan 04 (PROD migrations apply).*
+*Last updated: 2026-06-11 — Phase 14 Plan 04 complete (TENANT-03 consumer side). All 13 event-resolution sites rewired to is_active; W-3 dual-write applied; full quality gate green (typecheck/lint/build/16 unit/15 e2e). Next: Plan 05 (operator checkpoint — supabase db push --linked).*
