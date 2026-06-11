@@ -44,8 +44,8 @@
 ### JURY — Grille jury paramétrable
 
 - [x] **JURY-06** : Les critères de pitch (nombre, libellés, barème max) sont définis par event en DB (remplace les colonnes figées `pitch_scores.c1..c5`)
-- [ ] **JURY-07** : Le formulaire `/jury` rend dynamiquement les critères de l'event
-- [ ] **JURY-08** : Le calcul des classements (`lib/results.ts`) absorbe les critères dynamiques en préservant les classements archivés (hack rétro-compat 4/5 critères)
+- [x] **JURY-07** : Le formulaire `/jury` rend dynamiquement les critères de l'event
+- [x] **JURY-08** : Le calcul des classements (`lib/results.ts`) absorbe les critères dynamiques en préservant les classements archivés (hack rétro-compat 4/5 critères)
 - [ ] **JURY-09** : Le GM édite la grille jury dans l'éditeur
 
 ### SETTINGS — Scoring paramétrable
@@ -139,8 +139,8 @@
 | VALID-01 | Phase 15 | Complete |
 | VALID-02 | Phase 15 | Complete |
 | JURY-06 | Phase 16 | Complete |
-| JURY-07 | Phase 16 | Pending |
-| JURY-08 | Phase 16 | Pending |
+| JURY-07 | Phase 16 | Complete |
+| JURY-08 | Phase 16 | Complete |
 | JURY-09 | Phase 16 | Pending |
 | SETTINGS-01 | Phase 16 | Complete |
 | SETTINGS-02 | Phase 16 | Complete |

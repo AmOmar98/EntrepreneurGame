@@ -90,7 +90,7 @@ Plans:
 **Plans**: 5 plans
 Plans:
 - [x] 16-01-PLAN.md — Migrations additives (pitch_criteria + pitch_scores.scores jsonb + event_settings + get_event_setting_int + recalc_player_engagement parametre) + accessors lib/pitch-criteria.ts/lib/event-settings.ts + demo defaults
-- [ ] 16-02-PLAN.md — Jury form dynamique + lib/results.ts/score.ts/jury.ts dynamic + retro-compat archives 4/5-crit + pitch_weight depuis event_settings
+- [x] 16-02-PLAN.md — Jury form dynamique + lib/results.ts/score.ts/jury.ts dynamic + retro-compat archives 4/5-crit + pitch_weight depuis event_settings
 - [ ] 16-03-PLAN.md — Editeurs GM (grille jury + reglages scoring) : saveJuryGridFlow/saveEventSettingsFlow + composants admin + page /admin/events/[id]/settings + i18n
 - [ ] 16-04-PLAN.md — Tests (retro-compat fixtures 4/5-crit + dynamic + event-settings + schemas) + R1 audit + 16-VERIFICATION.md
 - [ ] 16-05-PLAN.md — Checkpoint operateur batche (autonomous: false) : apply 5 migrations PROD + smoke RLS/3-surfaces + spot-checks archives + miroir declaratif database/
@@ -125,7 +125,7 @@ Plans:
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
-| 16. Jury paramétrable + Scoring configurable | 1/5 | In Progress|  |
+| 16. Jury paramétrable + Scoring configurable | 2/5 | In Progress|  |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
 

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
-status: verifying
-last_updated: "2026-06-11T22:48:28.352Z"
+status: executing
+last_updated: "2026-06-11T23:02:05.507Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 16
   percent: 50
 ---
 
@@ -24,9 +24,9 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 16 (Jury paramétrable + Scoring configurable) — IN PROGRESS
-Plan: 1 of 5 (complete)
-Status: Plan 16-01 complete — DB foundation + TS accessors delivered
-Last activity: 2026-06-11
+Plan: 2 of 5 (complete)
+Status: Plan 16-02 complete — dynamic jury form + scoring wiring delivered
+Last activity: 2026-06-12
 
 ```
 [Phase 13] [Phase 14] [Phase 15] [Phase 16] [Phase 17] [Phase 18]
@@ -61,6 +61,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 15 P15-04 | 9min | 3 tasks | 7 files |
 | Phase 15 P15-05 | 15min | 3 tasks | 8 files |
 | Phase 16 P01 | 20min | 3 tasks | 6 files |
+| Phase 16 P16-02 | 35min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-04 : LEVELS-04 + ENGINE-05 + ENGINE-06 + ENGINE-07 complete; HARD_BLOCK_DEPENDENCIES literal untouched (VALID-02)
 - 15-05 : rubricSchema extracted to lib/schemas.ts; remapSoftRecommends to lib/clone-remap.ts; 44 unit / 23 e2e green; 15-VERIFICATION.md all 10 requirements + 6 SC traced; PROD migration apply deferred to Phase 16/18 operator checkpoint
 - 16-01 : pitch_criteria table + scores jsonb (JURY-06); event_settings with bonus_multiplier_cap DEFAULT 3.0 (SETTINGS-01/02); get_event_setting_int + parameterized recalc_player_engagement (SETTINGS-03); dual-mode TS accessors with DEFAULT_EVENT_SETTINGS = current hardcoded values; 58 unit + 23 e2e green
+- 16-02 : normalizePitchScore exported from lib/results.ts (dynamic jsonb + retro-compat c5=0->x1.25 preserved cardinal); XP literals replaced by settings.xpFirstSubmission/xpValidateV1/xpValidateV2; jury form dynamic criteria prop + positional c1..c4 + c5=0 always + scoresJson; pitchWeight from getEventSettings; 64 unit + 23 e2e green
 
 ### Phase Sequence Rationale
 
