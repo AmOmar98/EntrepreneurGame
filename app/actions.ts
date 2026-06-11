@@ -3249,3 +3249,195 @@ export async function saveDeliverableTemplateFlow(
   revalidatePath("/mentor");
   return { ok: true, message: "Livrable enregistre." };
 }
+
+// ============================================================================
+// Phase 15 / Plan 04 — Program levels CRUD (LEVELS-04)
+// ============================================================================
+
+const createLevelSchema = z.object({
+  id: z.string().min(1).max(64),
+  label: z.string().min(1).max(200),
+  description: z.string().optional(),
+  ord: z.coerce.number().int().min(0),
+});
+
+export async function createLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = createLevelSchema.safeParse({
+    id: formData.get("id"),
+    label: formData.get("label"),
+    description: formData.get("description") ?? undefined,
+    ord: formData.get("ord"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: insErr } = await supabase.from("levels_v2").insert({
+    id: parsed.data.id,
+    label: parsed.data.label,
+    description: parsed.data.description ?? null,
+    ord: parsed.data.ord,
+  });
+  if (insErr) return { ok: false, message: insErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau cree." };
+}
+
+const updateLevelSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1).max(200),
+  description: z.string().optional(),
+});
+
+export async function updateLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = updateLevelSchema.safeParse({
+    id: formData.get("id"),
+    label: formData.get("label"),
+    description: formData.get("description") ?? undefined,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: updErr } = await supabase
+    .from("levels_v2")
+    .update({ label: parsed.data.label, description: parsed.data.description ?? null })
+    .eq("id", parsed.data.id);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau mis a jour." };
+}
+
+const reorderLevelSchema = z.object({
+  items: z.array(z.object({ id: z.string().min(1), ord: z.coerce.number().int().min(0) })).min(1),
+});
+
+export async function reorderLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawItems = formData.get("items");
+  let items: unknown;
+  try {
+    items = typeof rawItems === "string" ? JSON.parse(rawItems) : null;
+  } catch {
+    return { ok: false, message: "Items JSON invalide." };
+  }
+
+  const parsed = reorderLevelSchema.safeParse({ items });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  for (const it of parsed.data.items) {
+    const { error: updErr } = await supabase
+      .from("levels_v2")
+      .update({ ord: it.ord })
+      .eq("id", it.id);
+    if (updErr) return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Ordre sauvegarde." };
+}
+
+const deleteLevelSchema = z.object({
+  id: z.string().min(1),
+});
+
+export async function deleteLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = deleteLevelSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Guard: block delete when missions reference this level.
+  const { count, error: countErr } = await supabase
+    .from("missions")
+    .select("id", { count: "exact", head: true })
+    .eq("level_id", parsed.data.id);
+  if (countErr) return { ok: false, message: countErr.message };
+
+  if (count && count > 0) {
+    return {
+      ok: false,
+      message: `Ce niveau est utilise par ${count} mission${count > 1 ? "s" : ""}.`,
+    };
+  }
+
+  const { error: delErr } = await supabase
+    .from("levels_v2")
+    .delete()
+    .eq("id", parsed.data.id);
+  if (delErr) return { ok: false, message: delErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau supprime." };
+}
