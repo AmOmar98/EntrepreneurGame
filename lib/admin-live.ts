@@ -7,7 +7,7 @@
 // Dual-mode (DATA-03): demo mode (no Supabase env) returns empty defaults
 // so the admin page renders without leaking seed data.
 import { createClient } from "@/utils/supabase/server";
-import { levelOrd } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import {
   computeTeamActivityState,
   latestActivityMs,
@@ -136,6 +136,8 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
 
   const supabase = await createClient();
   if (!supabase) return empty;
+
+  const levelsMap = await getLevelsMap();
 
   // 1. Resolve current event.
   const { data: eventRow, error: eventErr } = await supabase
@@ -302,7 +304,7 @@ export async function getAdminLiveSnapshot(): Promise<AdminLiveSnapshot> {
       slug: p.slug,
       idea: p.idea,
       currentLevel: p.current_level,
-      level: levelOrd(p.current_level),
+      level: levelsMap.get(p.current_level)?.ord ?? 0,
       scoreProject:
         typeof p.score_project === "string"
           ? Number(p.score_project)

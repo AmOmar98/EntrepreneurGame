@@ -4,7 +4,7 @@
 // Dual-mode (DATA-03): demo mode (no Supabase env) returns empty / zero defaults
 // rather than leaking seed data.
 import { createClient } from "@/utils/supabase/server";
-import { levelLabel } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import type { LevelId, Player, SubmissionStatus } from "@/lib/types";
 
 // ============================================================================
@@ -106,6 +106,8 @@ type SubmissionRow = {
 export async function getCohortOverview(): Promise<CohortRow[]> {
   const supabase = await createClient();
   if (!supabase) return [];
+
+  const levelsMap = await getLevelsMap();
 
   // 1. Resolve current event (mirror mentor.ts).
   const { data: eventRow, error: eventErr } = await supabase
@@ -255,7 +257,7 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
 
     return {
       player,
-      levelLabel: levelLabel(player.currentLevel),
+      levelLabel: levelsMap.get(player.currentLevel)?.label ?? player.currentLevel,
       status,
       nextDeliverableTitle: nextTitle,
     };

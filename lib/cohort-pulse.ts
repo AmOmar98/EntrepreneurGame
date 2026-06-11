@@ -16,7 +16,7 @@
 //     -> empty (we only ever select id / cohort_id / mission_id / level_id /
 //     deliverable_template_id / status / player_id).
 import { createClient } from "@/utils/supabase/server";
-import { levelOrd } from "@/lib/journey";
+import { demoLevels } from "@/lib/seed/levels";
 import { seedPlayers } from "@/lib/seed";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type { LevelId, SubmissionStatus } from "@/lib/types";
@@ -63,9 +63,11 @@ function emptyEntries(total: number): CohortPulseEntry[] {
 function getCohortPulseDemo(): CohortPulseEntry[] {
   const players = seedPlayers();
   const total = players.length;
+  const levelsMap = new Map(demoLevels.map((l) => [l.id, l]));
+  const ordOf = (id: LevelId) => levelsMap.get(id)?.ord ?? 0;
   return PULSE_LEVELS.map((levelId) => {
-    const ord = levelOrd(levelId);
-    const count = players.filter((p) => levelOrd(p.currentLevel) > ord).length;
+    const ord = ordOf(levelId);
+    const count = players.filter((p) => ordOf(p.currentLevel) > ord).length;
     return { levelId, count, total };
   });
 }

@@ -7,6 +7,7 @@
 // events.pitch_order_json {playerId: slot} ascending when present.
 // Falls back to name ASC when no order has been set by the GameMaster.
 import { createClient } from "@/utils/supabase/server";
+import { getLevelsMap } from "@/lib/levels";
 import { getPlayerSlot, type PitchOrder } from "@/lib/pitch-order";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { isCurrentUserJuror } from "@/lib/jurors";
@@ -177,6 +178,8 @@ export async function getJuryOverview(): Promise<{
     return { eventId: null, rows: [], pitchModeState: "off", notInvited: false };
   }
 
+  const levelsMap = await getLevelsMap();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -252,16 +255,6 @@ export async function getJuryOverview(): Promise<{
   //      then score_project DESC. Tie-break on name ASC.
   // Rationale : juror naturally sees the most advanced teams first
   // ("matures d'abord") in absence of an explicit GM-set order.
-  const levelRank: Record<LevelId, number> = {
-    L0_diagnostic: 0,
-    L1_problem: 1,
-    L2_solution: 2,
-    L3_market: 3,
-    L4_business_model: 4,
-    L5_pitch: 5,
-    L6_traction: 6,
-    L7_alumni: 7,
-  };
   const players = [...playersUnsorted].sort((a, b) => {
     const sa = getPlayerSlot(pitchOrder, a.id);
     const sb = getPlayerSlot(pitchOrder, b.id);
@@ -269,7 +262,7 @@ export async function getJuryOverview(): Promise<{
     if (sa !== null) return -1;
     if (sb !== null) return 1;
     // Smart fallback : level DESC, then score_project DESC, then name ASC.
-    const dl = (levelRank[b.currentLevel] ?? -1) - (levelRank[a.currentLevel] ?? -1);
+    const dl = (levelsMap.get(b.currentLevel)?.ord ?? -1) - (levelsMap.get(a.currentLevel)?.ord ?? -1);
     if (dl !== 0) return dl;
     const ds = (b.scoreProject ?? 0) - (a.scoreProject ?? 0);
     if (ds !== 0) return ds;
@@ -411,18 +404,8 @@ export async function getJuryOverview(): Promise<{
         });
       }
       // Sort by level ASC then template.ord ASC (stable).
-      const levelOrder: Record<LevelId, number> = {
-        L0_diagnostic: 0,
-        L1_problem: 1,
-        L2_solution: 2,
-        L3_market: 3,
-        L4_business_model: 4,
-        L5_pitch: 5,
-        L6_traction: 6,
-        L7_alumni: 7,
-      };
       flat.sort((a, b) => {
-        const dl = (levelOrder[a.levelId] ?? 99) - (levelOrder[b.levelId] ?? 99);
+        const dl = (levelsMap.get(a.levelId)?.ord ?? 99) - (levelsMap.get(b.levelId)?.ord ?? 99);
         if (dl !== 0) return dl;
         return a.ord - b.ord;
       });
