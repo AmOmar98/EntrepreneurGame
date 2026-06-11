@@ -2856,8 +2856,13 @@ export async function cloneEventFlow(
   // old template id -> new template id
   const templateIdMap = new Map<string, string>();
 
+  // WR-05: single timestamp + per-item index to guarantee unique slugs even
+  // when the loop completes within the same millisecond.
+  const cloneTs = Date.now();
+
   // Pass 1: insert all clones with soft_recommends_before=null (avoids self-FK constraint during insert).
-  for (const tpl of srcTemplates) {
+  for (let tplIdx = 0; tplIdx < srcTemplates.length; tplIdx++) {
+    const tpl = srcTemplates[tplIdx];
     const newMissionId = missionIdMap.get(tpl.mission_id);
     if (!newMissionId) {
       return { ok: false, message: `Mission cible introuvable pour template ${tpl.slug}.` };
@@ -2866,7 +2871,7 @@ export async function cloneEventFlow(
       .from("deliverable_templates")
       .insert({
         mission_id: newMissionId,
-        slug: `${tpl.slug}-clone-${Date.now()}`,
+        slug: `${tpl.slug}-clone-${cloneTs}-${tplIdx}`,
         title: tpl.title,
         description: tpl.description,
         rubric: tpl.rubric,
@@ -2890,6 +2895,7 @@ export async function cloneEventFlow(
 
   // Pass 2: remap soft_recommends_before via old->new template map.
   // Only templates that had a non-null soft_recommends_before need updating.
+  // CR-03: on any remap failure, best-effort cleanup to avoid orphaned records.
   for (const tpl of srcTemplates) {
     if (!tpl.soft_recommends_before) continue;
     const newTplId = templateIdMap.get(tpl.id);
@@ -2902,7 +2908,17 @@ export async function cloneEventFlow(
       .update({ soft_recommends_before: newPrereqId })
       .eq("id", newTplId);
     if (remapErr) {
-      return { ok: false, message: remapErr.message };
+      // Best-effort cleanup: delete cloned templates, missions, event (FK-safe order).
+      const newTemplateIds = [...templateIdMap.values()];
+      if (newTemplateIds.length > 0) {
+        await supabase.from("deliverable_templates").delete().in("id", newTemplateIds);
+      }
+      const newMissionIds = [...missionIdMap.values()];
+      if (newMissionIds.length > 0) {
+        await supabase.from("missions").delete().in("id", newMissionIds);
+      }
+      await supabase.from("events").delete().eq("id", newEventId);
+      return { ok: false, message: `Clone echoue (nettoyage effectue): ${remapErr.message}` };
     }
   }
 
