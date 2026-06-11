@@ -73,7 +73,7 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Migration colonnes engine (composer_kind/template_url/auto_validate/soft_recommends_before/validation_rules + CHECK warn-only + backfill 13 Digi + trigger auto_validate) + types/schemas/seed defaults (VALID-01)
 - [x] 15-02-PLAN.md — Events CRUD + clone (remap self-FK) + activate single-active (ENGINE-04, ENGINE-03)
-- [ ] 15-03-PLAN.md — Missions CRUD/reorder + éditeur template + rubric builder {key,label,max} + note warn-only (ENGINE-01, ENGINE-02, VALID-02)
+- [x] 15-03-PLAN.md — Missions CRUD/reorder + éditeur template + rubric builder {key,label,max} + note warn-only (ENGINE-01, ENGINE-02, VALID-02)
 - [ ] 15-04-PLAN.md — Levels editor + dé-hardcoding consumer (composer_kind/template_url) + hint ambre soft_recommends + getSimulatedNow (LEVELS-04, ENGINE-05, ENGINE-06, ENGINE-07)
 - [ ] 15-05-PLAN.md — Tests unitaires (schemas éditeur + clone remap) + E2E editor demo smoke + R3 gate + 15-VERIFICATION.md
 **UI hint**: yes
@@ -118,7 +118,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
-| 15. Mission Engine no-code | 2/5 | In Progress|  |
+| 15. Mission Engine no-code | 3/5 | In Progress|  |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |

@@ -26,8 +26,8 @@
 
 ### ENGINE — Mission engine no-code (éditeur GM)
 
-- [ ] **ENGINE-01** : Le GM peut créer/éditer/désactiver une mission (titre, niveau, ordre, date programmée, kind) depuis `/admin` sans SQL
-- [ ] **ENGINE-02** : Le GM peut créer/éditer un deliverable_template (titre, description, rubric critères/labels/max, max_score, is_bonus, ordre, activation) via un éditeur de barème
+- [x] **ENGINE-01** : Le GM peut créer/éditer/désactiver une mission (titre, niveau, ordre, date programmée, kind) depuis `/admin` sans SQL
+- [x] **ENGINE-02** : Le GM peut créer/éditer un deliverable_template (titre, description, rubric critères/labels/max, max_score, is_bonus, ordre, activation) via un éditeur de barème
 - [x] **ENGINE-03** : Le GM peut cloner un event existant (missions + livrables + réglages) vers un nouvel event en un clic
 - [x] **ENGINE-04** : Le GM peut créer un event + cohorte (slug, nom, dates) depuis l'admin
 - [ ] **ENGINE-05** : Les comportements par livrable sont data-driven — `composer_kind`, `template_url`, `auto_validate` en colonnes remplacent tous les slugs codés en dur (`HARD_BLOCK_DEPENDENCIES`, `MOSCOW_DELIVERABLE_SLUG`, `lib/template-links.ts`, UUID G01 du trigger auto-eval)
@@ -58,7 +58,7 @@
 ### VALID — Moteur validation v2 (SEED-001)
 
 - [x] **VALID-01** : Chaque deliverable_template porte des `validation_rules [{rule, severity, message}]` structurellement warn-only — R2 encodé dans le moteur, `severity: "error"` impossible côté Player
-- [ ] **VALID-02** : L'exception hard-block L2 (`prep-questions-v1` → `fiches-entretien-v1`) reste l'unique cas codé, non exposée ni généralisable dans l'éditeur
+- [x] **VALID-02** : L'exception hard-block L2 (`prep-questions-v1` → `fiches-entretien-v1`) reste l'unique cas codé, non exposée ni généralisable dans l'éditeur
 
 ### QUAL — Qualité full council
 
@@ -128,8 +128,8 @@
 | LEVELS-01 | Phase 14 | Complete |
 | LEVELS-02 | Phase 14 | Complete |
 | LEVELS-03 | Phase 14 | Complete |
-| ENGINE-01 | Phase 15 | Pending |
-| ENGINE-02 | Phase 15 | Pending |
+| ENGINE-01 | Phase 15 | Complete |
+| ENGINE-02 | Phase 15 | Complete |
 | ENGINE-03 | Phase 15 | Complete |
 | ENGINE-04 | Phase 15 | Complete |
 | ENGINE-05 | Phase 15 | Pending |
@@ -137,7 +137,7 @@
 | ENGINE-07 | Phase 15 | Pending |
 | LEVELS-04 | Phase 15 | Pending |
 | VALID-01 | Phase 15 | Complete |
-| VALID-02 | Phase 15 | Pending |
+| VALID-02 | Phase 15 | Complete |
 | JURY-06 | Phase 16 | Pending |
 | JURY-07 | Phase 16 | Pending |
 | JURY-08 | Phase 16 | Pending |
