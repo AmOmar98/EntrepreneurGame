@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: verifying
-last_updated: "2026-06-11T21:51:42.881Z"
+last_updated: "2026-06-11T22:48:28.352Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 19
+  completed_plans: 15
   percent: 50
 ---
 
@@ -23,9 +23,9 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 
 ## Current Position
 
-Phase: 15 (Mission Engine no-code — éditeur GM) — COMPLETE
-Plan: 5 of 5 (complete)
-Status: Phase 15 complete — all 10 requirements satisfied, gate green
+Phase: 16 (Jury paramétrable + Scoring configurable) — IN PROGRESS
+Plan: 1 of 5 (complete)
+Status: Plan 16-01 complete — DB foundation + TS accessors delivered
 Last activity: 2026-06-11
 
 ```
@@ -60,6 +60,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 15 P03 | 7min | 3 tasks | 5 files |
 | Phase 15 P15-04 | 9min | 3 tasks | 7 files |
 | Phase 15 P15-05 | 15min | 3 tasks | 8 files |
+| Phase 16 P01 | 20min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-04 : isAutoValidate pre-migration dual-check: (composer_kind=multi_url && auto_validate) || (!column && slug===fiches-entretien-v1) so PROD works until migration applied
 - 15-04 : LEVELS-04 + ENGINE-05 + ENGINE-06 + ENGINE-07 complete; HARD_BLOCK_DEPENDENCIES literal untouched (VALID-02)
 - 15-05 : rubricSchema extracted to lib/schemas.ts; remapSoftRecommends to lib/clone-remap.ts; 44 unit / 23 e2e green; 15-VERIFICATION.md all 10 requirements + 6 SC traced; PROD migration apply deferred to Phase 16/18 operator checkpoint
+- 16-01 : pitch_criteria table + scores jsonb (JURY-06); event_settings with bonus_multiplier_cap DEFAULT 3.0 (SETTINGS-01/02); get_event_setting_int + parameterized recalc_player_engagement (SETTINGS-03); dual-mode TS accessors with DEFAULT_EVENT_SETTINGS = current hardcoded values; 58 unit + 23 e2e green
 
 ### Phase Sequence Rationale
 
