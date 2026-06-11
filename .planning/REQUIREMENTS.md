@@ -21,7 +21,7 @@
 
 - [x] **TENANT-01** : Le schéma DB introduit `organizations` ; chaque event appartient à une organisation (hiérarchie `organization → event → cohort → mission → deliverable_template`)
 - [x] **TENANT-02** : RLS strict inter-org — un utilisateur (Player/Mentor/GM) de l'org A ne peut lire aucune donnée de l'org B
-- [ ] **TENANT-03** : Le GM peut désigner explicitement l'event « actif » — fin de la convention implicite `starts_at` le plus récent (`lib/pitch-mode.ts` et équivalents)
+- [x] **TENANT-03** : Le GM peut désigner explicitement l'event « actif » — fin de la convention implicite `starts_at` le plus récent (`lib/pitch-mode.ts` et équivalents)
 - [ ] **TENANT-04** : Les events archivés (AgreenTech, Digi) restent consultables en lecture seule, données et classements intacts (pas de migration big-bang)
 
 ### ENGINE — Mission engine no-code (éditeur GM)
@@ -38,7 +38,7 @@
 
 - [x] **LEVELS-01** : La structure des niveaux (nombre, IDs, noms, ordre) est définie en table par programme — plus d'enum PG `level_id`
 - [x] **LEVELS-02** : Migration de `players.current_level` + `missions.level_id` de l'enum vers la nouvelle référence sans perte de données PROD (migration multi-étapes)
-- [ ] **LEVELS-03** : L'UI lit labels/ordres depuis la DB — suppression des maps TS `LEVEL_LABELS`/`LEVEL_ORDS`/`SHORT_LABELS`/`LEVEL_IDS` et des `z.enum` miroirs
+- [x] **LEVELS-03** : L'UI lit labels/ordres depuis la DB — suppression des maps TS `LEVEL_LABELS`/`LEVEL_ORDS`/`SHORT_LABELS`/`LEVEL_IDS` et des `z.enum` miroirs
 - [ ] **LEVELS-04** : Le GM peut renommer/réordonner/ajouter/retirer des niveaux d'un programme dans l'éditeur
 
 ### JURY — Grille jury paramétrable
@@ -57,7 +57,7 @@
 
 ### VALID — Moteur validation v2 (SEED-001)
 
-- [ ] **VALID-01** : Chaque deliverable_template porte des `validation_rules [{rule, severity, message}]` structurellement warn-only — R2 encodé dans le moteur, `severity: "error"` impossible côté Player
+- [x] **VALID-01** : Chaque deliverable_template porte des `validation_rules [{rule, severity, message}]` structurellement warn-only — R2 encodé dans le moteur, `severity: "error"` impossible côté Player
 - [ ] **VALID-02** : L'exception hard-block L2 (`prep-questions-v1` → `fiches-entretien-v1`) reste l'unique cas codé, non exposée ni généralisable dans l'éditeur
 
 ### QUAL — Qualité full council
@@ -123,11 +123,11 @@
 | QUAL-03 | Phase 13 | Pending |
 | TENANT-01 | Phase 14 | Complete |
 | TENANT-02 | Phase 14 | Complete |
-| TENANT-03 | Phase 14 | Pending |
+| TENANT-03 | Phase 14 | Complete |
 | TENANT-04 | Phase 14 | Pending |
 | LEVELS-01 | Phase 14 | Complete |
 | LEVELS-02 | Phase 14 | Complete |
-| LEVELS-03 | Phase 14 | Pending |
+| LEVELS-03 | Phase 14 | Complete |
 | ENGINE-01 | Phase 15 | Pending |
 | ENGINE-02 | Phase 15 | Pending |
 | ENGINE-03 | Phase 15 | Pending |
@@ -136,7 +136,7 @@
 | ENGINE-06 | Phase 15 | Pending |
 | ENGINE-07 | Phase 15 | Pending |
 | LEVELS-04 | Phase 15 | Pending |
-| VALID-01 | Phase 15 | Pending |
+| VALID-01 | Phase 15 | Complete |
 | VALID-02 | Phase 15 | Pending |
 | JURY-06 | Phase 16 | Pending |
 | JURY-07 | Phase 16 | Pending |

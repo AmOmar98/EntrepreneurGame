@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T19:42:06.438Z"
+last_updated: "2026-06-11T21:00:03.497Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 9
-  completed_plans: 8
-  percent: 17
+  completed_phases: 2
+  total_plans: 14
+  completed_plans: 10
+  percent: 33
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
-Plan: 4 of 5 (complete)
+Plan: 5 of 5 (complete)
 Status: Ready to execute
 Last activity: 2026-06-11
 
@@ -55,6 +55,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 14 P02 | 7min | 2 tasks | 8 files |
 | Phase 14 P03 | 17min | 3 tasks | 16 files |
 | Phase 14 P14-04 | 12min | 2 tasks | 13 files |
+| Phase 15 P15-01 | 12min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 14-04 : All 13 event-resolution sites rewired from starts_at-desc to is_active=true (TENANT-03 consumer side complete)
 - 14-04 : lib/announcements.ts:76 confirmed as event-resolution site (swapped); announcement-row created_at ordering left intact
 - 14-04 : W-3 dual-write: saveOnboardingKyc writes both current_level and current_level_text='L1_problem' to prevent enum/text FK drift post-migration
+- 15-01 : DeliverableTemplate required fields (non-optional) — callers supply defensive defaults; journey.ts mapper demonstrates pre-migration pattern
+- 15-01 : VALID-01 structural: z.literal("warn") + DB CHECK validation_rules_severity_warn_only — severity:error impossible at both TS and DB layers (defense in depth / R2)
+- 15-01 : fn_auto_eval_fiches_entretien generalized to auto_validate column — slug literal removed (ENGINE-05); G01 UUID retained; PROD apply operator-gated
 
 ### Phase Sequence Rationale
 
@@ -123,4 +127,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 14 Plan 04 complete (TENANT-03 consumer side). All 13 event-resolution sites rewired to is_active; W-3 dual-write applied; full quality gate green (typecheck/lint/build/16 unit/15 e2e). Next: Plan 05 (operator checkpoint — supabase db push --linked).*
+*Last updated: 2026-06-11 — Phase 15 Plan 01 complete (engine-columns foundation). Migration additive (PROD apply deferred), DeliverableTemplate extended, VALID-01 structural (z.literal warn + DB CHECK), demo seed defaults, full quality gate green (typecheck/lint/build/23 unit/15 e2e).*
