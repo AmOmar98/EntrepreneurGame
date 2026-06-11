@@ -163,7 +163,10 @@ export async function saveOnboarding(
       // onto L1_problem so the journey track shows L0=done, L1=current.
       // Without this, the L0 node stays "current/À rendre" forever even after
       // the KYC form is filled. See memory project_onboarding_level_bump_sql.
+      // W-3 (14-04): write both enum column and text FK to prevent drift after
+      // the levels_v2 migration is applied (Plan 05 operator checkpoint).
       current_level: "L1_problem",
+      current_level_text: "L1_problem",
     })
     .eq("id", player.id);
   if (updateError) {
@@ -845,11 +848,11 @@ export async function importPlayersCsv(
     };
   }
 
-  // 4. Resolve current event (latest by starts_at).
+  // 4. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -1525,11 +1528,11 @@ export async function createAnnouncementFlow(
     return { ok: false, message: "Acces reserve au GameMaster." };
   }
 
-  // Resolve current event (latest by starts_at — same heuristic as elsewhere).
+  // Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

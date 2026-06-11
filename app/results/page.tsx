@@ -32,7 +32,7 @@ async function loadReplayStats(): Promise<ReplayStats> {
   const { data: eventRow } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   const eventId = (eventRow as { id?: string } | null)?.id ?? null;

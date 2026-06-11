@@ -65,7 +65,7 @@ export default async function AdminPage({
     const { data: eventRow } = await supabase
       .from("events")
       .select("id, pitch_order_json")
-      .order("starts_at", { ascending: false })
+      .eq("is_active", true)
       .limit(1)
       .maybeSingle();
     const r = eventRow as

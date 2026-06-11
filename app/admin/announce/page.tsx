@@ -33,7 +33,7 @@ async function loadComposerData(): Promise<{
   const { data: eventRow } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (!eventRow) return { players: [], levels, hasEvent: false };
