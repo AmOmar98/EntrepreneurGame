@@ -74,6 +74,22 @@ export const submissionSchema = z
   });
 
 // ---------------------------------------------------------------------------
+// Engine: composer_kind + validation_rules (Phase 15 — ENGINE-05, VALID-01)
+// ---------------------------------------------------------------------------
+
+// Mirrors DB CHECK constraint composer_kind_valid_values and ComposerKind in lib/types.ts.
+export const composerKindSchema = z.enum(["simple", "moscow", "multi_url"]);
+
+// Mirrors DB CHECK validation_rules_severity_warn_only and ValidationRule in lib/types.ts.
+// z.literal("warn") is the TS-side VALID-01 structural guarantee: severity:'error' is
+// impossible at parse time, mirroring the DB CHECK constraint (defense in depth / R2).
+export const validationRuleSchema = z.object({
+  rule: z.string().min(1),
+  severity: z.literal("warn"),
+  message: z.string().min(1),
+});
+
+// ---------------------------------------------------------------------------
 // Evaluation (EVAL-02, EVAL-03, SCORE-01)
 // ---------------------------------------------------------------------------
 

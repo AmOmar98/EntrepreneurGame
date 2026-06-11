@@ -140,6 +140,12 @@ type DeliverableTemplateRow = {
   max_score: number;
   ord: number;
   is_bonus?: boolean | null;
+  // Phase 15 engine columns — optional for pre-migration window compatibility.
+  composer_kind?: string | null;
+  template_url?: string | null;
+  auto_validate?: boolean | null;
+  soft_recommends_before?: string | null;
+  validation_rules?: unknown[] | null;
 };
 
 function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplate {
@@ -153,6 +159,15 @@ function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplat
     maxScore: row.max_score,
     ord: row.ord,
     isBonus: Boolean(row.is_bonus),
+    // Phase 15 engine columns: defensive defaults for pre-migration window.
+    composerKind:
+      row.composer_kind === "moscow" || row.composer_kind === "multi_url"
+        ? row.composer_kind
+        : "simple",
+    templateUrl: row.template_url ?? null,
+    autoValidate: Boolean(row.auto_validate),
+    softRecommendsBefore: row.soft_recommends_before ?? null,
+    validationRules: [],
   };
 }
 

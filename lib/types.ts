@@ -66,6 +66,19 @@ export type RubricCriterion = {
   max: number;
 };
 
+// Phase 15: data-driven composer kind (ENGINE-05).
+// Mirrors DB CHECK constraint composer_kind_valid_values and z.enum in schemas.ts.
+export type ComposerKind = "simple" | "moscow" | "multi_url";
+
+// Phase 15: validation rule shape (VALID-01 / R2 CARDINAL structural guarantee).
+// severity is constrained to "warn" only -- no "error" severity possible at compile time.
+// Mirrors DB CHECK constraint validation_rules_severity_warn_only and z.literal("warn") in schemas.ts.
+export type ValidationRule = {
+  rule: string;
+  severity: "warn";
+  message: string;
+};
+
 export type DeliverableTemplate = {
   id: string;
   missionId: string;
@@ -79,6 +92,14 @@ export type DeliverableTemplate = {
   // (recalc_player_score / sumPlayerScoreProject ignore it) and MUST NOT be
   // used to gate / disable any sibling deliverable (R3). Polish v3 2026-05-12.
   isBonus: boolean;
+  // Phase 15 engine columns (ENGINE-05). Defensive defaults for pre-migration
+  // window: composerKind ?? "simple", templateUrl ?? null, autoValidate ?? false,
+  // softRecommendsBefore ?? null, validationRules ?? [].
+  composerKind: ComposerKind;
+  templateUrl: string | null;
+  autoValidate: boolean;
+  softRecommendsBefore: string | null;
+  validationRules: ValidationRule[];
 };
 
 export type Cohort = {
