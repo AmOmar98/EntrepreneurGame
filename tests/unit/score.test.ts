@@ -107,4 +107,65 @@ describe("applyBonusMultiplier", () => {
     expect(result.boostedScore).toBe(100);
     expect(result.applied).toBe("bonus-1");
   });
+
+  it("excludes a rest_of_event bonus when submission is after eventEndsAt", () => {
+    const bonusEvent: BonusEvent = {
+      id: "bonus-2",
+      projectId: "player-1",
+      type: "bonus_verbatims_terrain",
+      title: "Verbatims bonus",
+      description: "10 verbatims",
+      docUrl: null,
+      status: "validated",
+      multiplierFactor: 2.0,
+      multiplierScope: "rest_of_event",
+      multiplierConsumedAt: null,
+      claimedAt: "2026-05-19T10:00:00Z",
+      claimedBy: "player-1",
+      reviewedBy: "mentor-1",
+      reviewedAt: "2026-05-19T12:00:00Z",
+      feedback: "",
+      createdAt: "2026-05-19T09:00:00Z",
+      updatedAt: "2026-05-19T12:00:00Z",
+    };
+    const result = applyBonusMultiplier({
+      rawScore: 50,
+      bonusEvents: [bonusEvent],
+      submission, // submittedAt 2026-05-20T10:00:00Z > eventEndsAt below
+      eventEndsAt: "2026-05-20T09:00:00Z",
+    });
+    expect(result.boostedScore).toBe(50);
+    expect(result.applied).toBeNull();
+  });
+
+  it("applies a rest_of_event bonus when submission is before eventEndsAt", () => {
+    const bonusEvent: BonusEvent = {
+      id: "bonus-3",
+      projectId: "player-1",
+      type: "bonus_verbatims_terrain",
+      title: "Verbatims bonus",
+      description: "10 verbatims",
+      docUrl: null,
+      status: "validated",
+      multiplierFactor: 1.5,
+      multiplierScope: "rest_of_event",
+      multiplierConsumedAt: null,
+      claimedAt: "2026-05-19T10:00:00Z",
+      claimedBy: "player-1",
+      reviewedBy: "mentor-1",
+      reviewedAt: "2026-05-19T12:00:00Z",
+      feedback: "",
+      createdAt: "2026-05-19T09:00:00Z",
+      updatedAt: "2026-05-19T12:00:00Z",
+    };
+    const result = applyBonusMultiplier({
+      rawScore: 50,
+      bonusEvents: [bonusEvent],
+      submission, // submittedAt 2026-05-20T10:00:00Z < eventEndsAt below
+      eventEndsAt: "2026-05-22T18:00:00Z",
+    });
+    // 50 * 1.5 = 75
+    expect(result.boostedScore).toBe(75);
+    expect(result.applied).toBe("bonus-3");
+  });
 });

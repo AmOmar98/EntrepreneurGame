@@ -36,6 +36,9 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run test:unit
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ""
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
 
   e2e:
     runs-on: ubuntu-latest

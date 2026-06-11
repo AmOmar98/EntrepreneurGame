@@ -200,3 +200,28 @@ begin
   return new;
 end;
 $$;
+
+-- Bootstrap-safe trigger attachment (WR-02 fix, phase 13 review).
+-- On a fresh bootstrap (schema.sql -> triggers.sql -> rls.sql -> db push) the
+-- help_requests table and events.pitch_mode_state column do not exist yet at
+-- this point — the migrations create both the objects AND these triggers.
+-- These guarded blocks attach the triggers only when the objects already exist
+-- (re-apply on a live DB), and no-op harmlessly on fresh bootstrap.
+do $$
+begin
+  if to_regclass('public.help_requests') is not null then
+    drop trigger if exists trg_help_requests_updated_at on public.help_requests;
+    create trigger trg_help_requests_updated_at
+      before update on public.help_requests
+      for each row execute function public.set_help_requests_updated_at();
+  end if;
+  if to_regclass('public.events') is not null
+     and exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'events'
+                   and column_name = 'pitch_mode_state') then
+    drop trigger if exists trg_set_pitch_mode_closed_at on public.events;
+    create trigger trg_set_pitch_mode_closed_at
+      before update of pitch_mode_state on public.events
+      for each row execute function public.set_pitch_mode_closed_at();
+  end if;
+end $$;
