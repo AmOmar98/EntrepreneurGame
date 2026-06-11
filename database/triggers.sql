@@ -225,3 +225,14 @@ begin
       for each row execute function public.set_pitch_mode_closed_at();
   end if;
 end $$;
+
+-- ============================================================================
+-- Phase 16 (v0.4) — scoring paramétré (mirror de 20260611240200, PROD 2026-06-12)
+-- get_event_setting_int + recalc_player_engagement lisant event_settings
+-- (défauts = comportement historique 100/25/50). Définitions exactes dans la
+-- migration ; résumé déclaratif ici — la migration reste la source d'apply.
+-- ============================================================================
+-- Voir supabase/migrations/20260611240200_phase16_triggers_parameterized.sql
+-- pour get_event_setting_int(p_event_id, p_key, p_default) et la version
+-- paramétrée de recalc_player_engagement (SECURITY DEFINER, search_path,
+-- REVOKE FROM PUBLIC + GRANT authenticated).

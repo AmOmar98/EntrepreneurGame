@@ -37,11 +37,9 @@ ALTER TABLE public.deliverable_templates
   ADD CONSTRAINT validation_rules_severity_warn_only
   CHECK (
     validation_rules = '[]'::jsonb
-    OR NOT EXISTS (
-      SELECT 1
-      FROM jsonb_array_elements(validation_rules) AS r
-      WHERE (r->>'severity') <> 'warn'
-    )
+    -- jsonb_path_exists (function, not subquery — allowed in CHECK):
+    -- true iff some element has severity != 'warn' → negated = warn-only (R2)
+    OR NOT jsonb_path_exists(validation_rules, '$[*] ? (@.severity != "warn")')
   );
 
 -- ----------------------------------------------------------------------------

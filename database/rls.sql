@@ -501,3 +501,49 @@ CREATE POLICY "organizations_gm_all" ON public.organizations
   FOR ALL TO authenticated
   USING (public.is_game_master())
   WITH CHECK (public.is_game_master());
+
+-- ============================================================================
+-- Phase 14 review CR-01 — events_org_scope_enforce mirror (applied 2026-06-12)
+-- is_in_org élargi (player membership OR mentor OR juror) puis DROP de la
+-- policy SELECT permissive "events_authenticated_select" — le scope org est
+-- désormais le gate effectif (avec is_game_master()).
+-- NB : la version antérieure d'is_in_org plus haut dans ce fichier est
+-- remplacée par celle-ci (CREATE OR REPLACE — dernière définition gagne).
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT
+    -- player: member of a team in a cohort of an event of this org
+    EXISTS(
+      SELECT 1
+      FROM public.events e
+      JOIN public.cohorts c   ON c.event_id = e.id
+      JOIN public.players p   ON p.cohort_id = c.id
+      JOIN public.player_members pm ON pm.player_id = p.id
+      WHERE e.organization_id = p_org_id
+        AND pm.user_id = (select auth.uid())
+    )
+    -- mentor: EIC staff, org-global until a mentor↔org mapping exists
+    OR public.is_mentor()
+    -- juror: assigned to an event of this org
+    OR EXISTS(
+      SELECT 1
+      FROM public.events e
+      JOIN public.jurors j ON j.event_id = e.id
+      WHERE e.organization_id = p_org_id
+        AND j.user_id = (select auth.uid())
+    )
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 2. Drop the legacy broad SELECT policy that shadowed org scoping (CR-01).
+--    events_org_scope_select (org member OR GM OR NULL-org) becomes the gate.
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "events_authenticated_select" ON public.events;

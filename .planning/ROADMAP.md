@@ -14,7 +14,7 @@
 - [x] **Phase 13: DB Consolidation + Test Infrastructure** - Résoudre le drift database/ vs PROD et installer le filet de sécurité Vitest/Playwright/CI avant tout refactor schéma (completed 2026-06-11)
 - [x] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org (completed 2026-06-11)
 - [x] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven (completed 2026-06-11)
-- [ ] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés
+- [x] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés (completed 2026-06-11)
 - [ ] **Phase 17: Observabilité + Perf** - Sentry, PostHog, perf test 500 users, vérification RLS initplan
 - [ ] **Phase 18: July Event — Provisioning + Freeze + Preflight** - Créer l'event juillet via le moteur, provisionner la cohorte, freeze et smoke preflight J-2
 
@@ -93,7 +93,7 @@ Plans:
 - [x] 16-02-PLAN.md — Jury form dynamique + lib/results.ts/score.ts/jury.ts dynamic + retro-compat archives 4/5-crit + pitch_weight depuis event_settings
 - [x] 16-03-PLAN.md — Editeurs GM (grille jury + reglages scoring) : saveJuryGridFlow/saveEventSettingsFlow + composants admin + page /admin/events/[id]/settings + i18n
 - [x] 16-04-PLAN.md — Tests (retro-compat fixtures 4/5-crit + dynamic + event-settings + schemas) + R1 audit + 16-VERIFICATION.md
-- [ ] 16-05-PLAN.md — Checkpoint operateur batche (autonomous: false) : apply 5 migrations PROD + smoke RLS/3-surfaces + spot-checks archives + miroir declaratif database/
+- [x] 16-05-PLAN.md — Checkpoint operateur batche (autonomous: false) : apply 5 migrations PROD + smoke RLS/3-surfaces + spot-checks archives + miroir declaratif database/
 **UI hint**: yes
 
 ### Phase 17: Observabilité + Perf
@@ -125,7 +125,7 @@ Plans:
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
-| 16. Jury paramétrable + Scoring configurable | 4/5 | In Progress|  |
+| 16. Jury paramétrable + Scoring configurable | 5/5 | Complete   | 2026-06-11 |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
 
