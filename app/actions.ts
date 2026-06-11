@@ -2664,10 +2664,13 @@ export async function activateEventFlow(
   const orgId = (evtRow as { organization_id: string | null } | null)?.organization_id ?? null;
 
   // Step 1: deactivate all events in the same org (single-active invariant).
-  // If organization_id is null (pre-migration window), scope to all events as a safe fallback.
+  // Always scope: org events when orgId is set, null-org events only when orgId is null.
+  // Never issue an unbounded UPDATE (would deactivate every event across all orgs).
   let deactivateQuery = supabase.from("events").update({ is_active: false });
   if (orgId) {
     deactivateQuery = deactivateQuery.eq("organization_id", orgId) as typeof deactivateQuery;
+  } else {
+    deactivateQuery = deactivateQuery.is("organization_id", null) as typeof deactivateQuery;
   }
   const { error: deactivateErr } = await deactivateQuery;
   if (deactivateErr) {
