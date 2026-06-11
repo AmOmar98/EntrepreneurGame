@@ -28,8 +28,8 @@
 
 - [ ] **ENGINE-01** : Le GM peut créer/éditer/désactiver une mission (titre, niveau, ordre, date programmée, kind) depuis `/admin` sans SQL
 - [ ] **ENGINE-02** : Le GM peut créer/éditer un deliverable_template (titre, description, rubric critères/labels/max, max_score, is_bonus, ordre, activation) via un éditeur de barème
-- [ ] **ENGINE-03** : Le GM peut cloner un event existant (missions + livrables + réglages) vers un nouvel event en un clic
-- [ ] **ENGINE-04** : Le GM peut créer un event + cohorte (slug, nom, dates) depuis l'admin
+- [x] **ENGINE-03** : Le GM peut cloner un event existant (missions + livrables + réglages) vers un nouvel event en un clic
+- [x] **ENGINE-04** : Le GM peut créer un event + cohorte (slug, nom, dates) depuis l'admin
 - [ ] **ENGINE-05** : Les comportements par livrable sont data-driven — `composer_kind`, `template_url`, `auto_validate` en colonnes remplacent tous les slugs codés en dur (`HARD_BLOCK_DEPENDENCIES`, `MOSCOW_DELIVERABLE_SLUG`, `lib/template-links.ts`, UUID G01 du trigger auto-eval)
 - [ ] **ENGINE-06** : Le GM peut définir une recommandation `soft_recommends_before` entre livrables, rendue en hint ambre non bloquant côté Player (R3 conforme — aucun hard-block configurable)
 - [ ] **ENGINE-07** : Toute logique calendrier (`scheduled_date`) est simulable à une date arbitraire en smoke (leçon incident BMC J1 Digi)
@@ -130,8 +130,8 @@
 | LEVELS-03 | Phase 14 | Complete |
 | ENGINE-01 | Phase 15 | Pending |
 | ENGINE-02 | Phase 15 | Pending |
-| ENGINE-03 | Phase 15 | Pending |
-| ENGINE-04 | Phase 15 | Pending |
+| ENGINE-03 | Phase 15 | Complete |
+| ENGINE-04 | Phase 15 | Complete |
 | ENGINE-05 | Phase 15 | Pending |
 | ENGINE-06 | Phase 15 | Pending |
 | ENGINE-07 | Phase 15 | Pending |

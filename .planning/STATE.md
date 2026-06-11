@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
-status: executing
-last_updated: "2026-06-11T21:00:03.497Z"
+status: verifying
+last_updated: "2026-06-11T21:09:49.369Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 14
-  completed_plans: 10
+  completed_plans: 11
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 
 Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
 Plan: 5 of 5 (complete)
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-11
 
 ```
@@ -56,6 +56,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 14 P03 | 17min | 3 tasks | 16 files |
 | Phase 14 P14-04 | 12min | 2 tasks | 13 files |
 | Phase 15 P15-01 | 12min | 3 tasks | 5 files |
+| Phase 15 P15-02 | 6min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-01 : DeliverableTemplate required fields (non-optional) — callers supply defensive defaults; journey.ts mapper demonstrates pre-migration pattern
 - 15-01 : VALID-01 structural: z.literal("warn") + DB CHECK validation_rules_severity_warn_only — severity:error impossible at both TS and DB layers (defense in depth / R2)
 - 15-01 : fn_auto_eval_fiches_entretien generalized to auto_validate column — slug literal removed (ENGINE-05); G01 UUID retained; PROD apply operator-gated
+- 15-02 : activateEventFlow two-step UPDATE (deactivate-all-in-org then activate-target); null-org fallback deactivates all events (pre-migration safe)
+- 15-02 : cloneEventFlow two-pass soft_recommends_before remap — pass1 null inserts, pass2 old->new UUID update (T-15-05 mitigated)
+- 15-02 : ENGINE-03 (clone) + ENGINE-04 (create event+cohort) + TENANT-03 editor side (single-active) complete
 
 ### Phase Sequence Rationale
 
@@ -127,4 +131,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 15 Plan 01 complete (engine-columns foundation). Migration additive (PROD apply deferred), DeliverableTemplate extended, VALID-01 structural (z.literal warn + DB CHECK), demo seed defaults, full quality gate green (typecheck/lint/build/23 unit/15 e2e).*
+*Last updated: 2026-06-11 — Phase 15 Plan 02 complete (events surface). /admin/events page + AdminEventsTable, createEventFlow/activateEventFlow/cloneEventFlow (ENGINE-03/04 + TENANT-03 editor side), two-pass self-FK remap, 21 i18n keys. Full quality gate green (typecheck/lint/build/23 unit/15 e2e).*
