@@ -11,7 +11,7 @@
 
 ## Phases
 
-- [ ] **Phase 13: DB Consolidation + Test Infrastructure** - Résoudre le drift database/ vs PROD et installer le filet de sécurité Vitest/Playwright/CI avant tout refactor schéma
+- [x] **Phase 13: DB Consolidation + Test Infrastructure** - Résoudre le drift database/ vs PROD et installer le filet de sécurité Vitest/Playwright/CI avant tout refactor schéma (completed 2026-06-11)
 - [ ] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org
 - [ ] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven
 - [ ] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés
@@ -34,7 +34,7 @@
   5. GitHub Actions CI gate tourne sur chaque push : typecheck + lint + build + vitest tests verts
 **Plans**: 4 plans
 Plans:
-- [ ] 13-01-PLAN.md — OPS-01 drift report + 13-NEW.sql consolidation + OPS-02 DIGI-08 verdict (operator-gated source mirror)
+- [x] 13-01-PLAN.md — OPS-01 drift report + 13-NEW.sql consolidation + OPS-02 DIGI-08 verdict (operator-gated source mirror)
 - [x] 13-02-PLAN.md — QUAL-01 Vitest + schema extraction to lib/schemas.ts + unit tests
 - [x] 13-03-PLAN.md — QUAL-02 Playwright E2E 5 demo-mode flows
 - [x] 13-04-PLAN.md — QUAL-03 GitHub Actions CI gate (typecheck/lint/build/unit/e2e)
@@ -104,7 +104,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 13. DB Consolidation + Test Infrastructure | 3/4 | In Progress|  |
+| 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 0/? | Not started | - |
 | 15. Mission Engine no-code | 0/? | Not started | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
