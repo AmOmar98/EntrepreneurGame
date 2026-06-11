@@ -2,6 +2,7 @@
 // Reads public.levels_v2 (text-PK table introduced by migration 20260611120200).
 // Dual-mode (DATA-03): returns DEMO_LEVELS when hasSupabaseEnv() is false or
 // the Supabase client is null. Never throws; never redirects.
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { demoLevels } from "@/lib/seed/levels";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
@@ -20,7 +21,9 @@ export const DEMO_LEVELS: Level[] = demoLevels;
  * - Supabase mode: reads public.levels_v2. Falls back to DEMO_LEVELS on any
  *   error (e.g. migration not yet applied to PROD -- Plan 04 window).
  */
-export async function getLevels(): Promise<Level[]> {
+// React cache(): dedupes the levels_v2 read across one server request
+// (journey page + getJourneyData both call getLevels — review WR-02).
+export const getLevels = cache(async function getLevels(): Promise<Level[]> {
   if (!hasSupabaseEnv()) return DEMO_LEVELS;
 
   const supabase = await createClient();
@@ -33,7 +36,7 @@ export async function getLevels(): Promise<Level[]> {
 
   if (error || !data) return DEMO_LEVELS;
   return data as Level[];
-}
+});
 
 /**
  * Convenience helper: returns a Map keyed by LevelId for O(1) lookup.

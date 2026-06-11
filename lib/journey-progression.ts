@@ -23,7 +23,8 @@ export type NextStep = {
 // Short level number "0".."7" extracted from level id string (e.g. "L3_market" -> "3").
 // Regex on id string -- still valid after LevelId = string.
 export function getLevelNumber(levelId: LevelId): string {
-  return levelId.charAt(1);
+  // Multi-digit safe ("L10_x" -> "10"); falls back to charAt for non-L ids.
+  return /^L(\d+)/.exec(levelId)?.[1] ?? levelId.charAt(1);
 }
 
 // Priority-ordered: "a_rendre" missions come first (player must submit V1),

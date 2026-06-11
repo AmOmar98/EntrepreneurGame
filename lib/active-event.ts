@@ -1,3 +1,7 @@
+// NOTE (review WR-01): not yet imported anywhere — the 13 event-resolution
+// sites inline `.eq("is_active", true)` inside larger queries. KEPT on purpose:
+// Phase 15's GM editor uses these accessors for the activate-event action
+// (TENANT-03 editor side) and new call sites must use them instead of inlining.
 // Phase 14 / Plan 02 - Active-event accessor.
 // Reads the single active event via events.is_active = true (TENANT-03).
 // Dual-mode (DATA-03): returns the demo event constant when hasSupabaseEnv()
