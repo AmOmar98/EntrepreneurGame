@@ -49,7 +49,13 @@ Plans:
   3. Les events AgreenTech et Digi restent consultables en lecture seule avec leurs classements intacts — aucun row supprimé ni modifié par la migration
   4. La colonne `players.current_level` et `missions.level_id` pointent vers la nouvelle table `levels` (plus d'enum PG) — migration appliquée sur PROD sans perte de données, rollback documenté
   5. Les maps TS `LEVEL_LABELS`, `LEVEL_ORDS`, `SHORT_LABELS`, `LEVEL_IDS` sont supprimées du code ; l'UI lit labels/ordres depuis la DB ; les z.enum miroirs sont supprimés
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 14-01-PLAN.md — SQL migrations (organizations + events.is_active + levels_v2 text table + RLS org-scope), additive/idempotent, PROD non appliqué
+- [ ] 14-02-PLAN.md — Couche données TS (accessors lib/levels.ts + lib/active-event.ts, LevelId→string, champs Event, seed demo, suppression triple miroir)
+- [ ] 14-03-PLAN.md — Sweep des callers level-helper (16 fichiers) + gate complète + audit R1
+- [ ] 14-04-PLAN.md — Sweep active-event starts_at→is_active (13 fichiers) + gate complète
+- [ ] 14-05-PLAN.md — Checkpoint opérateur (PROD db push) + vérification RLS/archives/backfill + miroir vue déclarative (autonomous: false)
 **UI hint**: yes
 
 ### Phase 15: Mission Engine no-code (éditeur GM)
@@ -105,7 +111,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
-| 14. Multi-tenant Schema + Niveaux data-driven | 0/? | Not started | - |
+| 14. Multi-tenant Schema + Niveaux data-driven | 0/5 | Not started | - |
 | 15. Mission Engine no-code | 0/? | Not started | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
@@ -140,4 +146,4 @@ Tag `v0.1-pilot-ready` (commit `8176419`). 5 phases (Foundation / Player / Mento
 
 ---
 
-*Last updated: 2026-06-11 — Phase 13 planned (4 plans, 3 waves). Phases 14-18 still TBD.*
+*Last updated: 2026-06-11 — Phase 14 planned (5 plans, 5 waves). Phases 15-18 still TBD.*
