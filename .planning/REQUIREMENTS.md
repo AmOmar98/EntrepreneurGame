@@ -116,12 +116,47 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (rempli par le roadmapper) | | |
+| OPS-01 | Phase 13 | Pending |
+| OPS-02 | Phase 13 | Pending |
+| QUAL-01 | Phase 13 | Pending |
+| QUAL-02 | Phase 13 | Pending |
+| QUAL-03 | Phase 13 | Pending |
+| TENANT-01 | Phase 14 | Pending |
+| TENANT-02 | Phase 14 | Pending |
+| TENANT-03 | Phase 14 | Pending |
+| TENANT-04 | Phase 14 | Pending |
+| LEVELS-01 | Phase 14 | Pending |
+| LEVELS-02 | Phase 14 | Pending |
+| LEVELS-03 | Phase 14 | Pending |
+| ENGINE-01 | Phase 15 | Pending |
+| ENGINE-02 | Phase 15 | Pending |
+| ENGINE-03 | Phase 15 | Pending |
+| ENGINE-04 | Phase 15 | Pending |
+| ENGINE-05 | Phase 15 | Pending |
+| ENGINE-06 | Phase 15 | Pending |
+| ENGINE-07 | Phase 15 | Pending |
+| LEVELS-04 | Phase 15 | Pending |
+| VALID-01 | Phase 15 | Pending |
+| VALID-02 | Phase 15 | Pending |
+| JURY-06 | Phase 16 | Pending |
+| JURY-07 | Phase 16 | Pending |
+| JURY-08 | Phase 16 | Pending |
+| JURY-09 | Phase 16 | Pending |
+| SETTINGS-01 | Phase 16 | Pending |
+| SETTINGS-02 | Phase 16 | Pending |
+| SETTINGS-03 | Phase 16 | Pending |
+| SETTINGS-04 | Phase 16 | Pending |
+| QUAL-04 | Phase 17 | Pending |
+| QUAL-05 | Phase 17 | Pending |
+| QUAL-06 | Phase 17 | Pending |
+| JULY-01 | Phase 18 | Pending |
+| JULY-02 | Phase 18 | Pending |
+| JULY-03 | Phase 18 | Pending |
 
 **Coverage:**
 - v0.4 requirements: 36 total
-- Mapped to phases: 0
-- Unmapped: 36 ⚠️ (roadmap en cours)
+- Mapped to phases: 36
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-11*

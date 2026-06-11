@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: planning
-last_updated: "2026-06-11T16:28:31.093Z"
+last_updated: "2026-06-11"
 last_activity: 2026-06-11
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,20 +17,69 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (mis à jour 2026-05-23 — v0.3 archivé)
+**Core value**: Plateforme d'accompagnement entrepreneurial gamifiée EIC/UEMF, personnalisable par bootcamp/programme via un éditeur GameMaster no-code.
+
+See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation started)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 13 — DB Consolidation + Test Infrastructure
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-11 — Milestone v0.4 started
+Status: Ready to plan
+Last activity: 2026-06-11 — ROADMAP.md créé, phases 13-18 dérivées, 36/36 requirements mappés
 
-## Tech debt reporté v0.4
+```
+[Phase 13] [Phase 14] [Phase 15] [Phase 16] [Phase 17] [Phase 18]
+    ▲
+  CURRENT
+  0/6 phases complete (0%)
+```
 
-- **DIGI-08** : backfill pitch_scores post-event (clarifier publish pré-event 15/05 suffisant vs re-backfill scores live)
-- **Catégorie B post-mortem** : schema drift mgmt-api Studio cleanup (session Omar UI Studio Supabase)
-- **Smoke E2E post-event** : non joué (rolling watcher J1-J3 seulement)
+## Deadline
+
+Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de build à partir du 2026-06-11)
+
+## Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| Phases total | 6 |
+| Phases complete | 0 |
+| Plans total | TBD |
+| Plans complete | 0 |
+| Requirements mapped | 36/36 |
+| Requirements complete | 0/36 |
+
+## Accumulated Context
+
+### Key Decisions (v0.4)
+
+- OPS-01 (db-source-consolidation) est le premier travail — pré-requis avant tout refactor schéma
+- QUAL-01/02/03 (test infra) atterrit en Phase 13 pour sécuriser tout le refactor schéma/RLS/scoring qui suit
+- Phases 14-15-16 : schéma → engine GM → jury/scoring (séquence bloquante)
+- QUAL-04/05/06 (Sentry/PostHog/perf) land en Phase 17 avant le freeze event
+- R3 strict dans l'éditeur : `soft_recommends_before` uniquement, AUCUN hard-block configurable
+- Exception L2 (`prep-questions-v1` → `fiches-entretien-v1`) reste unique cas codé, non exposée dans l'éditeur
+- Archives AgreenTech + Digi gelées en lecture seule — classements intacts, 0 migration big-bang
+- database/** est Write/Edit-denied dans settings.local.json — SQL via NEW.sql dans quick/phase dirs + Supabase MCP execute_sql
+- Dual-mode demo (hasSupabaseEnv fallback) préservé dans toutes les phases
+
+### Phase Sequence Rationale
+
+```
+Phase 13: OPS-01 (drift) + QUAL-01/02/03 (test infra) — filet de sécurité AVANT tout refactor
+Phase 14: TENANT + LEVELS — schéma multi-tenant + niveaux data-driven (délicat: enum→table migration)
+Phase 15: ENGINE + VALID — éditeur GM complet + dé-hardcoding slugs
+Phase 16: JURY-06..09 + SETTINGS — jury dynamique + scoring configurable
+Phase 17: QUAL-04/05/06 — observabilité + perf avant freeze
+Phase 18: JULY — event juillet sur le nouveau moteur + freeze + preflight J-2
+```
+
+### Tech Debt v0.3 Reporté
+
+- **DIGI-08** : backfill pitch_scores post-event (→ OPS-02, Phase 13)
+- **Catégorie B post-mortem** : schema drift mgmt-api Studio cleanup (→ OPS-01, Phase 13)
+- **Smoke E2E post-event** : non joué (→ QUAL-02 Playwright base, Phase 13)
 
 ## Seeds Planted
 
@@ -42,7 +91,7 @@ Last activity: 2026-06-11 — Milestone v0.4 started
 
 _None_
 
-### Quick Tasks Completed
+## Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
@@ -56,4 +105,4 @@ _None_
 
 ---
 
-*Last updated: 2026-05-23 — v0.3 archivé. Aucun milestone actif. Lancer `/gsd-new-milestone` pour v0.4.*
+*Last updated: 2026-06-11 — v0.4 Scale Foundation roadmap created. Phase 13 not started / Status: Ready to plan. Next: `/gsd:plan-phase 13`*
