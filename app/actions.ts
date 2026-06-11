@@ -2896,3 +2896,356 @@ export async function cloneEventFlow(
     message: `Event clone avec succes. Vous pouvez maintenant le modifier. /admin/events/${newEventId}/missions`,
   };
 }
+
+// ============================================================================
+// Phase 15 / Plan 03 — Mission CRUD + reorder + template save (ENGINE-01/02)
+// ============================================================================
+
+import {
+  composerKindSchema,
+  validationRuleSchema,
+} from "@/lib/schemas";
+
+// ---- createMissionFlow ------------------------------------------------------
+
+const createMissionSchema = z.object({
+  eventId: z.string().uuid(),
+  title: z.string().min(1),
+  levelId: z.string().min(1),
+  kind: z.enum(["atelier", "session", "presentation", "pitch", "admin"]),
+  scheduledAt: z.string().nullable().optional(),
+  ord: z.coerce.number().int().min(0),
+});
+
+export async function createMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = createMissionSchema.safeParse({
+    eventId: formData.get("eventId"),
+    title: formData.get("title"),
+    levelId: formData.get("levelId"),
+    kind: formData.get("kind"),
+    scheduledAt: formData.get("scheduledAt") || null,
+    ord: formData.get("ord"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: insertErr } = await supabase
+    .from("missions")
+    .insert({
+      event_id: parsed.data.eventId,
+      title: parsed.data.title,
+      level_id: parsed.data.levelId,
+      kind: parsed.data.kind,
+      scheduled_at: parsed.data.scheduledAt ?? null,
+      ord: parsed.data.ord,
+    });
+  if (insertErr) return { ok: false, message: insertErr.message };
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Mission creee." };
+}
+
+// ---- updateMissionFlow ------------------------------------------------------
+
+const updateMissionSchema = z.object({
+  missionId: z.string().uuid(),
+  eventId: z.string().uuid(),
+  title: z.string().min(1),
+  levelId: z.string().min(1),
+  kind: z.enum(["atelier", "session", "presentation", "pitch", "admin"]),
+  scheduledAt: z.string().nullable().optional(),
+  ord: z.coerce.number().int().min(0),
+  isActive: z.coerce.boolean(),
+});
+
+export async function updateMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawIsActive = formData.get("isActive");
+  const parsed = updateMissionSchema.safeParse({
+    missionId: formData.get("missionId"),
+    eventId: formData.get("eventId"),
+    title: formData.get("title"),
+    levelId: formData.get("levelId"),
+    kind: formData.get("kind"),
+    scheduledAt: formData.get("scheduledAt") || null,
+    ord: formData.get("ord"),
+    isActive: rawIsActive === "true" || rawIsActive === "1" || rawIsActive === "on",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: updErr } = await supabase
+    .from("missions")
+    .update({
+      title: parsed.data.title,
+      level_id: parsed.data.levelId,
+      kind: parsed.data.kind,
+      scheduled_at: parsed.data.scheduledAt ?? null,
+      ord: parsed.data.ord,
+      is_active: parsed.data.isActive,
+    })
+    .eq("id", parsed.data.missionId);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Mission mise a jour." };
+}
+
+// ---- reorderMissionFlow -----------------------------------------------------
+
+const reorderMissionSchema = z.object({
+  eventId: z.string().uuid(),
+  items: z.array(
+    z.object({ id: z.string().uuid(), ord: z.number().int().min(0) })
+  ),
+});
+
+export async function reorderMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse(formData.get("items") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "Donnees de reorder invalides." };
+  }
+
+  const parsed = reorderMissionSchema.safeParse({
+    eventId: formData.get("eventId"),
+    items: rawItems,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Batch UPDATE loop (same pattern as reorderMoscowCardsFlow)
+  for (const it of parsed.data.items) {
+    const { error: updErr } = await supabase
+      .from("missions")
+      .update({ ord: it.ord })
+      .eq("id", it.id);
+    if (updErr) return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Ordre sauvegarde." };
+}
+
+// ---- saveDeliverableTemplateFlow --------------------------------------------
+
+// Helper: slugify a label to a key (lowercase, hyphenate spaces/special chars)
+function slugifyToKey(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 64) || "criterion";
+}
+
+const rubricCriterionSchema = z.object({
+  key: z.string().min(1).optional(),
+  label: z.string().min(1),
+  max: z.coerce.number().int().min(1).max(100),
+});
+
+const saveDeliverableTemplateSchema = z.object({
+  templateId: z.string().uuid().nullable().optional(),
+  missionId: z.string().uuid(),
+  eventId: z.string().uuid(),
+  slug: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string(),
+  composerKind: composerKindSchema,
+  templateUrl: httpsUrl.nullable().optional(),
+  autoValidate: z.coerce.boolean(),
+  isBonus: z.coerce.boolean(),
+  maxScore: z.coerce.number().int().min(1).max(200),
+  ord: z.coerce.number().int().min(0),
+  isActive: z.coerce.boolean(),
+  softRecommendsBefore: z.string().uuid().nullable().optional(),
+  rubric: z.array(rubricCriterionSchema).min(1),
+  validationRules: z.array(validationRuleSchema),
+});
+
+export async function saveDeliverableTemplateFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  // Parse rubric JSON from hidden input
+  let rawRubric: unknown;
+  let rawValidationRules: unknown;
+  try {
+    rawRubric = JSON.parse(formData.get("rubric") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "Rubric JSON invalide." };
+  }
+  try {
+    rawValidationRules = JSON.parse(formData.get("validationRules") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "ValidationRules JSON invalide." };
+  }
+
+  const rawTemplateId = formData.get("templateId") as string | null;
+  const rawSoftRecommends = formData.get("softRecommendsBefore") as string | null;
+  const rawTemplateUrl = formData.get("templateUrl") as string | null;
+
+  const parsed = saveDeliverableTemplateSchema.safeParse({
+    templateId: rawTemplateId || null,
+    missionId: formData.get("missionId"),
+    eventId: formData.get("eventId"),
+    slug: formData.get("slug"),
+    title: formData.get("title"),
+    description: formData.get("description") ?? "",
+    composerKind: formData.get("composerKind"),
+    templateUrl: rawTemplateUrl || null,
+    autoValidate: formData.get("autoValidate") === "true" || formData.get("autoValidate") === "on",
+    isBonus: formData.get("isBonus") === "true" || formData.get("isBonus") === "on",
+    maxScore: formData.get("maxScore"),
+    ord: formData.get("ord"),
+    isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on" || formData.get("isActive") === null,
+    softRecommendsBefore: rawSoftRecommends || null,
+    rubric: rawRubric,
+    validationRules: rawValidationRules,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Normalize rubric: ensure each criterion has a key (slugify from label when absent).
+  // CRITICAL: rubric MUST be stored as [{key, label, max}] — mentor eval forms depend on this exact shape.
+  const normalizedRubric = parsed.data.rubric.map((c) => ({
+    key: c.key && c.key.trim() ? c.key.trim() : slugifyToKey(c.label),
+    label: c.label,
+    max: c.max,
+  }));
+
+  const payload = {
+    mission_id: parsed.data.missionId,
+    slug: parsed.data.slug,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    composer_kind: parsed.data.composerKind,
+    template_url: parsed.data.templateUrl ?? null,
+    auto_validate: parsed.data.autoValidate,
+    is_bonus: parsed.data.isBonus,
+    max_score: parsed.data.maxScore,
+    ord: parsed.data.ord,
+    is_active: parsed.data.isActive,
+    soft_recommends_before: parsed.data.softRecommendsBefore ?? null,
+    rubric: normalizedRubric,
+    validation_rules: parsed.data.validationRules,
+  };
+
+  if (parsed.data.templateId) {
+    // UPDATE existing template
+    const { error: updErr } = await supabase
+      .from("deliverable_templates")
+      .update(payload)
+      .eq("id", parsed.data.templateId);
+    if (updErr) return { ok: false, message: updErr.message };
+  } else {
+    // INSERT new template
+    const { error: insertErr } = await supabase
+      .from("deliverable_templates")
+      .insert(payload);
+    if (insertErr) return { ok: false, message: insertErr.message };
+  }
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  revalidatePath("/mentor");
+  return { ok: true, message: "Livrable enregistre." };
+}
