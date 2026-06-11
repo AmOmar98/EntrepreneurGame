@@ -114,10 +114,24 @@ WHERE dt.mission_id IN (
 );
 
 -- ----------------------------------------------------------------------------
--- 5. Generalize fn_auto_eval_fiches_entretien to use auto_validate column
+-- 5. CHECK constraint: auto_validate may only be true for multi_url templates
+--    (CR-02: prevents auto-eval logic from applying a hardcoded fiche rubric
+--    to templates with a different rubric structure.)
+-- ----------------------------------------------------------------------------
+
+ALTER TABLE public.deliverable_templates
+  DROP CONSTRAINT IF EXISTS auto_validate_multi_url_only;
+
+ALTER TABLE public.deliverable_templates
+  ADD CONSTRAINT auto_validate_multi_url_only
+  CHECK (NOT auto_validate OR composer_kind = 'multi_url');
+
+-- ----------------------------------------------------------------------------
+-- 6. Generalize fn_auto_eval_fiches_entretien to use auto_validate column
 --    instead of the 'fiches-entretien-v1' slug literal (ENGINE-05).
 --    G01 UUID 59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334 retained as canonical
---    SECURITY DEFINER system evaluator. Trigger binding unchanged.
+--    SECURITY DEFINER system evaluator.
+--    CR-02 guard: only fires for composer_kind='multi_url' templates.
 -- ----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.fn_auto_eval_fiches_entretien()
@@ -127,23 +141,32 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_auto     boolean;
-  v_max_score numeric;
+  v_auto         boolean;
+  v_max_score    numeric;
+  v_composer     text;
 BEGIN
   -- Only fire on validated submissions.
   IF NEW.status <> 'validated' THEN
     RETURN NEW;
   END IF;
 
-  -- Look up auto_validate flag (and max_score) from the template.
+  -- Look up auto_validate flag, max_score, and composer_kind from the template.
   -- Uses the new auto_validate column instead of the slug literal (ENGINE-05).
-  SELECT auto_validate, max_score
-  INTO   v_auto, v_max_score
+  SELECT auto_validate, max_score, composer_kind
+  INTO   v_auto, v_max_score, v_composer
   FROM   public.deliverable_templates
   WHERE  id = NEW.deliverable_template_id;
 
   -- If auto_validate is false (or template not found), skip.
   IF NOT COALESCE(v_auto, false) THEN
+    RETURN NEW;
+  END IF;
+
+  -- CR-02: guard — only fire for multi_url composer_kind.
+  -- The hardcoded fiche rubric (fiche_1..fiche_10) is only valid for multi_url
+  -- templates. Any other composer_kind with auto_validate=true is blocked by
+  -- the CHECK constraint above, but we guard defensively here too.
+  IF COALESCE(v_composer, '') <> 'multi_url' THEN
     RETURN NEW;
   END IF;
 
@@ -176,7 +199,30 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.fn_auto_eval_fiches_entretien() IS
-  'Phase15-01 generalization 2026-06-11: uses auto_validate column instead of slug literal (ENGINE-05). Fires for any deliverable_template with auto_validate=true. G01 evaluator UUID 59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334 unchanged.';
+  'Phase15-01 CR-02 fix 2026-06-11: guards on composer_kind=multi_url before inserting fiche rubric. Uses auto_validate column (ENGINE-05). G01 evaluator UUID 59a2b0f7-fa2c-41dd-b3ee-408b0eaf1334 unchanged.';
+
+-- ----------------------------------------------------------------------------
+-- 7. Trigger binding (IN-02): ensure trg_auto_eval_fiches_entretien exists
+--    on fresh Supabase bootstraps (previously only in a planning SQL file).
+-- ----------------------------------------------------------------------------
+
+DROP TRIGGER IF EXISTS trg_auto_eval_fiches_entretien ON public.submissions;
+CREATE TRIGGER trg_auto_eval_fiches_entretien
+  AFTER INSERT OR UPDATE OF status ON public.submissions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fn_auto_eval_fiches_entretien();
+
+-- ----------------------------------------------------------------------------
+-- 8. WR-03: partial unique index — one active event per org (replaces the
+--    previously-applied global uniq_events_single_active index).
+--    The old global index is dropped first (if it exists) so both a fresh
+--    bootstrap and an incremental apply reach the same final state.
+-- ----------------------------------------------------------------------------
+
+DROP INDEX IF EXISTS public.uniq_events_single_active;
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_events_single_active_per_org
+  ON public.events(organization_id)
+  WHERE is_active = true;
 
 COMMIT;
 
