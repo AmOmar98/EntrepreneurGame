@@ -167,12 +167,36 @@ create trigger trg_player_onboarding
   for each row execute function public.guard_player_onboarding();
 
 -- ============================================================================
--- Quick 260523-kc2 D1 — PROD-only drift functions (not yet sourced here)
+-- help_requests updated_at + pitch mode closed_at (sourced 2026-06-11, phase 13 OPS-01)
 -- ============================================================================
--- The following 2 trigger functions exist in PROD but are NOT defined in this
--- file (they were added via migrations under database/migrations/). PROD has
--- `SET search_path = ''` applied to them via quick-260523-kc2 D1.sql so the
--- function_search_path_mutable advisor is cleared for the same 4 functions.
---   - public.set_help_requests_updated_at()  (cf. database/migrations/202605110007_phase14*)
---   - public.set_pitch_mode_closed_at()      (cf. pitch mode migration, search history)
--- Source them here at next consolidated refactor (SEED-001 v0.4 schemas-v2).
+-- Bodies: supabase/migrations/20260512100000_help_requests.sql (help_requests)
+-- and supabase/migrations/20260519120000_jurors_and_pitch_mode.sql (pitch mode).
+-- search_path = '' applied to PROD by quick-260523-kc2 D1.sql.
+-- NB: their CREATE TRIGGER statements live in the migrations above (the tables
+-- help_requests / events.pitch_mode_state are created by migrations, not schema.sql).
+
+create or replace function public.set_help_requests_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+create or replace function public.set_pitch_mode_closed_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.pitch_mode_state = 'closed' and (old.pitch_mode_state is distinct from 'closed') then
+    new.pitch_mode_closed_at := now();
+  elsif new.pitch_mode_state <> 'closed' then
+    new.pitch_mode_closed_at := null;
+  end if;
+  return new;
+end;
+$$;
