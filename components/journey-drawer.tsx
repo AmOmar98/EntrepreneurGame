@@ -8,7 +8,7 @@
 //         reward XP, contextual action button.
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { JourneyDeliverableCard } from "@/components/journey-deliverable-card";
-import { getShortLevelLabel, getLevelNumber, type LevelState } from "@/lib/journey-progression";
+import { getLevelNumber, type LevelState } from "@/lib/journey-progression";
 import { dictionaries } from "@/lib/i18n";
 import type { JourneyMission } from "@/lib/journey";
 import type { LevelId } from "@/lib/types";
@@ -17,6 +17,8 @@ const t = dictionaries.fr;
 
 export type JourneyDrawerProps = {
   levelId: LevelId;
+  /** Short label for the level (e.g. "Problème"). Passed from JourneyClient via levelLabels. */
+  levelLabel?: string;
   state: LevelState;
   missions: JourneyMission[];
   objective?: string | null;
@@ -32,6 +34,7 @@ function makeMissionCode(levelId: LevelId, missionOrd: number, deliverableOrd: n
 
 export function JourneyDrawer({
   levelId,
+  levelLabel,
   state,
   missions,
   objective,
@@ -68,7 +71,7 @@ export function JourneyDrawer({
   const handleBackdrop = useCallback(() => onClose(), [onClose]);
 
   const number = getLevelNumber(levelId);
-  const label = getShortLevelLabel(levelId);
+  const label = levelLabel ?? levelId;
 
   const iconClass = useMemo(() => {
     const base = "eic-drawer__icon";

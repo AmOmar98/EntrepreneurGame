@@ -12,30 +12,19 @@ import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { createClient } from "@/utils/supabase/server";
-import { levelLabel } from "@/lib/journey";
-import type { LevelId } from "@/lib/types";
+import { getLevels } from "@/lib/levels";
 
 const t = dictionaries.fr;
-
-const ALL_LEVELS: LevelId[] = [
-  "L0_diagnostic",
-  "L1_problem",
-  "L2_solution",
-  "L3_market",
-  "L4_business_model",
-  "L5_pitch",
-  "L6_traction",
-  "L7_alumni",
-];
 
 async function loadComposerData(): Promise<{
   players: ComposerPlayer[];
   levels: ComposerLevel[];
   hasEvent: boolean;
 }> {
-  const levels: ComposerLevel[] = ALL_LEVELS.map((id) => ({
-    id,
-    label: levelLabel(id),
+  const levelsData = await getLevels();
+  const levels: ComposerLevel[] = levelsData.map((l) => ({
+    id: l.id,
+    label: l.label,
   }));
 
   const supabase = await createClient();
@@ -79,13 +68,7 @@ export default async function AdminAnnouncePage() {
   }
 
   const supaOk = hasSupabaseEnv();
-  const composer = supaOk
-    ? await loadComposerData()
-    : {
-        players: [] as ComposerPlayer[],
-        levels: ALL_LEVELS.map((id) => ({ id, label: levelLabel(id) })),
-        hasEvent: false,
-      };
+  const composer = await loadComposerData();
   const announcements = supaOk ? await getRecentAnnouncements(20) : [];
 
   return (

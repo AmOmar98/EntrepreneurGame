@@ -19,7 +19,7 @@ import {
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { computeHackStatus } from "@/lib/hack-status";
 import { dictionaries } from "@/lib/i18n";
-import { levelOrd } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import { getJurorsForEvent } from "@/lib/jurors";
 import type { PitchOrder } from "@/lib/pitch-order";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
@@ -98,6 +98,10 @@ export default async function AdminPage({
   const currentEventId = eventInfo.id;
   const pitchOrder = eventInfo.pitchOrder;
   const pitchModeState: PitchModeState = pitchModeInfo.state;
+
+  const levelsOrd: Record<string, number> = Object.fromEntries(
+    Array.from((await getLevelsMap()).entries()).map(([id, l]) => [id, l.ord]),
+  );
 
   // Fetch jurors list for current event (Wave 3 - quick-260519-jpr).
   // Minimal shape: userId + invitedAt. Display fallback = truncated userId.
@@ -190,6 +194,7 @@ export default async function AdminPage({
               pitchOrder={pitchOrder}
               pitchModeState={pitchModeState}
               jurors={jurors}
+              levelsOrd={levelsOrd}
             />
           )}
         </div>
@@ -206,6 +211,7 @@ function StandardView({
   pitchOrder,
   pitchModeState,
   jurors,
+  levelsOrd,
 }: {
   rows: CohortRow[];
   counters: { totalSubmissions: number; pendingReview: number; validated: number; totalDeliverableSlots: number };
@@ -214,6 +220,7 @@ function StandardView({
   pitchOrder: PitchOrder | null;
   pitchModeState: PitchModeState;
   jurors: Array<{ userId: string; email: string | null; displayName: string | null; invitedAt: string }>;
+  levelsOrd: Record<string, number>;
 }) {
   return (
     <>
@@ -309,14 +316,14 @@ function StandardView({
               </div>
             </div>
           </header>
-          <LeaderboardTable rows={leaderboard} />
+          <LeaderboardTable rows={leaderboard} levelsOrd={levelsOrd} />
         </section>
       )}
     </>
   );
 }
 
-function LeaderboardTable({ rows }: { rows: CohortRow[] }) {
+function LeaderboardTable({ rows, levelsOrd }: { rows: CohortRow[]; levelsOrd: Record<string, number> }) {
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -333,7 +340,7 @@ function LeaderboardTable({ rows }: { rows: CohortRow[] }) {
         </thead>
         <tbody>
           {rows.map((row, i) => {
-            const ord = levelOrd(row.player.currentLevel);
+            const ord = levelsOrd[row.player.currentLevel] ?? 0;
             return (
               <tr
                 key={row.player.id}
