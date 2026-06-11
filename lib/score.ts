@@ -196,6 +196,11 @@ export function sumPlayerScoreEngagement(
  * @param args.submission       The submission whose score is being boosted (needs submittedAt + playerId).
  * @param args.eventEndsAt      Optional ISO string for event.ends_at (used for rest_of_event scope).
  * @returns boostedScore (capped at rawScore * BONUS_MULTIPLIER_CAP), applied (bonusEvent.id or null).
+ * @note CR-02 (Phase 16 review): this function accepts opts.bonusMultiplierCap to honor
+ *   the configurable event_settings.bonus_multiplier_cap. However there are currently no
+ *   production call-sites — the Mentor/GM UI evaluations never invoke this helper directly.
+ *   Deferred: wire eventSettings.bonusMultiplierCap here when a mentor evaluation surface
+ *   calls applyBonusMultiplier.
  */
 export function applyBonusMultiplier(args: {
   rawScore: number;
