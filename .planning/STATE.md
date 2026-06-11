@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T19:06:49.949Z"
+last_updated: "2026-06-11T19:18:05.389Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 5
+  completed_plans: 6
   percent: 17
 ---
 
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
-Plan: 1 of 5 (complete)
-Status: Executing — Plan 02 next
+Plan: 2 of 5 (complete)
+Status: Executing — Plan 03 next
 Last activity: 2026-06-11
 
 ```
@@ -52,6 +52,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 13 P02 | 15min | 2 tasks | 7 files |
 | Phase 13 P03 | 10min | 2 tasks | 7 files |
 | Phase 14 P01 | 5min | 3 tasks | 4 files |
+| Phase 14 P02 | 7min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 14-01 : levels_v2 (text PK) naming évite collision avec public.levels (enum PK) — enum retenu, suppression post-juillet
 - 14-01 : PROD apply = checkpoint opérateur batché Plan 04 (supabase db push --linked) ; database/** non édité
 - 14-01 : events.organization_id nullable + is_active DEFAULT false = état intermédiaire PROD tolérable (TS fallback Plan 02)
+- 14-02 : LevelId = string (plain alias, DB text FK est l'integrity guard) ; z.enum mirror confirmé absent dans schemas.ts
+- 14-02 : getActiveEvent() retourne null en pré-migration window ; callers Plan 03 doivent tolérer null
+- 14-02 : getLevelStates(levels: Level[], currentLevel) — signature changée, LEVEL_IDS constant supprimée
 
 ### Phase Sequence Rationale
 
@@ -111,4 +115,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 14 Plan 01 complete (TENANT-01/02, LEVELS-01/02). 4 migrations authored (organizations, is_active, levels_v2, is_in_org RLS). Next: Plan 02 (TS data layer).*
+*Last updated: 2026-06-11 — Phase 14 Plan 02 complete (LEVELS-01/03, TENANT-03). getLevels/getActiveEvent accessors, LevelId=string, triple-mirror maps removed (16 external callers deferred to Plan 03). Next: Plan 03 (call-site sweep).*

@@ -52,7 +52,7 @@ Plans:
 **Plans**: 5 plans
 Plans:
 - [x] 14-01-PLAN.md — SQL migrations (organizations + events.is_active + levels_v2 text table + RLS org-scope), additive/idempotent, PROD non appliqué
-- [ ] 14-02-PLAN.md — Couche données TS (accessors lib/levels.ts + lib/active-event.ts, LevelId→string, champs Event, seed demo, suppression triple miroir)
+- [x] 14-02-PLAN.md — Couche données TS (accessors lib/levels.ts + lib/active-event.ts, LevelId→string, champs Event, seed demo, suppression triple miroir)
 - [ ] 14-03-PLAN.md — Sweep des callers level-helper (16 fichiers) + gate complète + audit R1
 - [ ] 14-04-PLAN.md — Sweep active-event starts_at→is_active (13 fichiers) + gate complète
 - [ ] 14-05-PLAN.md — Checkpoint opérateur (PROD db push) + vérification RLS/archives/backfill + miroir vue déclarative (autonomous: false)
@@ -111,7 +111,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
-| 14. Multi-tenant Schema + Niveaux data-driven | 1/5 | In Progress|  |
+| 14. Multi-tenant Schema + Niveaux data-driven | 2/5 | In Progress|  |
 | 15. Mission Engine no-code | 0/? | Not started | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
