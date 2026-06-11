@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T23:02:05.507Z"
+last_updated: "2026-06-11T23:12:56.287Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
   percent: 50
 ---
 
@@ -24,9 +24,9 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 16 (Jury paramétrable + Scoring configurable) — IN PROGRESS
-Plan: 2 of 5 (complete)
-Status: Plan 16-02 complete — dynamic jury form + scoring wiring delivered
-Last activity: 2026-06-12
+Plan: 3 of 5 (complete)
+Status: Ready to execute
+Last activity: 2026-06-11
 
 ```
 [Phase 13] [Phase 14] [Phase 15] [Phase 16] [Phase 17] [Phase 18]

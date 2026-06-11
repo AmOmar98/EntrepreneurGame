@@ -46,14 +46,14 @@
 - [x] **JURY-06** : Les critères de pitch (nombre, libellés, barème max) sont définis par event en DB (remplace les colonnes figées `pitch_scores.c1..c5`)
 - [x] **JURY-07** : Le formulaire `/jury` rend dynamiquement les critères de l'event
 - [x] **JURY-08** : Le calcul des classements (`lib/results.ts`) absorbe les critères dynamiques en préservant les classements archivés (hack rétro-compat 4/5 critères)
-- [ ] **JURY-09** : Le GM édite la grille jury dans l'éditeur
+- [x] **JURY-09** : Le GM édite la grille jury dans l'éditeur
 
 ### SETTINGS — Scoring paramétrable
 
 - [x] **SETTINGS-01** : Règles XP (+100/+50/+100), paliers engagement (100/25/50) et caps stockés en `event_settings` éditables par event
 - [x] **SETTINGS-02** : Pondération projet/pitch (défaut 0.2/0.8) paramétrable par event
 - [x] **SETTINGS-03** : Les triggers PL/pgSQL (`recalc_player_score`, `recalc_player_engagement`) lisent les mêmes paramètres que les helpers TS — zéro double hardcode
-- [ ] **SETTINGS-04** : Le GM édite ces réglages dans l'éditeur
+- [x] **SETTINGS-04** : Le GM édite ces réglages dans l'éditeur
 
 ### VALID — Moteur validation v2 (SEED-001)
 
@@ -141,11 +141,11 @@
 | JURY-06 | Phase 16 | Complete |
 | JURY-07 | Phase 16 | Complete |
 | JURY-08 | Phase 16 | Complete |
-| JURY-09 | Phase 16 | Pending |
+| JURY-09 | Phase 16 | Complete |
 | SETTINGS-01 | Phase 16 | Complete |
 | SETTINGS-02 | Phase 16 | Complete |
 | SETTINGS-03 | Phase 16 | Complete |
-| SETTINGS-04 | Phase 16 | Pending |
+| SETTINGS-04 | Phase 16 | Complete |
 | QUAL-04 | Phase 17 | Pending |
 | QUAL-05 | Phase 17 | Pending |
 | QUAL-06 | Phase 17 | Pending |
