@@ -9,6 +9,9 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests",
+  // Only discover Playwright spec files under tests/smoke and tests/e2e.
+  // Excludes tests/unit (Vitest .test.ts files) which use vitest imports.
+  testMatch: ["**/smoke/**/*.spec.ts", "**/e2e/**/*.spec.ts"],
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
