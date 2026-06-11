@@ -69,7 +69,13 @@ Plans:
   4. GM peut définir un `soft_recommends_before` entre livrables ; côté Player, cela rend un hint ambre non bloquant — aucun `disabled` DOM ni `pointer-events: none` ne découle d'un soft_recommends_before configurable (R3 conforme)
   5. `validation_rules [{rule, severity, message}]` sur deliverable_template sont structurellement warn-only — `severity: "error"` est impossible à créer via l'éditeur (R2 encodé dans le moteur) ; l'exception L2 hard-block reste le seul cas codé non exposé dans l'éditeur
   6. La logique `scheduled_date` peut être simulée à une date arbitraire en smoke (flag ou param) pour rejouer le scénario incident BMC J1 Digi
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 15-01-PLAN.md — Migration colonnes engine (composer_kind/template_url/auto_validate/soft_recommends_before/validation_rules + CHECK warn-only + backfill 13 Digi + trigger auto_validate) + types/schemas/seed defaults (VALID-01)
+- [ ] 15-02-PLAN.md — Events CRUD + clone (remap self-FK) + activate single-active (ENGINE-04, ENGINE-03)
+- [ ] 15-03-PLAN.md — Missions CRUD/reorder + éditeur template + rubric builder {key,label,max} + note warn-only (ENGINE-01, ENGINE-02, VALID-02)
+- [ ] 15-04-PLAN.md — Levels editor + dé-hardcoding consumer (composer_kind/template_url) + hint ambre soft_recommends + getSimulatedNow (LEVELS-04, ENGINE-05, ENGINE-06, ENGINE-07)
+- [ ] 15-05-PLAN.md — Tests unitaires (schemas éditeur + clone remap) + E2E editor demo smoke + R3 gate + 15-VERIFICATION.md
 **UI hint**: yes
 
 ### Phase 16: Jury paramétrable + Scoring configurable
@@ -112,7 +118,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
-| 15. Mission Engine no-code | 0/? | Not started | - |
+| 15. Mission Engine no-code | 0/5 | Planned | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
@@ -146,4 +152,4 @@ Tag `v0.1-pilot-ready` (commit `8176419`). 5 phases (Foundation / Player / Mento
 
 ---
 
-*Last updated: 2026-06-11 — Phase 14 planned (5 plans, 5 waves). Phases 15-18 still TBD.*
+*Last updated: 2026-06-11 — Phase 15 planned (5 plans, 5 waves). Phases 16-18 still TBD.*
