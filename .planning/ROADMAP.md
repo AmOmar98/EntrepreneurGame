@@ -87,7 +87,13 @@ Plans:
   2. Les classements archivés (AgreenTech 4 critères, Digi 5 critères) restent calculables correctement avec leur schéma d'origine — rétro-compat vérifiable en relançant le calcul sur les données archivées
   3. GM peut paramétrer XP (+soumis/+reviewed/+validé), paliers engagement (seuils) et pondération projet/pitch par event depuis l'éditeur — les valeurs sont stockées dans `event_settings`
   4. Les triggers PL/pgSQL `recalc_player_score` et `recalc_player_engagement` lisent leurs paramètres depuis `event_settings` — grep sur les valeurs hardcodées `100`, `0.8`, `25`, `50` dans les fonctions SQL ne retourne aucun littéral libre (ils sont lus depuis la table)
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 16-01-PLAN.md — Migrations additives (pitch_criteria + pitch_scores.scores jsonb + event_settings + get_event_setting_int + recalc_player_engagement parametre) + accessors lib/pitch-criteria.ts/lib/event-settings.ts + demo defaults
+- [ ] 16-02-PLAN.md — Jury form dynamique + lib/results.ts/score.ts/jury.ts dynamic + retro-compat archives 4/5-crit + pitch_weight depuis event_settings
+- [ ] 16-03-PLAN.md — Editeurs GM (grille jury + reglages scoring) : saveJuryGridFlow/saveEventSettingsFlow + composants admin + page /admin/events/[id]/settings + i18n
+- [ ] 16-04-PLAN.md — Tests (retro-compat fixtures 4/5-crit + dynamic + event-settings + schemas) + R1 audit + 16-VERIFICATION.md
+- [ ] 16-05-PLAN.md — Checkpoint operateur batche (autonomous: false) : apply 5 migrations PROD + smoke RLS/3-surfaces + spot-checks archives + miroir declaratif database/
 **UI hint**: yes
 
 ### Phase 17: Observabilité + Perf
@@ -119,7 +125,7 @@ Plans:
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
-| 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
+| 16. Jury paramétrable + Scoring configurable | 0/5 | Planned | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
 
@@ -152,4 +158,4 @@ Tag `v0.1-pilot-ready` (commit `8176419`). 5 phases (Foundation / Player / Mento
 
 ---
 
-*Last updated: 2026-06-11 — Phase 15 planned (5 plans, 5 waves). Phases 16-18 still TBD.*
+*Last updated: 2026-06-11 — Phase 16 planned (5 plans, 5 waves). Phases 17-18 still TBD.*
