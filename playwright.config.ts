@@ -1,13 +1,14 @@
 // Quick 260517-psd — Playwright smoke harness (demo mode only).
 // Boots `next dev -p 3001` automatically via webServer config; no Supabase env
 // expected, app falls back to in-memory seed (lib/seed/). Single chromium project.
+// Phase 13-03: testDir widened to "./tests" to cover both tests/smoke and tests/e2e.
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3001;
 const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
-  testDir: "./tests/smoke",
+  testDir: "./tests",
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
