@@ -64,14 +64,14 @@
 
 - [x] **QUAL-01** : Vitest couvre les server actions critiques (soumission, évaluation, éditeur, clonage) avec tests verts
 - [x] **QUAL-02** : Playwright E2E couvre 5 flows — onboarding, soumission livrable, éval mentor, pitch jury, export GM (absorbe SEED-002)
-- [ ] **QUAL-03** : CI GitHub Actions — typecheck + lint + build + tests en gate sur chaque push
+- [x] **QUAL-03** : CI GitHub Actions — typecheck + lint + build + tests en gate sur chaque push
 - [ ] **QUAL-04** : Sentry capte les erreurs serveur/client en prod avec alerting
 - [ ] **QUAL-05** : PostHog trace le funnel produit (completion par livrable, drop-offs)
 - [ ] **QUAL-06** : Perf test seed 500 users — P95 des queries mesuré, RLS initplan `(SELECT auth.uid())` vérifié
 
 ### OPS — Consolidation + tech debt v0.3
 
-- [ ] **OPS-01** : `database/` consolidé comme source de vérité alignée PROD (drift résorbé : 2 functions PROD-only sourcées, grants divergents) — **pré-requis avant tout refactor schéma**
+- [x] **OPS-01** : `database/` consolidé comme source de vérité alignée PROD (drift résorbé : 2 functions PROD-only sourcées, grants divergents) — **pré-requis avant tout refactor schéma**
 - [ ] **OPS-02** : DIGI-08 clarifié et clos (backfill `pitch_scores` post-event ou publish pré-event 15/05 confirmé suffisant)
 
 ### JULY — Event de juillet 2026
