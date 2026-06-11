@@ -39,6 +39,8 @@ export type PitchScoreWithComments = PitchScore & {
   isDraft?: boolean;
   /** quick-260520-124 ext — verdict global cote panel, null si non choisi. */
   verdict?: Verdict | null;
+  /** Phase 16: dynamic jsonb scores (key -> value). null when pre-migration. */
+  scores?: Record<string, number> | null;
 };
 
 // SubmissionRef — slim shape passed to V4 jury session for deliverable links.
@@ -69,6 +71,8 @@ export type JuryAggregate = {
   /** Weighted average on /100 (sum × 5 / 4 — mirrors lib/results.ts pitchAvg). */
   avg100: number;
   jurorCount: number;
+  /** Phase 16: dynamic per-criterion averages when scores jsonb present. key -> avg */
+  criteriaAvg?: Record<string, number>;
 };
 
 export type JuryPlayerRow = {
@@ -137,6 +141,8 @@ type PitchScoreRow = {
   // quick-260520-124 ext (2026-05-20) — is_draft + verdict (optional pre-migration).
   is_draft?: boolean | null;
   verdict?: Verdict | null;
+  // Phase 16: dynamic jsonb scores (nullable; legacy rows keep null).
+  scores?: Record<string, number> | null;
 };
 
 export function mapPitchScore(row: PitchScoreRow): PitchScoreWithComments {
@@ -160,6 +166,8 @@ export function mapPitchScore(row: PitchScoreRow): PitchScoreWithComments {
     // quick-260520-124 ext — is_draft + verdict (tolerant : undefined if migration not applied).
     isDraft: row.is_draft ?? undefined,
     verdict: row.verdict ?? null,
+    // Phase 16: dynamic jsonb scores (tolerant: undefined if migration not applied).
+    scores: row.scores ?? null,
   };
 }
 
@@ -270,9 +278,10 @@ export async function getJuryOverview(): Promise<{
   });
 
   // 3. Fetch pitch_scores authored by the connected juror for this event.
+  // Phase 16: select scores jsonb for dynamic criteria mapping.
   const { data: scoreRows, error: scoreErr } = await supabase
     .from("pitch_scores")
-    .select("id, event_id, player_id, juror_id, c1, c2, c3, c4, c5, total_score")
+    .select("id, event_id, player_id, juror_id, c1, c2, c3, c4, c5, total_score, scores")
     .eq("event_id", eventId)
     .eq("juror_id", user.id);
   if (scoreErr) {
@@ -429,18 +438,23 @@ export async function getJuryOverview(): Promise<{
   // aggregates. RLS (`pitch_scores_select_visibility`) only authorises the
   // wider SELECT once `events.pitch_mode_state = 'closed'` (or results are
   // published), so this read is privacy-safe in live/off mode (returns []).
+  // Phase 16: select scores jsonb for criteriaAvg dynamic path.
   const aggregateByPlayer = new Map<string, JuryAggregate>();
   if (pitchModeState === "closed") {
     const { data: allScoreRows, error: aggErr } = await supabase
       .from("pitch_scores")
-      .select("player_id, c1, c2, c3, c4")
+      .select("player_id, c1, c2, c3, c4, scores")
       .eq("event_id", eventId);
     if (aggErr) {
       console.error("[jury] pitch_scores aggregate query failed", aggErr);
     } else {
       const buckets = new Map<
         string,
-        { c1Sum: number; c2Sum: number; c3Sum: number; c4Sum: number; count: number }
+        {
+          c1Sum: number; c2Sum: number; c3Sum: number; c4Sum: number; count: number;
+          // Phase 16: per-criterion sum for dynamic criteriaAvg
+          criteriaSum: Record<string, number>;
+        }
       >();
       for (const r of (allScoreRows ?? []) as Array<{
         player_id: string;
@@ -448,6 +462,7 @@ export async function getJuryOverview(): Promise<{
         c2: number;
         c3: number;
         c4: number;
+        scores?: Record<string, number> | null;
       }>) {
         const b = buckets.get(r.player_id) ?? {
           c1Sum: 0,
@@ -455,12 +470,19 @@ export async function getJuryOverview(): Promise<{
           c3Sum: 0,
           c4Sum: 0,
           count: 0,
+          criteriaSum: {},
         };
         b.c1Sum += Number(r.c1) || 0;
         b.c2Sum += Number(r.c2) || 0;
         b.c3Sum += Number(r.c3) || 0;
         b.c4Sum += Number(r.c4) || 0;
         b.count += 1;
+        // Phase 16: accumulate dynamic criteria sums
+        if (r.scores && typeof r.scores === "object") {
+          for (const [key, val] of Object.entries(r.scores)) {
+            b.criteriaSum[key] = (b.criteriaSum[key] ?? 0) + (Number(val) || 0);
+          }
+        }
         buckets.set(r.player_id, b);
       }
       for (const [playerId, b] of buckets) {
@@ -470,6 +492,11 @@ export async function getJuryOverview(): Promise<{
         const c4Avg = b.c4Sum / b.count;
         // 4 critères × 20 = 80 max ; normalise × 5/4 → /100 (cf. lib/results.ts).
         const avg100 = ((c1Avg + c2Avg + c3Avg + c4Avg) * 5) / 4;
+        // Phase 16: criteriaAvg when dynamic scores were present
+        const criteriaAvg: Record<string, number> = {};
+        for (const [key, sum] of Object.entries(b.criteriaSum)) {
+          criteriaAvg[key] = sum / b.count;
+        }
         aggregateByPlayer.set(playerId, {
           c1Avg,
           c2Avg,
@@ -477,6 +504,7 @@ export async function getJuryOverview(): Promise<{
           c4Avg,
           avg100,
           jurorCount: b.count,
+          ...(Object.keys(criteriaAvg).length > 0 ? { criteriaAvg } : {}),
         });
       }
     }

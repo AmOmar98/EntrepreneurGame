@@ -7,6 +7,7 @@
 // getJourneyData fetches levels via getLevels() to populate JourneyData.levelLabel.
 import { createClient } from "@/utils/supabase/server";
 import { getLevels } from "@/lib/levels";
+import { getEventSettings } from "@/lib/event-settings";
 import type {
   DeliverableTemplate,
   LevelId,
@@ -225,6 +226,11 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   }
   const eventId = (cohortRow as { event_id: string }).event_id;
 
+  // Phase 16 (SETTINGS-01): fetch event settings for XP rule values.
+  // DEFAULT_EVENT_SETTINGS fallback ensures pre-migration + demo behavior is
+  // byte-identical to the previous hardcoded literals.
+  const settings = await getEventSettings(eventId);
+
   // Fetch missions for this event ordered.
   const { data: missionRows } = await supabase
     .from("missions")
@@ -341,16 +347,18 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
         subs.map((s) => ({ id: s.id, version: s.version, status: s.status })),
       );
       // R1 revised — Player-facing XP per deliverable.
-      // +100 base on first submission (any version), +score from latest eval,
-      // +50 if verdict=validate_v1, +100 if verdict=validate_v2 (50 base + 50 V2 bonus).
+      // +xpFirstSubmission on first submission, +score from latest eval,
+      // +xpValidateV1 if verdict=validate_v1, +xpValidateV2 if verdict=validate_v2.
+      // XP rules read from EventSettings (SETTINGS-01/03); DEFAULT_EVENT_SETTINGS
+      // fallback preserves behavior when pre-migration or demo (values = 100/50/100).
       let earnedXp = 0;
       if (subs.length > 0) {
-        earnedXp += 100;
+        earnedXp += settings.xpFirstSubmission;
         const evalEntry = latestEvalByTplId.get(template.id);
         if (evalEntry) {
           earnedXp += evalEntry.totalScore;
-          if (evalEntry.verdict === "validate_v1") earnedXp += 50;
-          if (evalEntry.verdict === "validate_v2") earnedXp += 100;
+          if (evalEntry.verdict === "validate_v1") earnedXp += settings.xpValidateV1;
+          if (evalEntry.verdict === "validate_v2") earnedXp += settings.xpValidateV2;
         }
       }
       return { template, status, latestSubmissionId, earnedXp };

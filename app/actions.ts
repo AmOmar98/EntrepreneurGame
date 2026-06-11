@@ -1131,6 +1131,9 @@ const pitchScoreSchema = z.object({
     .enum(["not_convinced", "needs_work", "convinced", "favorite"])
     .optional()
     .nullable(),
+  // Phase 16: optional dynamic scores jsonb (format: JSON object key->number).
+  // Tolerant: absent or parse failure → legacy c1..c5 path (no breakage).
+  scoresJson: z.string().optional().nullable(),
 });
 
 export async function savePitchScoreFlow(
@@ -1159,6 +1162,8 @@ export async function savePitchScoreFlow(
     // FormData.get returns null when absent ; Zod default kicks in for isDraft.
     isDraft: formData.get("isDraft"),
     verdict: formData.get("verdict") || null,
+    // Phase 16: dynamic scores jsonb. Empty string normalized to null (legacy path).
+    scoresJson: formData.get("scoresJson") || null,
   });
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
@@ -1227,16 +1232,40 @@ export async function savePitchScoreFlow(
   if (parsed.data.verdict) {
     payload.verdict = parsed.data.verdict;
   }
+
+  // Phase 16: parse scoresJson for dynamic path (tolerant: skip on failure).
+  // T-16-04: JSON.parse ignore on failure — legacy c1..c5 path remains authoritative.
+  if (parsed.data.scoresJson) {
+    try {
+      const scoresPayload = JSON.parse(parsed.data.scoresJson) as Record<string, number>;
+      if (scoresPayload && typeof scoresPayload === "object" && !Array.isArray(scoresPayload)) {
+        if (Object.keys(scoresPayload).length > 0) {
+          payload.scores = scoresPayload;
+        }
+      }
+    } catch {
+      // Ignore parse failure — legacy c1..c5 path used
+    }
+  }
+
   const { error: upsertErr } = await supabase
     .from("pitch_scores")
     .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
   if (upsertErr) {
-    // quick-260520-124 ext — graceful degradation if migration not yet applied
-    // (column does not exist). Retry without is_draft/verdict.
+    // quick-260520-124 ext — graceful degradation if migration not yet applied.
     const msg = upsertErr.message ?? "";
     if (msg.includes("is_draft") || msg.includes("verdict")) {
       delete payload.is_draft;
       delete payload.verdict;
+      const { error: retryErr } = await supabase
+        .from("pitch_scores")
+        .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
+      if (retryErr) {
+        return { ok: false, message: retryErr.message };
+      }
+    } else if (msg.includes("scores") || msg.includes("column")) {
+      // Phase 16: pre-migration tolerance for scores column not yet applied.
+      delete payload.scores;
       const { error: retryErr } = await supabase
         .from("pitch_scores")
         .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
