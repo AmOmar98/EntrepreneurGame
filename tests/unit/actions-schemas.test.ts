@@ -3,7 +3,7 @@
 // Schemas are imported from lib/schemas.ts — never from app/actions.ts.
 // Demo-mode note: no Supabase env vars set, hasSupabaseEnv() returns false.
 import { describe, it, expect } from "vitest";
-import { submissionSchema, evaluationSchema } from "@/lib/schemas";
+import { submissionSchema, evaluationSchema, validationRuleSchema, composerKindSchema } from "@/lib/schemas";
 
 // Use all-zeros UUID — accepted by Zod v4 uuid validator
 // (Zod v4 accepts RFC 4122 nil UUID and standard v4 UUIDs)
@@ -44,6 +44,53 @@ describe("submissionSchema", () => {
       proofText: "a".repeat(10),
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("validationRuleSchema", () => {
+  it("accepts severity 'warn' with valid rule and message", () => {
+    const result = validationRuleSchema.safeParse({
+      rule: "non-empty",
+      severity: "warn",
+      message: "This field is required",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects severity 'error' (R2 / VALID-01 structural guarantee)", () => {
+    const result = validationRuleSchema.safeParse({
+      rule: "non-empty",
+      severity: "error",
+      message: "This field is required",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty rule string", () => {
+    const result = validationRuleSchema.safeParse({
+      rule: "",
+      severity: "warn",
+      message: "This field is required",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("composerKindSchema", () => {
+  it("accepts 'simple'", () => {
+    expect(composerKindSchema.safeParse("simple").success).toBe(true);
+  });
+
+  it("accepts 'moscow'", () => {
+    expect(composerKindSchema.safeParse("moscow").success).toBe(true);
+  });
+
+  it("accepts 'multi_url'", () => {
+    expect(composerKindSchema.safeParse("multi_url").success).toBe(true);
+  });
+
+  it("rejects unknown kind 'other'", () => {
+    expect(composerKindSchema.safeParse("other").success).toBe(false);
   });
 });
 
