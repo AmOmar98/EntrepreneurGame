@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: verifying
-last_updated: "2026-06-11T21:20:51.259Z"
+last_updated: "2026-06-11T21:34:27.888Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 33
 ---
 
@@ -58,6 +58,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 15 P15-01 | 12min | 3 tasks | 5 files |
 | Phase 15 P15-02 | 6min | 3 tasks | 5 files |
 | Phase 15 P03 | 7min | 3 tasks | 5 files |
+| Phase 15 P15-04 | 9min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-02 : activateEventFlow two-step UPDATE (deactivate-all-in-org then activate-target); null-org fallback deactivates all events (pre-migration safe)
 - 15-02 : cloneEventFlow two-pass soft_recommends_before remap — pass1 null inserts, pass2 old->new UUID update (T-15-05 mitigated)
 - 15-02 : ENGINE-03 (clone) + ENGINE-04 (create event+cohort) + TENANT-03 editor side (single-active) complete
+- 15-04 : getSimulatedNow reads gsd_simulate_date cookie (server-only); GM-only via lib/admin.ts call sites
+- 15-04 : isAutoValidate pre-migration dual-check: (composer_kind=multi_url && auto_validate) || (!column && slug===fiches-entretien-v1) so PROD works until migration applied
+- 15-04 : LEVELS-04 + ENGINE-05 + ENGINE-06 + ENGINE-07 complete; HARD_BLOCK_DEPENDENCIES literal untouched (VALID-02)
 
 ### Phase Sequence Rationale
 
@@ -132,4 +136,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 15 Plan 02 complete (events surface). /admin/events page + AdminEventsTable, createEventFlow/activateEventFlow/cloneEventFlow (ENGINE-03/04 + TENANT-03 editor side), two-pass self-FK remap, 21 i18n keys. Full quality gate green (typecheck/lint/build/23 unit/15 e2e).*
+*Last updated: 2026-06-11 — Phase 15 Plan 04 complete (de-hardcoding + levels editor). getSimulatedNow (ENGINE-07), /admin/levels CRUD (LEVELS-04), composer_kind/template_url de-hardcoding (ENGINE-05), soft_recommends_before amber hint (ENGINE-06). R1/R3 audits clean, 23 unit / 15 e2e green.*

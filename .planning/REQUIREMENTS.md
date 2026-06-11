@@ -30,16 +30,16 @@
 - [x] **ENGINE-02** : Le GM peut créer/éditer un deliverable_template (titre, description, rubric critères/labels/max, max_score, is_bonus, ordre, activation) via un éditeur de barème
 - [x] **ENGINE-03** : Le GM peut cloner un event existant (missions + livrables + réglages) vers un nouvel event en un clic
 - [x] **ENGINE-04** : Le GM peut créer un event + cohorte (slug, nom, dates) depuis l'admin
-- [ ] **ENGINE-05** : Les comportements par livrable sont data-driven — `composer_kind`, `template_url`, `auto_validate` en colonnes remplacent tous les slugs codés en dur (`HARD_BLOCK_DEPENDENCIES`, `MOSCOW_DELIVERABLE_SLUG`, `lib/template-links.ts`, UUID G01 du trigger auto-eval)
-- [ ] **ENGINE-06** : Le GM peut définir une recommandation `soft_recommends_before` entre livrables, rendue en hint ambre non bloquant côté Player (R3 conforme — aucun hard-block configurable)
-- [ ] **ENGINE-07** : Toute logique calendrier (`scheduled_date`) est simulable à une date arbitraire en smoke (leçon incident BMC J1 Digi)
+- [x] **ENGINE-05** : Les comportements par livrable sont data-driven — `composer_kind`, `template_url`, `auto_validate` en colonnes remplacent tous les slugs codés en dur (`HARD_BLOCK_DEPENDENCIES`, `MOSCOW_DELIVERABLE_SLUG`, `lib/template-links.ts`, UUID G01 du trigger auto-eval)
+- [x] **ENGINE-06** : Le GM peut définir une recommandation `soft_recommends_before` entre livrables, rendue en hint ambre non bloquant côté Player (R3 conforme — aucun hard-block configurable)
+- [x] **ENGINE-07** : Toute logique calendrier (`scheduled_date`) est simulable à une date arbitraire en smoke (leçon incident BMC J1 Digi)
 
 ### LEVELS — Niveaux data-driven
 
 - [x] **LEVELS-01** : La structure des niveaux (nombre, IDs, noms, ordre) est définie en table par programme — plus d'enum PG `level_id`
 - [x] **LEVELS-02** : Migration de `players.current_level` + `missions.level_id` de l'enum vers la nouvelle référence sans perte de données PROD (migration multi-étapes)
 - [x] **LEVELS-03** : L'UI lit labels/ordres depuis la DB — suppression des maps TS `LEVEL_LABELS`/`LEVEL_ORDS`/`SHORT_LABELS`/`LEVEL_IDS` et des `z.enum` miroirs
-- [ ] **LEVELS-04** : Le GM peut renommer/réordonner/ajouter/retirer des niveaux d'un programme dans l'éditeur
+- [x] **LEVELS-04** : Le GM peut renommer/réordonner/ajouter/retirer des niveaux d'un programme dans l'éditeur
 
 ### JURY — Grille jury paramétrable
 
@@ -132,10 +132,10 @@
 | ENGINE-02 | Phase 15 | Complete |
 | ENGINE-03 | Phase 15 | Complete |
 | ENGINE-04 | Phase 15 | Complete |
-| ENGINE-05 | Phase 15 | Pending |
-| ENGINE-06 | Phase 15 | Pending |
-| ENGINE-07 | Phase 15 | Pending |
-| LEVELS-04 | Phase 15 | Pending |
+| ENGINE-05 | Phase 15 | Complete |
+| ENGINE-06 | Phase 15 | Complete |
+| ENGINE-07 | Phase 15 | Complete |
+| LEVELS-04 | Phase 15 | Complete |
 | VALID-01 | Phase 15 | Complete |
 | VALID-02 | Phase 15 | Complete |
 | JURY-06 | Phase 16 | Pending |
