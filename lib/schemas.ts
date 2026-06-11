@@ -10,6 +10,23 @@
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
+// slugifyToKey — canonical implementation (WR-02)
+// Single source of truth imported by both app/actions.ts (server) and
+// components/admin-deliverable-template-editor.tsx (client).
+// NFD normalize + diacritic strip ensures "Clarté" → "clarte" consistently.
+// ---------------------------------------------------------------------------
+
+export function slugifyToKey(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 64) || "criterion";
+}
+
+// ---------------------------------------------------------------------------
 // Shared URL schema
 // ---------------------------------------------------------------------------
 

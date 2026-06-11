@@ -12,6 +12,7 @@ import {
   composerKindSchema,
   validationRuleSchema,
   rubricSchema,
+  slugifyToKey,
 } from "@/lib/schemas";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
@@ -3131,16 +3132,7 @@ export async function reorderMissionFlow(
 
 // ---- saveDeliverableTemplateFlow --------------------------------------------
 
-// Helper: slugify a label to a key (lowercase, hyphenate spaces/special chars)
-function slugifyToKey(label: string): string {
-  return label
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 64) || "criterion";
-}
+// slugifyToKey imported from @/lib/schemas (WR-02 canonical implementation)
 
 const saveDeliverableTemplateSchema = z.object({
   templateId: z.string().uuid().nullable().optional(),

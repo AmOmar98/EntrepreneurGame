@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { saveDeliverableTemplateFlow, type WorkflowState } from "@/app/actions";
+import { slugifyToKey } from "@/lib/schemas";
 import { dictionaries } from "@/lib/i18n";
 import type { ComposerKind } from "@/lib/types";
 
@@ -16,15 +17,6 @@ type RubricRow = {
   label: string;
   max: number;
 };
-
-// Helper: slugify a label to a key (mirrors server-side slugifyToKey)
-function slugifyToKey(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 64) || "criterion";
-}
 
 // ============================================================================
 // Props
