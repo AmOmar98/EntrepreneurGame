@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { AdminLevelsEditor } from "@/components/admin-levels-editor";
+import { AdminLevelsEditor, SimulateDatePanel } from "@/components/admin-levels-editor";
 import { getAdminLevels } from "@/lib/admin-levels";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
@@ -61,6 +61,10 @@ export default async function AdminLevelsPage() {
           >
             {t.admin_engine_simulate_date_active.replace("[date]", simulateDate)}
           </div>
+        ) : null}
+
+        {hasSupabaseEnv() ? (
+          <SimulateDatePanel currentDate={simulateDate} />
         ) : null}
 
         {!hasSupabaseEnv() ? (

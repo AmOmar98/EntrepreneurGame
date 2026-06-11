@@ -7,6 +7,7 @@ import {
   updateLevelFlow,
   reorderLevelFlow,
   deleteLevelFlow,
+  setSimulatedDateFlow,
   type WorkflowState,
 } from "@/app/actions";
 import { dictionaries } from "@/lib/i18n";
@@ -245,6 +246,62 @@ function AddLevelForm() {
         ) : null}
       </div>
     </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// WR-04: GM date simulation control (ENGINE-07)
+// Sets/clears the gsd_simulate_date cookie via setSimulatedDateFlow.
+// ---------------------------------------------------------------------------
+
+export function SimulateDatePanel({ currentDate }: { currentDate: string | null }) {
+  const [state, formAction, pending] = useActionState(setSimulatedDateFlow, { ok: false, message: "" } as WorkflowState);
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--wf-line)",
+        borderRadius: 8,
+        padding: "14px 16px",
+        background: "var(--home-surface)",
+        marginBottom: 20,
+      }}
+    >
+      <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700 }}>
+        Simulation de date (ENGINE-07)
+      </p>
+      <form action={formAction} className="wf-row" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <input
+          type="date"
+          name="simulateDate"
+          defaultValue={currentDate ?? ""}
+          style={{ fontSize: 13, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--wf-line)" }}
+        />
+        <button
+          type="submit"
+          className="eic-button eic-button--primary"
+          disabled={pending}
+          style={{ fontSize: 13 }}
+        >
+          {pending ? "..." : "Appliquer"}
+        </button>
+        <button
+          type="submit"
+          name="simulateDate"
+          value=""
+          className="button"
+          disabled={pending}
+          style={{ fontSize: 13 }}
+        >
+          Effacer
+        </button>
+        {state.message ? (
+          <span style={{ fontSize: 12, color: state.ok ? "var(--wf-success, green)" : "var(--wf-error, red)" }}>
+            {state.message}
+          </span>
+        ) : null}
+      </form>
+    </div>
   );
 }
 

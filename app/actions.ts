@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import {
   httpsUrl,
@@ -3453,4 +3454,65 @@ export async function deleteLevelFlow(
   revalidatePath("/admin/levels");
   revalidatePath("/journey");
   return { ok: true, message: "Niveau supprime." };
+}
+
+// ============================================================================
+// Phase 15 / ENGINE-07 — GM date simulation cookie setter (WR-04)
+// ============================================================================
+
+const SIMULATE_DATE_COOKIE = "gsd_simulate_date";
+
+const setSimulatedDateSchema = z.object({
+  simulateDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+});
+
+/**
+ * Sets or clears the gsd_simulate_date httpOnly cookie (GM-only).
+ * Pass simulateDate="" or omit to clear.
+ */
+export async function setSimulatedDateFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const raw = (formData.get("simulateDate") as string | null) ?? "";
+  const parsed = setSimulatedDateSchema.safeParse({ simulateDate: raw || null });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Date invalide (YYYY-MM-DD)." };
+  }
+
+  const cookieStore = await cookies();
+  if (parsed.data.simulateDate) {
+    cookieStore.set(SIMULATE_DATE_COOKIE, parsed.data.simulateDate, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+    });
+  } else {
+    cookieStore.delete(SIMULATE_DATE_COOKIE);
+  }
+
+  revalidatePath("/admin/levels");
+  return {
+    ok: true,
+    message: parsed.data.simulateDate
+      ? `Simulation active : ${parsed.data.simulateDate}`
+      : "Simulation desactivee.",
+  };
 }
