@@ -8,6 +8,7 @@ import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { computeRanking } from "@/lib/results";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
+import { getEventSettings } from "@/lib/event-settings";
 import { isCurrentUserJuror } from "@/lib/jurors";
 import { createClient } from "@/utils/supabase/server";
 import { PublishButton } from "./publish-button";
@@ -128,11 +129,15 @@ export default async function ResultsPage() {
   const isJuror = await isCurrentUserJuror(pitchMode.eventId);
   const isPublished = pitchMode.publishedAt !== null;
 
+  // Phase 16 (SETTINGS-02): pitch weight from event_settings (default 0.8).
+  const eventSettings = await getEventSettings(pitchMode.eventId);
+
   // computeRanking extended signature (Agent #3 wave 2). Falls back to legacy
   // single-arg signature if Agent #3 drift not yet landed.
   const ranking = await computeRanking({
     requesterRole: role,
     isJuror,
+    pitchWeight: eventSettings.pitchWeight,
   } as Parameters<typeof computeRanking>[0]);
 
   // --- B. Non-GM + non-juror + non-published → editorial "thank you" ---------
