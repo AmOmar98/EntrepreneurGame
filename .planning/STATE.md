@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T18:03:52.249Z"
+last_updated: "2026-06-11T19:06:49.949Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 4
-  completed_plans: 2
-  percent: 0
+  completed_phases: 1
+  total_plans: 9
+  completed_plans: 5
+  percent: 17
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 
 ## Current Position
 
-Phase: 13 (DB Consolidation + Test Infrastructure) — EXECUTING
-Plan: 3 of 4
-Status: Ready to execute
+Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
+Plan: 1 of 5 (complete)
+Status: Executing — Plan 02 next
 Last activity: 2026-06-11
 
 ```
@@ -51,6 +51,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Requirements complete | 0/36 |
 | Phase 13 P02 | 15min | 2 tasks | 7 files |
 | Phase 13 P03 | 10min | 2 tasks | 7 files |
+| Phase 14 P01 | 5min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - Archives AgreenTech + Digi gelées en lecture seule — classements intacts, 0 migration big-bang
 - database/** est Write/Edit-denied dans settings.local.json — SQL via NEW.sql dans quick/phase dirs + Supabase MCP execute_sql
 - Dual-mode demo (hasSupabaseEnv fallback) préservé dans toutes les phases
+- 14-01 : levels_v2 (text PK) naming évite collision avec public.levels (enum PK) — enum retenu, suppression post-juillet
+- 14-01 : PROD apply = checkpoint opérateur batché Plan 04 (supabase db push --linked) ; database/** non édité
+- 14-01 : events.organization_id nullable + is_active DEFAULT false = état intermédiaire PROD tolérable (TS fallback Plan 02)
 
 ### Phase Sequence Rationale
 
@@ -107,4 +111,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — v0.4 Scale Foundation roadmap created. Phase 13 not started / Status: Ready to plan. Next: `/gsd:plan-phase 13`*
+*Last updated: 2026-06-11 — Phase 14 Plan 01 complete (TENANT-01/02, LEVELS-01/02). 4 migrations authored (organizations, is_active, levels_v2, is_in_org RLS). Next: Plan 02 (TS data layer).*
