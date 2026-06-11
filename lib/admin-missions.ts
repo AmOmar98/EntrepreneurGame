@@ -17,6 +17,13 @@ export type AdminTemplateRow = {
   isActive: boolean;
   isBonus: boolean;
   composerKind: ComposerKind;
+  // WR-01: full fields so editor opens with existing values (no silent reset on save)
+  description: string;
+  templateUrl: string | null;
+  autoValidate: boolean;
+  softRecommendsBefore: string | null;
+  rubric: Array<{ key: string; label: string; max: number }> | null;
+  maxScore: number;
 };
 
 export type AdminMissionRow = {
@@ -54,6 +61,13 @@ type TemplateDbRow = {
   is_bonus: boolean | null;
   composer_kind: string | null;
   mission_id: string;
+  // WR-01: extended fields for lossless edit
+  description: string | null;
+  template_url: string | null;
+  auto_validate: boolean | null;
+  soft_recommends_before: string | null;
+  rubric: unknown;
+  max_score: number;
 };
 
 // ============================================================================
@@ -85,10 +99,10 @@ export async function getEventMissions(eventId: string): Promise<AdminMissionRow
 
   const missionIds = missions.map((m) => m.id);
 
-  // Fetch templates for all missions in one query
+  // Fetch templates for all missions in one query (WR-01: include all editable fields)
   const { data: templateRows, error: templatesErr } = await supabase
     .from("deliverable_templates")
-    .select("id, slug, title, ord, is_active, is_bonus, composer_kind, mission_id")
+    .select("id, slug, title, ord, is_active, is_bonus, composer_kind, mission_id, description, template_url, auto_validate, soft_recommends_before, rubric, max_score")
     .in("mission_id", missionIds)
     .order("ord", { ascending: true });
 
@@ -108,6 +122,13 @@ export async function getEventMissions(eventId: string): Promise<AdminMissionRow
       isActive: tpl.is_active === null ? true : Boolean(tpl.is_active),
       isBonus: tpl.is_bonus === null ? false : Boolean(tpl.is_bonus),
       composerKind: (tpl.composer_kind ?? "simple") as ComposerKind,
+      // WR-01: extended fields for lossless edit
+      description: tpl.description ?? "",
+      templateUrl: tpl.template_url ?? null,
+      autoValidate: tpl.auto_validate === null ? false : Boolean(tpl.auto_validate),
+      softRecommendsBefore: tpl.soft_recommends_before ?? null,
+      rubric: Array.isArray(tpl.rubric) ? (tpl.rubric as Array<{ key: string; label: string; max: number }>) : null,
+      maxScore: tpl.max_score,
     });
     templatesByMission.set(tpl.mission_id, rows);
   }

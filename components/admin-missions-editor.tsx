@@ -359,10 +359,16 @@ function TemplateSummaryRow({
             templateId={template.id}
             initialSlug={template.slug}
             initialTitle={template.title}
+            initialDescription={template.description}
             initialComposerKind={template.composerKind}
+            initialTemplateUrl={template.templateUrl}
+            initialAutoValidate={template.autoValidate}
             initialIsBonus={template.isBonus}
+            initialMaxScore={template.maxScore}
             initialIsActive={template.isActive}
             initialOrd={template.ord}
+            initialSoftRecommendsBefore={template.softRecommendsBefore}
+            initialRubric={template.rubric ? template.rubric.map((r) => ({ label: r.label, max: r.max })) : undefined}
             otherTemplates={otherTemplates}
           />
         </div>
