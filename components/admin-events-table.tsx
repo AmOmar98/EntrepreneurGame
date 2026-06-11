@@ -162,6 +162,16 @@ function EventRow({ row, demo }: { row: AdminEventRow; demo: boolean }) {
             Voir missions
           </a>
 
+          {/* Link to event settings (jury grid + scoring) */}
+          <a
+            href={`/admin/events/${row.id}/settings`}
+            className="eic-button"
+            style={{ fontSize: 13 }}
+            aria-label={`Reglages de l'event ${row.name}`}
+          >
+            Reglages
+          </a>
+
           {/* Activate toggle */}
           {!row.isActive && (
             <form action={activateAction}>
