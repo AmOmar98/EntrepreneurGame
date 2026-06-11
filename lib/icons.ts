@@ -15,9 +15,11 @@ import {
   Wallet,
   XCircle,
 } from "lucide-react";
-import type { LevelId, SubmissionStatus } from "@/lib/types";
+import type { SubmissionStatus } from "@/lib/types";
 
-export const levelIcon: Record<LevelId, LucideIcon> = {
+// Record<string, LucideIcon>: no longer an exhaustive map over the LevelId union
+// (LevelId = string after 14-02). Object literal unchanged -- runtime lookup is safe.
+export const levelIcon: Record<string, LucideIcon> = {
   L0_diagnostic: Compass,
   L1_problem: Target,
   L2_solution: Lightbulb,

@@ -3,7 +3,10 @@
 // fetches today's missions + their deliverable templates, computes statuses.
 // Dual-mode (DATA-03): in demo mode (no Supabase env) returns an empty payload
 // rather than leaking seed names into the UI.
+// Phase 14 / Plan 02: hardcoded level maps and levelLabel/levelOrd helpers removed.
+// getJourneyData fetches levels via getLevels() to populate JourneyData.levelLabel.
 import { createClient } from "@/utils/supabase/server";
+import { getLevels } from "@/lib/levels";
 import type {
   DeliverableTemplate,
   LevelId,
@@ -68,39 +71,9 @@ export function computeDeliverableStatus(
   return { status: latest.status, latestSubmissionId: latest.id };
 }
 
-const LEVEL_LABELS: Record<LevelId, string> = {
-  L0_diagnostic: "Niveau 0 - Diagnostic",
-  L1_problem: "Niveau 1 - Probleme",
-  L2_solution: "Niveau 2 - Solution",
-  L3_market: "Niveau 3 - Marche",
-  L4_business_model: "Niveau 4 - Modele economique",
-  L5_pitch: "Niveau 5 - Pitch",
-  L6_traction: "Niveau 6 - Traction",
-  L7_alumni: "Niveau 7 - Alumni",
-};
-
-export function levelLabel(levelId: LevelId): string {
-  return LEVEL_LABELS[levelId] ?? String(levelId);
-}
-
-const LEVEL_ORDS: Record<LevelId, number> = {
-  L0_diagnostic: 0,
-  L1_problem: 1,
-  L2_solution: 2,
-  L3_market: 3,
-  L4_business_model: 4,
-  L5_pitch: 5,
-  L6_traction: 6,
-  L7_alumni: 7,
-};
-
-/**
- * Numeric ordinal (0..7) for a LevelId. Mirrors database/schema.sql ord values.
- * Used by the admin radar (Phase 9 GMR-02) and any UI that needs to compare levels.
- */
-export function levelOrd(levelId: LevelId): number {
-  return LEVEL_ORDS[levelId] ?? 0;
-}
+// Hardcoded level label/ord maps and their helper exports removed in Phase 14 / Plan 02.
+// Callers must look up labels/ords from the levels array returned by getLevels()
+// (lib/levels.ts). Plan 03 (wave 3) migrates every external call site.
 
 // ============================================================================
 // Row mappers (snake_case -> camelCase, mirrors the pattern used in app/actions.ts)
@@ -220,6 +193,12 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   const player = await getPlayerForUser(userId);
   if (!player) return EMPTY;
 
+  // Fetch levels for label lookup (replaces removed levelLabel() helper).
+  const levels = await getLevels();
+  const levelsMap = new Map(levels.map((l) => [l.id, l]));
+  const resolveLabel = (levelId: LevelId): string =>
+    levelsMap.get(levelId)?.label ?? String(levelId);
+
   // Resolve event via cohort.
   const { data: cohortRow } = await supabase
     .from("cohorts")
@@ -227,7 +206,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     .eq("id", player.cohortId)
     .maybeSingle();
   if (!cohortRow) {
-    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+    return { player, levelLabel: resolveLabel(player.currentLevel), missions: [], empty: true };
   }
   const eventId = (cohortRow as { event_id: string }).event_id;
 
@@ -263,7 +242,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   const displayMissions = todayMissions.length > 0 ? todayMissions : allMissions;
 
   if (displayMissions.length === 0) {
-    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+    return { player, levelLabel: resolveLabel(player.currentLevel), missions: [], empty: true };
   }
 
   const missionIds = displayMissions.map((m) => m.id);
@@ -370,7 +349,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
 
   return {
     player,
-    levelLabel: levelLabel(player.currentLevel),
+    levelLabel: resolveLabel(player.currentLevel),
     missions,
     empty: false,
   };

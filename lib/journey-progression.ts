@@ -2,12 +2,15 @@
 // Pure helpers consumed by the refactored /journey page to compute:
 //   - the "next step" CTA target (priority: a_rendre, then feedback_received)
 //   - the per-level state (done/current/locked) used by JourneyTrack
-//   - short FR labels per LevelId (wireframe-aligned, e.g. "Diagnostic")
 //
-// Domain types (LevelId, SubmissionStatus) come from lib/types.ts.
+// Phase 14 / Plan 02: LEVEL_IDS, SHORT_LABELS, getShortLevelLabel removed.
+// getLevelStates now accepts a levels: Level[] parameter (sorted by ord) so
+// callers can pass the DB-fetched array rather than the hardcoded constant.
+//
+// Domain types (LevelId, Level) come from lib/types.ts.
 // JourneyMission / JourneyDeliverable come from lib/journey.ts.
 import type { JourneyDeliverable, JourneyMission } from "@/lib/journey";
-import type { LevelId } from "@/lib/types";
+import type { Level, LevelId } from "@/lib/types";
 
 export type LevelState = "done" | "current" | "locked";
 
@@ -17,39 +20,10 @@ export type NextStep = {
   status: JourneyDeliverable["status"];
 };
 
-// Ordered list of all LevelIds (L0 -> L7). Single source of truth for
-// progression iteration in JourneyTrack.
-export const LEVEL_IDS: LevelId[] = [
-  "L0_diagnostic",
-  "L1_problem",
-  "L2_solution",
-  "L3_market",
-  "L4_business_model",
-  "L5_pitch",
-  "L6_traction",
-  "L7_alumni",
-];
-
-// Short FR labels matching the wireframe (player-screens.jsx). The verbose
-// labels still live in lib/journey.ts:LEVEL_LABELS for legacy callers.
-const SHORT_LABELS: Record<LevelId, string> = {
-  L0_diagnostic: "Diagnostic",
-  L1_problem: "Problème",
-  L2_solution: "Solution",
-  L3_market: "Marché",
-  L4_business_model: "Modèle éco.",
-  L5_pitch: "Pitch",
-  L6_traction: "Traction",
-  L7_alumni: "Alumni",
-};
-
-// Short level number "0".."7" (used in track nodes).
+// Short level number "0".."7" extracted from level id string (e.g. "L3_market" -> "3").
+// Regex on id string -- still valid after LevelId = string.
 export function getLevelNumber(levelId: LevelId): string {
   return levelId.charAt(1);
-}
-
-export function getShortLevelLabel(levelId: LevelId): string {
-  return SHORT_LABELS[levelId] ?? String(levelId);
 }
 
 // Priority-ordered: "a_rendre" missions come first (player must submit V1),
@@ -80,13 +54,18 @@ export function getNextStep(missions: JourneyMission[]): NextStep | null {
 
 // Compute per-level state. A level is:
 //   - "current" if it === currentLevel
-//   - "done" if it appears before currentLevel in LEVEL_IDS order
+//   - "done" if it appears before currentLevel in ord order
 //   - "locked" otherwise (i.e. after currentLevel)
-export function getLevelStates(currentLevel: LevelId): Map<LevelId, LevelState> {
+//
+// Phase 14 / Plan 02: accepts levels: Level[] (sorted by ord ASC) instead of
+// the removed LEVEL_IDS constant. Caller fetches levels from getLevels()
+// (lib/levels.ts) and passes the array here.
+export function getLevelStates(levels: Level[], currentLevel: LevelId): Map<LevelId, LevelState> {
   const map = new Map<LevelId, LevelState>();
-  const currentIdx = LEVEL_IDS.indexOf(currentLevel);
-  for (let i = 0; i < LEVEL_IDS.length; i++) {
-    const id = LEVEL_IDS[i];
+  const ordered = [...levels].sort((a, b) => a.ord - b.ord);
+  const currentIdx = ordered.findIndex((l) => l.id === currentLevel);
+  for (let i = 0; i < ordered.length; i++) {
+    const id = ordered[i].id;
     if (currentIdx === -1) {
       // Defensive: unknown level -> mark all locked.
       map.set(id, "locked");
