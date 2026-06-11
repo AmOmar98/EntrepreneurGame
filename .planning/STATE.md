@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T19:18:05.389Z"
+last_updated: "2026-06-11T19:33:00Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
-  percent: 17
+  completed_plans: 8
+  percent: 22
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
-Plan: 2 of 5 (complete)
-Status: Executing — Plan 03 next
+Plan: 3 of 5 (complete)
+Status: Plan 03 complete — executing Plan 04 next
 Last activity: 2026-06-11
 
 ```
@@ -53,6 +53,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 13 P03 | 10min | 2 tasks | 7 files |
 | Phase 14 P01 | 5min | 3 tasks | 4 files |
 | Phase 14 P02 | 7min | 2 tasks | 8 files |
+| Phase 14 P03 | 17min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 14-02 : LevelId = string (plain alias, DB text FK est l'integrity guard) ; z.enum mirror confirmé absent dans schemas.ts
 - 14-02 : getActiveEvent() retourne null en pré-migration window ; callers Plan 03 doivent tolérer null
 - 14-02 : getLevelStates(levels: Level[], currentLevel) — signature changée, LEVEL_IDS constant supprimée
+- 14-03 : levelLabels: Record<string,string> prop shape pour client components (short label = label.split(' - ')[1] ?? label)
+- 14-03 : LEVEL_IDS remplacé par Array.from(levelStates.keys()) dans JourneyTrack (Map insertion order = ord order)
+- 14-03 : LEVELS-03 entièrement satisfait côté consumer ; quality gate restored (typecheck/lint/build/16 unit/15 e2e green)
 
 ### Phase Sequence Rationale
 
@@ -115,4 +119,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 14 Plan 02 complete (LEVELS-01/03, TENANT-03). getLevels/getActiveEvent accessors, LevelId=string, triple-mirror maps removed (16 external callers deferred to Plan 03). Next: Plan 03 (call-site sweep).*
+*Last updated: 2026-06-11 — Phase 14 Plan 03 complete (LEVELS-03 consumer side). All 16 caller sites fixed, full quality gate green (typecheck/lint/build/16 unit/15 e2e). Next: Plan 04 (PROD migrations apply).*
