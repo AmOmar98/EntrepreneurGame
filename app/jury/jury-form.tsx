@@ -5,12 +5,18 @@
 // (jury_c5_label = "" depuis quick-260519-jpr, legacy retired).
 // Score total double affichage : /100 (canonique DB) + /20 (moyenne pondérée).
 // Tokens --wf-* via inline style, classes responsive dans globals.css.
+//
+// Phase 16 Plan 02: dynamic criteria via `criteria` prop (JURY-07).
+// Falls back to legacy 4-criteria form when criteria absent/empty.
+// Positional c1..c4 mapping for total_score GENERATED column compat.
+// c5=0 ALWAYS to keep *1.25 legacy normalization consistent.
 
 import { useActionState, useState } from "react";
 import { savePitchScoreFlow, type WorkflowState } from "@/app/actions";
 import type { dictionaries } from "@/lib/i18n";
 import type { JuryAggregate, PitchScoreWithComments } from "@/lib/jury";
 import type { Player, PitchModeState } from "@/lib/types";
+import type { PitchCriterion } from "@/lib/pitch-criteria";
 
 const initialState: WorkflowState = { ok: false, message: "" };
 
@@ -26,22 +32,30 @@ type Props = {
   aggregate?: JuryAggregate | null;
   /** quick-260520-124 F3 — banner state mapping (live vs closed). */
   pitchModeState?: PitchModeState;
+  /** Phase 16: dynamic criteria from pitch_criteria table. Falls back to legacy 4 when absent. */
+  criteria?: PitchCriterion[];
 };
 
-function clamp(v: number): number {
+function clampToMax(v: number, max: number): number {
   if (Number.isNaN(v)) return 0;
   if (v < 0) return 0;
-  if (v > 20) return 20;
+  if (v > max) return max;
   return v;
+}
+
+function clampSmallint(v: number): number {
+  if (v < 0) return 0;
+  if (v > 32767) return 32767;
+  return Math.round(v);
 }
 
 // 4 pills "Faible / Moyen / Bon / Excellent" qui s'allument selon la valeur.
 // Mockup ligne 81-87 : Math.floor(value / 5.5) → 0/1/2/3.
 const PILLS: ReadonlyArray<string> = ["Faible", "Moyen", "Bon", "Excellent"];
 
-function activePillIndex(value: number): number {
+function activePillIndex(value: number, max: number): number {
   if (value <= 0) return -1;
-  return Math.min(3, Math.floor(value / 5.5));
+  return Math.min(3, Math.floor((value / max) * 4));
 }
 
 export function JuryForm({
@@ -51,46 +65,78 @@ export function JuryForm({
   dict,
   aggregate,
   pitchModeState,
+  criteria,
 }: Props) {
+  // Phase 16: derive activeCriteria from prop or fall back to 4 legacy criteria.
+  // Legacy criteria use the same keys c1..c4 as the existing hidden inputs.
+  const legacyCriteria: PitchCriterion[] = [
+    { id: "c1", eventId, key: "c1", label: dict.jury_c1_label, max: 20, ord: 0 },
+    { id: "c2", eventId, key: "c2", label: dict.jury_c2_label, max: 20, ord: 1 },
+    { id: "c3", eventId, key: "c3", label: dict.jury_c3_label, max: 20, ord: 2 },
+    { id: "c4", eventId, key: "c4", label: dict.jury_c4_label, max: 20, ord: 3 },
+  ];
+  const activeCriteria = criteria && criteria.length > 0 ? criteria : legacyCriteria;
+
+  // Phase 16: single scores map replaces c1/c2/c3/c4 state vars.
+  // Pre-fill from existing?.scores (dynamic path) or existing?.c1..c4 (legacy).
+  const initialScores: Record<string, number> = Object.fromEntries(
+    activeCriteria.map((c, i) => {
+      if (existing?.scores && existing.scores[c.key] !== undefined) {
+        return [c.key, existing.scores[c.key]];
+      }
+      // Legacy fallback: read c1..c4 positionally from existing PitchScore
+      if (existing) {
+        const legacyVal = [existing.c1, existing.c2, existing.c3, existing.c4][i];
+        return [c.key, legacyVal ?? 0];
+      }
+      return [c.key, 0];
+    }),
+  );
+
+  const [scores, setScores] = useState<Record<string, number>>(initialScores);
+
   // quick-260520-124 F3 — pick the banner string based on pitch mode state.
   const bannerLabel =
     pitchModeState === "closed"
       ? dict.jury_pitch_mode_closed_banner
       : dict.jury_pitch_mode_live_banner;
   const [state, formAction, pending] = useActionState(savePitchScoreFlow, initialState);
-  const [c1, setC1] = useState<number>(existing?.c1 ?? 0);
-  const [c2, setC2] = useState<number>(existing?.c2 ?? 0);
-  const [c3, setC3] = useState<number>(existing?.c3 ?? 0);
-  const [c4, setC4] = useState<number>(existing?.c4 ?? 0);
-  // c5 = 0 envoyé en hidden (legacy retired). Pas de UI, pas de setter.
 
-  const total = clamp(c1) + clamp(c2) + clamp(c3) + clamp(c4);
-  // total max = 80 (4×20). UI affiche :
-  // - score100 = total * 1.25 (normalisé /100, cohérent avec lib/results.ts
-  //   pitchAvg qui fait sum*5/4 quand c5=0).
-  // - score20  = total / 4 (moyenne pondérée /20, cosmétique mockup).
-  const score100 = Math.round(total * 1.25);
-  const score20 = (total / 4).toFixed(1);
+  // Dynamic total: sum of all scores values
+  const totalRaw = activeCriteria.reduce((sum, c) => sum + (scores[c.key] ?? 0), 0);
+  const maxTotal = activeCriteria.reduce((sum, c) => sum + c.max, 0);
 
-  const fields: ReadonlyArray<{
-    key: "c1" | "c2" | "c3" | "c4";
-    label: string;
-    help: string;
-    value: number;
-    setter: (n: number) => void;
-  }> = [
-    { key: "c1", label: dict.jury_c1_label, help: dict.jury_c1_help, value: c1, setter: setC1 },
-    { key: "c2", label: dict.jury_c2_label, help: dict.jury_c2_help, value: c2, setter: setC2 },
-    { key: "c3", label: dict.jury_c3_label, help: dict.jury_c3_help, value: c3, setter: setC3 },
-    { key: "c4", label: dict.jury_c4_label, help: dict.jury_c4_help, value: c4, setter: setC4 },
-  ];
+  // Display /100 normalized score (mirrors lib/results.ts normalizePitchScore dynamic path)
+  const score100 = maxTotal > 0 ? Math.round((totalRaw / maxTotal) * 100) : 0;
+  const score20 = activeCriteria.length > 0 ? (totalRaw / activeCriteria.length).toFixed(1) : "0.0";
+
+  // Positional c1..c4 mapping (Phase 16 plan verbatim):
+  // c1 = scores[activeCriteria[0]?.key] ?? 0
+  // c2 = scores[activeCriteria[1]?.key] ?? 0
+  // c3 = scores[activeCriteria[2]?.key] ?? 0
+  // c4 = scores[activeCriteria[3]?.key] ?? 0
+  // c5 = 0 ALWAYS — keeps *1.25 legacy normalization consistent for non-jsonb readers
+  const c1Hidden = clampSmallint(scores[activeCriteria[0]?.key ?? ""] ?? 0);
+  const c2Hidden = clampSmallint(scores[activeCriteria[1]?.key ?? ""] ?? 0);
+  const c3Hidden = clampSmallint(scores[activeCriteria[2]?.key ?? ""] ?? 0);
+  const c4Hidden = clampSmallint(scores[activeCriteria[3]?.key ?? ""] ?? 0);
+
+  // scoresJson for the dynamic path (all criteria, not just first 4)
+  const scoresJson = JSON.stringify(scores);
 
   return (
     <form action={formAction} className="eic-jury-form-v1">
       <input type="hidden" name="playerId" value={player.id} />
       <input type="hidden" name="eventId" value={eventId} />
-      {/* c5 hidden = 0, legacy retired (jury_c5_label = "" intentionnel). */}
+      {/* Positional c1..c4 for total_score GENERATED column + legacy compat */}
+      <input type="hidden" name="c1" value={c1Hidden} />
+      <input type="hidden" name="c2" value={c2Hidden} />
+      <input type="hidden" name="c3" value={c3Hidden} />
+      <input type="hidden" name="c4" value={c4Hidden} />
+      {/* c5 = 0 ALWAYS (legacy retired + keeps *1.25 normalization consistent) */}
       <input type="hidden" name="c5" value={0} />
+      {/* Phase 16: scoresJson for dynamic authoritative path */}
+      <input type="hidden" name="scoresJson" value={scoresJson} />
 
       <div className="eic-jury-form-v1__layout">
         {/* Left column: sliders */}
@@ -101,11 +147,12 @@ export function JuryForm({
             gap: 16,
           }}
         >
-          {fields.map((f) => {
-            const pillIdx = activePillIndex(f.value);
+          {activeCriteria.map((criterion) => {
+            const value = scores[criterion.key] ?? 0;
+            const pillIdx = activePillIndex(value, criterion.max);
             return (
               <div
-                key={f.key}
+                key={criterion.key}
                 style={{
                   background: "var(--wf-paper, #fff)",
                   border: "1px solid var(--wf-line, #e2e8f0)",
@@ -123,14 +170,14 @@ export function JuryForm({
                   }}
                 >
                   <label
-                    htmlFor={`${f.key}-${player.id}`}
+                    htmlFor={`${criterion.key}-${player.id}`}
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
                       color: "var(--wf-ink, #0f172a)",
                     }}
                   >
-                    {f.label}
+                    {criterion.label}
                   </label>
                   <span
                     style={{
@@ -141,7 +188,7 @@ export function JuryForm({
                     }}
                     aria-live="polite"
                   >
-                    {f.value}
+                    {value}
                     <span
                       style={{
                         fontSize: 12,
@@ -149,21 +196,25 @@ export function JuryForm({
                         marginLeft: 4,
                       }}
                     >
-                      / 20
+                      / {criterion.max}
                     </span>
                   </span>
                 </div>
 
                 <input
-                  id={`${f.key}-${player.id}`}
+                  id={`${criterion.key}-${player.id}`}
                   type="range"
-                  name={f.key}
+                  aria-label={criterion.label}
                   min={0}
-                  max={20}
+                  max={criterion.max}
                   step={1}
-                  value={f.value}
-                  onChange={(e) => f.setter(clamp(Number(e.target.value)))}
-                  aria-describedby={`${f.key}-${player.id}-help`}
+                  value={value}
+                  onChange={(e) =>
+                    setScores((prev) => ({
+                      ...prev,
+                      [criterion.key]: clampToMax(Number(e.target.value), criterion.max),
+                    }))
+                  }
                   style={{
                     width: "100%",
                     accentColor: "var(--wf-blue, #1d4ed8)",
@@ -207,20 +258,6 @@ export function JuryForm({
                     </span>
                   ))}
                 </div>
-
-                {f.help ? (
-                  <p
-                    id={`${f.key}-${player.id}-help`}
-                    style={{
-                      fontSize: 11,
-                      color: "var(--wf-ink-faint, #64748b)",
-                      lineHeight: 1.4,
-                      margin: "6px 0 0",
-                    }}
-                  >
-                    {f.help}
-                  </p>
-                ) : null}
               </div>
             );
           })}
@@ -275,8 +312,8 @@ export function JuryForm({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              équivalent {score20}
-              <span style={{ color: "var(--wf-ink-faint, #94a3b8)" }}> /20</span>
+              equivalent {score20}
+              <span style={{ color: "var(--wf-ink-faint, #94a3b8)" }}> /{activeCriteria.length > 0 ? activeCriteria[0]!.max : 20}</span>
             </p>
           </div>
 
@@ -291,18 +328,18 @@ export function JuryForm({
               paddingTop: 8,
             }}
           >
-            {fields.map((f) => (
+            {activeCriteria.map((criterion) => (
               <div
-                key={f.key}
+                key={criterion.key}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   gap: 8,
                 }}
               >
-                <span>{f.label}</span>
+                <span>{criterion.label}</span>
                 <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>
-                  {f.value}/20
+                  {scores[criterion.key] ?? 0}/{criterion.max}
                 </span>
               </div>
             ))}
@@ -435,7 +472,7 @@ export function JuryForm({
         </aside>
       </div>
 
-      {total === 0 && (
+      {totalRaw === 0 && (
         <p
           className="eic-jury-form__warn"
           role="status"
@@ -449,7 +486,7 @@ export function JuryForm({
             padding: "6px 10px",
           }}
         >
-          &#9888; Vérifie : tous les critères sont à 0
+          &#9888; Verifie : tous les criteres sont a 0
         </p>
       )}
       {state.message ? (
