@@ -159,6 +159,17 @@ No new threat surface beyond what is in the plan's `<threat_model>`. All four th
 - Plan 05 (declarative-view mirror): `database/schema.sql` / `triggers.sql` / `rls.sql` need to reflect organizations, levels_v2, is_active, organization_id, is_in_org.
 - PROD is in a fully functional intermediate state: all new columns are nullable or have safe defaults; no app code reads them yet; existing events/missions/players continue to work exactly as before.
 
+## Self-Check: PASSED
+
+- FOUND: supabase/migrations/20260611120000_organizations.sql
+- FOUND: supabase/migrations/20260611120100_events_is_active.sql
+- FOUND: supabase/migrations/20260611120200_levels_data_driven.sql
+- FOUND: supabase/migrations/20260611120300_rls_org_scope.sql
+- FOUND: .planning/phases/14-multi-tenant-schema-niveaux-data-driven/14-01-SUMMARY.md
+- FOUND commit: c486679
+- FOUND commit: e080eca
+- FOUND commit: b02f3b4
+
 ---
 *Phase: 14-multi-tenant-schema-niveaux-data-driven*
 *Completed: 2026-06-11*
