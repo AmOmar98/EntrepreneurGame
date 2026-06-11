@@ -248,11 +248,13 @@ export async function submitDeliverable(
     return { ok: false, message: "Aucun Player rattache a votre compte." };
   }
 
-  // quick-260519-l1l : Resolve template slug to dispatch on special flows
-  // (hard-block dependency + auto-validation for fiches-entretien-v1).
+  // quick-260519-l1l : Resolve template slug + ENGINE-05 columns to dispatch on
+  // special flows (hard-block dependency + auto-validation).
+  // ENGINE-05: also fetch composer_kind + auto_validate for data-driven dispatch.
+  // Pre-migration defensive: columns may be absent → fallback to slug-based behavior.
   const { data: tplRow, error: tplErr } = await supabase
     .from("deliverable_templates")
-    .select("slug")
+    .select("slug, composer_kind, auto_validate")
     .eq("id", parsed.data.deliverableTemplateId)
     .maybeSingle();
   if (tplErr) {
@@ -261,7 +263,12 @@ export async function submitDeliverable(
   if (!tplRow) {
     return { ok: false, message: "Livrable inconnu." };
   }
-  const templateSlug = (tplRow as { slug: string }).slug;
+  const tplData = tplRow as { slug: string; composer_kind?: string | null; auto_validate?: boolean | null };
+  const templateSlug = tplData.slug;
+  // ENGINE-05: data-driven auto-validate check (pre-migration: fallback to slug literal).
+  const isAutoValidate =
+    (tplData.composer_kind === "multi_url" && tplData.auto_validate === true)
+    || (!tplData.composer_kind && templateSlug === "fiches-entretien-v1");
 
   // quick-260519-l1l : Hard-block 2A→2B (R3 exception, Omar 2026-05-19).
   // If this deliverable depends on another being validated first, check that
@@ -296,7 +303,10 @@ export async function submitDeliverable(
   }
 
   // quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation flow for
-  // fiches-entretien-v1. Player inserts submission with status='validated'.
+  // multi_url auto_validate templates (formerly keyed on fiches-entretien-v1 slug).
+  // ENGINE-05: now dispatches on isAutoValidate (composer_kind=multi_url + auto_validate=true
+  // from DB column, with pre-migration fallback to slug literal — see above).
+  // Player inserts submission with status='validated'.
   // The synthetic evaluations row is now inserted server-side by trigger
   // `trg_auto_eval_fiches_entretien` (SECURITY DEFINER, bypasses RLS
   // `evaluations_mentor_self_insert`) — see
@@ -306,7 +316,7 @@ export async function submitDeliverable(
   // - Trigger fires AFTER INSERT, creates eval row (scores fiche_1..10=25,
   //   total=250, verdict='validate_v1', evaluator=G01 UUID).
   // - Skip mailto (no mentor notif needed for auto-validated submission).
-  if (templateSlug === "fiches-entretien-v1") {
+  if (isAutoValidate) {
     if (parsed.data.kind !== "proof_text" || !parsed.data.proofText) {
       return {
         ok: false,

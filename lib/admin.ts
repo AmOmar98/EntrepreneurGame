@@ -5,6 +5,7 @@
 // rather than leaking seed data.
 import { createClient } from "@/utils/supabase/server";
 import { getLevelsMap } from "@/lib/levels";
+import { getSimulatedNow } from "@/lib/get-simulated-now";
 import type { LevelId, Player, SubmissionStatus } from "@/lib/types";
 
 // ============================================================================
@@ -219,7 +220,10 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
   }
 
   // 6. Compute "elapsed missions" = missions whose scheduled_at <= now (null = future).
-  const now = Date.now();
+  // ENGINE-07: getSimulatedNow() allows GM to simulate a date via ?simulate_date=YYYY-MM-DD.
+  // Falls back to Date.now() when no override is active. GM-only: this function is only
+  // called from /admin server components; Player surfaces are unaffected.
+  const now = await getSimulatedNow();
   let elapsedMissions = 0;
   for (const m of missions) {
     if (!m.scheduled_at) continue;
