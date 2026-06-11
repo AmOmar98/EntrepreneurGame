@@ -87,11 +87,11 @@ export async function getMentorPlayersOverview(
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  // 1. Resolve current event (single seed event for the pilot - EVENT-01).
+  // 1. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

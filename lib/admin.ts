@@ -109,11 +109,11 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
 
   const levelsMap = await getLevelsMap();
 
-  // 1. Resolve current event (mirror mentor.ts).
+  // 1. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -283,11 +283,11 @@ export async function getGlobalCounters(): Promise<GlobalCounters> {
   const supabase = await createClient();
   if (!supabase) return zero;
 
-  // Resolve current event.
+  // Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

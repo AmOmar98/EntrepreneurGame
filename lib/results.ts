@@ -133,7 +133,7 @@ export async function isResultsPublished(): Promise<{
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id, results_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -163,12 +163,12 @@ export async function computeRanking(opts?: {
   const rlsClient = await createClient();
   if (!rlsClient) return { eventId: null, publishedAt: null, rows: [] };
 
-  // 1. Resolve current event (latest by starts_at). RLS-aware — events SELECT
-  // is open to all authenticated users.
+  // 1. Resolve current event (GM-designated active event via is_active). RLS-aware —
+  // events SELECT is open to all authenticated users.
   const { data: eventRow, error: eventErr } = await rlsClient
     .from("events")
     .select("id, results_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

@@ -187,11 +187,11 @@ export async function getJuryOverview(): Promise<{
     return { eventId: null, rows: [], pitchModeState: "off", notInvited: false };
   }
 
-  // 1. Resolve current event (latest by starts_at - mirror lib/mentor.ts).
+  // 1. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id, pitch_order_json")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

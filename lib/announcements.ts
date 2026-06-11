@@ -63,8 +63,8 @@ function mapAnnouncement(
 // ============================================================================
 
 /**
- * Fetch the most recent announcements for the current event (latest by
- * starts_at). Capped at `limit` rows (default 25).
+ * Fetch the most recent announcements for the current event (GM-designated
+ * active event via is_active). Capped at `limit` rows (default 25).
  */
 export async function getRecentAnnouncements(limit = 25): Promise<Announcement[]> {
   const supabase = await createClient();
@@ -73,7 +73,7 @@ export async function getRecentAnnouncements(limit = 25): Promise<Announcement[]
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr || !eventRow) return [];
