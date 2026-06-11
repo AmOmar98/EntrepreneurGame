@@ -36,7 +36,7 @@
 Plans:
 - [ ] 13-01-PLAN.md — OPS-01 drift report + 13-NEW.sql consolidation + OPS-02 DIGI-08 verdict (operator-gated source mirror)
 - [x] 13-02-PLAN.md — QUAL-01 Vitest + schema extraction to lib/schemas.ts + unit tests
-- [ ] 13-03-PLAN.md — QUAL-02 Playwright E2E 5 demo-mode flows
+- [x] 13-03-PLAN.md — QUAL-02 Playwright E2E 5 demo-mode flows
 - [ ] 13-04-PLAN.md — QUAL-03 GitHub Actions CI gate (typecheck/lint/build/unit/e2e)
 
 ### Phase 14: Multi-tenant Schema + Niveaux data-driven
@@ -104,7 +104,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 13. DB Consolidation + Test Infrastructure | 1/4 | In Progress|  |
+| 13. DB Consolidation + Test Infrastructure | 2/4 | In Progress|  |
 | 14. Multi-tenant Schema + Niveaux data-driven | 0/? | Not started | - |
 | 15. Mission Engine no-code | 0/? | Not started | - |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |

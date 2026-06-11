@@ -63,7 +63,7 @@
 ### QUAL — Qualité full council
 
 - [x] **QUAL-01** : Vitest couvre les server actions critiques (soumission, évaluation, éditeur, clonage) avec tests verts
-- [ ] **QUAL-02** : Playwright E2E couvre 5 flows — onboarding, soumission livrable, éval mentor, pitch jury, export GM (absorbe SEED-002)
+- [x] **QUAL-02** : Playwright E2E couvre 5 flows — onboarding, soumission livrable, éval mentor, pitch jury, export GM (absorbe SEED-002)
 - [ ] **QUAL-03** : CI GitHub Actions — typecheck + lint + build + tests en gate sur chaque push
 - [ ] **QUAL-04** : Sentry capte les erreurs serveur/client en prod avec alerting
 - [ ] **QUAL-05** : PostHog trace le funnel produit (completion par livrable, drop-offs)
@@ -119,7 +119,7 @@
 | OPS-01 | Phase 13 | Pending |
 | OPS-02 | Phase 13 | Pending |
 | QUAL-01 | Phase 13 | Complete |
-| QUAL-02 | Phase 13 | Pending |
+| QUAL-02 | Phase 13 | Complete |
 | QUAL-03 | Phase 13 | Pending |
 | TENANT-01 | Phase 14 | Pending |
 | TENANT-02 | Phase 14 | Pending |
