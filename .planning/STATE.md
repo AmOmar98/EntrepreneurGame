@@ -1,11 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: "Between milestones — v0.3 archived 2026-05-23"
-status: idle
-last_updated: "2026-05-23T17:30:00.000Z"
-last_activity: 2026-05-23
-phase: none
+milestone: v0.4
+milestone_name: Scale Foundation
+status: planning
+last_updated: "2026-06-11T16:28:31.093Z"
+last_activity: 2026-06-11
+progress:
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -16,11 +21,10 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-23 — v0.3 archivé)
 
 ## Current Position
 
-**Milestone actif** : aucun. Lancer `/gsd-new-milestone` pour cadrer v0.4.
-
-**PROD** : https://entrepreneur-game-six.vercel.app (région cdg1) — 22 auth.users Digi-Hackathon (10P + 5M + 3J + 4GM)
-
-**Dernière activité** : 2026-05-23 — v0.3 Digi-Hackathon archivé, tag `v0.3-pilot-shipped` posé.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-11 — Milestone v0.4 started
 
 ## Tech debt reporté v0.4
 
@@ -37,6 +41,12 @@ See: `.planning/PROJECT.md` (mis à jour 2026-05-23 — v0.3 archivé)
 ## Blockers
 
 _None_
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260524-o7v | cleanup root dev-server logs + f2-fix screenshot + .playwright-mcp/ (3.5 MB reclaimed, gitignored noise) | 2026-05-24 | — (no code) | [260524-o7v-cleanup-root-dev-server-logs-f2-fix-scre](./quick/260524-o7v-cleanup-root-dev-server-logs-f2-fix-scre/) |
 
 ## Historique Milestones
 
