@@ -60,11 +60,12 @@ Declared values (multiples of 4 — mapped to EIC token names from `app/eic-toke
 | 2xl | 48px | `--space-12` | Page-level top/bottom breathing room |
 | 3xl | 64px | `--space-16` | Reserved — not needed in this phase |
 
+Focal point (D2): primary visual anchor of `/admin/events` = the `.eic-button--primary` « Créer un event » CTA in the topbar, supported by the events table as dominant content mass.
+Accessibility (D2): every `.button.icon` (ChevronUp/ChevronDown/Trash2) MUST carry an explicit `aria-label` (e.g. `aria-label="Monter la mission"`, `aria-label="Descendre la mission"`, `aria-label="Supprimer le critère"`).
+
 Exceptions:
-- Topbar: `padding: 18px 28px` (18px vertical = not a multiple of 4 — inherited from existing admin topbar, preserve as-is for consistency with app/admin/page.tsx)
-- Table cells: `padding: 14px 12px` (existing `.td` pattern — preserve for table scan consistency)
+- Pre-existing CSS class values (`panel-header`, `.td`, `.input`) are inherited as-is and NOT governed by this phase's spacing contract — the executor consumes those classes directly from globals.css without re-declaring their values.
 - Toggle switch: 40px min-height (desktop), 44px on coarse pointer (WCAG 2.5.5 — existing `.eic-button` rule applies)
-- Form inputs: `min-height: 42px` (existing `.input` class — preserve)
 - Rubric builder row: min-height 40px per criterion row with 8px gap between rows
 
 ---
@@ -76,11 +77,11 @@ All sizes from the existing codebase type scale. No new sizes introduced.
 | Role | Size | Weight | Line Height | Font stack | CSS |
 |------|------|--------|-------------|------------|-----|
 | Body | 14px | 400 (regular) | 1.5 | Montserrat, system-ui | `font-size: 14px; line-height: 1.5` |
-| Label / caption | 12px | 600 (semibold) | 1.4 | Montserrat | `.wf-kicker`, table `th`, `text-transform: uppercase; letter-spacing: 0.06em` |
+| Label / caption | 12px | (inherited from `.wf-kicker`/`th` — pre-existing classes, not governed by this contract) | 1.4 | Montserrat | `.wf-kicker`, table `th`, `text-transform: uppercase; letter-spacing: 0.06em` |
 | Section heading | 16px | 700 (bold) | 1.3 | Montserrat | `h3` rule: `font-size: 16px; line-height: 1.3` |
 | Page heading | 21px | 700 (bold) | 1.2 | Montserrat/Baskervville | `h2` rule: `font-size: 21px; line-height: 1.2` |
 
-**Only 2 weights used: 400 (regular) + 700 (bold).** Weight 600 is used on labels/captions only as part of existing `.wf-kicker` and `th` patterns — considered part of the "bold" family.
+**Exactly 2 weights declared by this contract: 400 (regular) + 700 (bold).** Pre-existing classes (`.wf-kicker`, `th`) carry their own weights from globals.css/wf-components.css and are outside this contract — new elements introduced by this phase use only 400 or 700.
 
 Font loading: already handled by `app/layout.tsx` via `next/font/google` — no new `@import` needed.
 
@@ -215,7 +216,7 @@ All new copy keys must be added to `lib/i18n.ts` under the `fr` dictionary. No i
 
 - All mutations via `app/actions.ts` server actions returning `WorkflowState { ok, message }`
 - Form hook: `useActionState(action, initialState)` pattern (see AdminDeliverablesTable as reference)
-- Pending state: disable submit button (`disabled={pending}`) + button text changes to "Enregistrement…" / "Clonage…"
+- Pending state: disable submit button (`disabled={pending}`) + button text changes to "Enregistrement en cours…" / "Clonage en cours…"
 - Success feedback: `.form-status` panel (blue tint, `.form-status` class) rendered below submit button — displayed for 3s then fades (or stays until next interaction)
 - Error feedback: same `.form-status` with `.wf-rose-tint` background + `.wf-rose` color (reuse `.form-error` class from globals.css)
 - `revalidatePath` called on all affected routes after mutation — page re-renders with fresh data
