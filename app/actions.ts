@@ -2507,3 +2507,392 @@ export async function removeJurorFlow(
   }
   return { ok: result.ok, message: result.message };
 }
+
+// ---- ENGINE-04 — create event + cohort --------------------------------------
+
+const createEventSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug doit etre en minuscules, chiffres et tirets uniquement."),
+  organizationId: z.string().uuid().nullable().optional(),
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1),
+  cohortName: z.string().min(1),
+});
+
+export async function createEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawOrgId = formData.get("organizationId");
+  const parsed = createEventSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    organizationId: typeof rawOrgId === "string" && rawOrgId.length > 0 ? rawOrgId : null,
+    startsAt: formData.get("startsAt"),
+    endsAt: formData.get("endsAt"),
+    cohortName: formData.get("cohortName"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  const { data: newEvent, error: eventErr } = await supabase
+    .from("events")
+    .insert({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      organization_id: parsed.data.organizationId ?? null,
+      starts_at: parsed.data.startsAt,
+      ends_at: parsed.data.endsAt,
+      is_active: false,
+    })
+    .select("id")
+    .single();
+  if (eventErr || !newEvent) {
+    return { ok: false, message: eventErr?.message ?? "Erreur creation event." };
+  }
+
+  const { error: cohortErr } = await supabase.from("cohorts").insert({
+    event_id: (newEvent as { id: string }).id,
+    slug: parsed.data.slug,
+    name: parsed.data.cohortName,
+  });
+  if (cohortErr) {
+    return { ok: false, message: cohortErr.message };
+  }
+
+  revalidatePath("/admin/events");
+  return { ok: true, message: "Event cree avec succes." };
+}
+
+// ---- ENGINE-03 / TENANT-03 — activate event (single-active invariant) -------
+
+const activateEventSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+export async function activateEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = activateEventSchema.safeParse({
+    eventId: formData.get("eventId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // Resolve the event's organization_id so we can scope the deactivation.
+  const { data: evtRow, error: evtErr } = await supabase
+    .from("events")
+    .select("organization_id")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (evtErr) {
+    return { ok: false, message: evtErr.message };
+  }
+
+  const orgId = (evtRow as { organization_id: string | null } | null)?.organization_id ?? null;
+
+  // Step 1: deactivate all events in the same org (single-active invariant).
+  // If organization_id is null (pre-migration window), scope to all events as a safe fallback.
+  let deactivateQuery = supabase.from("events").update({ is_active: false });
+  if (orgId) {
+    deactivateQuery = deactivateQuery.eq("organization_id", orgId) as typeof deactivateQuery;
+  }
+  const { error: deactivateErr } = await deactivateQuery;
+  if (deactivateErr) {
+    return { ok: false, message: deactivateErr.message };
+  }
+
+  // Step 2: activate target event.
+  const { error: activateErr } = await supabase
+    .from("events")
+    .update({ is_active: true })
+    .eq("id", parsed.data.eventId);
+  if (activateErr) {
+    return { ok: false, message: activateErr.message };
+  }
+
+  revalidatePath("/admin/events");
+  revalidatePath("/admin");
+  revalidatePath("/journey");
+  return { ok: true, message: "Event active." };
+}
+
+// ---- ENGINE-03 — clone event (missions + templates, self-FK remap) ----------
+
+const cloneEventSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+type MissionRow = {
+  id: string;
+  event_id: string;
+  title: string;
+  level_id: string | null;
+  ord: number;
+  kind: string | null;
+  scheduled_at: string | null;
+};
+
+type TemplateRow = {
+  id: string;
+  mission_id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  rubric: unknown;
+  max_score: number;
+  ord: number;
+  is_bonus: boolean;
+  is_active: boolean | null;
+  composer_kind: string | null;
+  template_url: string | null;
+  auto_validate: boolean | null;
+  soft_recommends_before: string | null;
+  validation_rules: unknown;
+};
+
+export async function cloneEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = cloneEventSchema.safeParse({
+    eventId: formData.get("eventId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // 1. Fetch source event.
+  const { data: srcEvent, error: srcEvtErr } = await supabase
+    .from("events")
+    .select("id, slug, name, starts_at, ends_at, organization_id, is_active")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (srcEvtErr || !srcEvent) {
+    return { ok: false, message: srcEvtErr?.message ?? "Event source introuvable." };
+  }
+
+  const src = srcEvent as {
+    id: string;
+    slug: string;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+    organization_id: string | null;
+    is_active: boolean | null;
+  };
+
+  // 2. Insert cloned event.
+  const clonedSlug = `${src.slug}-clone-${Date.now()}`;
+  const { data: newEvent, error: newEvtErr } = await supabase
+    .from("events")
+    .insert({
+      name: `${src.name} (copie)`,
+      slug: clonedSlug,
+      starts_at: src.starts_at,
+      ends_at: src.ends_at,
+      organization_id: src.organization_id,
+      is_active: false,
+    })
+    .select("id")
+    .single();
+  if (newEvtErr || !newEvent) {
+    return { ok: false, message: newEvtErr?.message ?? "Erreur creation event clone." };
+  }
+  const newEventId = (newEvent as { id: string }).id;
+
+  // 3. Fetch source missions.
+  const { data: srcMissions, error: missionErr } = await supabase
+    .from("missions")
+    .select("id, event_id, title, level_id, ord, kind, scheduled_at")
+    .eq("event_id", parsed.data.eventId)
+    .order("ord", { ascending: true });
+  if (missionErr) {
+    return { ok: false, message: missionErr.message };
+  }
+
+  // old mission id -> new mission id
+  const missionIdMap = new Map<string, string>();
+
+  for (const m of (srcMissions ?? []) as MissionRow[]) {
+    const { data: newMission, error: mErr } = await supabase
+      .from("missions")
+      .insert({
+        event_id: newEventId,
+        title: m.title,
+        level_id: m.level_id,
+        ord: m.ord,
+        kind: m.kind,
+        scheduled_at: m.scheduled_at,
+      })
+      .select("id")
+      .single();
+    if (mErr || !newMission) {
+      return { ok: false, message: mErr?.message ?? "Erreur clonage mission." };
+    }
+    missionIdMap.set(m.id, (newMission as { id: string }).id);
+  }
+
+  // 4. Fetch source deliverable_templates for all source missions.
+  const srcMissionIds = (srcMissions ?? []).map((m: MissionRow) => m.id);
+  let srcTemplates: TemplateRow[] = [];
+  if (srcMissionIds.length > 0) {
+    const { data: tplData, error: tplErr } = await supabase
+      .from("deliverable_templates")
+      .select(
+        "id, mission_id, slug, title, description, rubric, max_score, ord, is_bonus, is_active, composer_kind, template_url, auto_validate, soft_recommends_before, validation_rules",
+      )
+      .in("mission_id", srcMissionIds)
+      .order("ord", { ascending: true });
+    if (tplErr) {
+      return { ok: false, message: tplErr.message };
+    }
+    srcTemplates = (tplData ?? []) as TemplateRow[];
+  }
+
+  // old template id -> new template id
+  const templateIdMap = new Map<string, string>();
+
+  // Pass 1: insert all clones with soft_recommends_before=null (avoids self-FK constraint during insert).
+  for (const tpl of srcTemplates) {
+    const newMissionId = missionIdMap.get(tpl.mission_id);
+    if (!newMissionId) {
+      return { ok: false, message: `Mission cible introuvable pour template ${tpl.slug}.` };
+    }
+    const { data: newTpl, error: tplInsertErr } = await supabase
+      .from("deliverable_templates")
+      .insert({
+        mission_id: newMissionId,
+        slug: `${tpl.slug}-clone-${Date.now()}`,
+        title: tpl.title,
+        description: tpl.description,
+        rubric: tpl.rubric,
+        max_score: tpl.max_score,
+        ord: tpl.ord,
+        is_bonus: tpl.is_bonus,
+        is_active: tpl.is_active === null ? true : tpl.is_active,
+        composer_kind: tpl.composer_kind ?? "simple",
+        template_url: tpl.template_url,
+        auto_validate: tpl.auto_validate ?? false,
+        soft_recommends_before: null,
+        validation_rules: tpl.validation_rules ?? [],
+      })
+      .select("id")
+      .single();
+    if (tplInsertErr || !newTpl) {
+      return { ok: false, message: tplInsertErr?.message ?? "Erreur clonage template." };
+    }
+    templateIdMap.set(tpl.id, (newTpl as { id: string }).id);
+  }
+
+  // Pass 2: remap soft_recommends_before via old->new template map.
+  // Only templates that had a non-null soft_recommends_before need updating.
+  for (const tpl of srcTemplates) {
+    if (!tpl.soft_recommends_before) continue;
+    const newTplId = templateIdMap.get(tpl.id);
+    const newPrereqId = templateIdMap.get(tpl.soft_recommends_before);
+    if (!newTplId) continue;
+    // If the prereq exists in the clone map, remap; otherwise leave null (points to outside the clone).
+    if (!newPrereqId) continue;
+    const { error: remapErr } = await supabase
+      .from("deliverable_templates")
+      .update({ soft_recommends_before: newPrereqId })
+      .eq("id", newTplId);
+    if (remapErr) {
+      return { ok: false, message: remapErr.message };
+    }
+  }
+
+  revalidatePath("/admin/events");
+  return {
+    ok: true,
+    message: `Event clone avec succes. Vous pouvez maintenant le modifier. /admin/events/${newEventId}/missions`,
+  };
+}
