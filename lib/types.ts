@@ -10,15 +10,9 @@ export type PlayerStatus = "active" | "eliminated" | "completed";
 
 export type TeamRole = "owner" | "co_founder" | "contributor";
 
-export type LevelId =
-  | "L0_diagnostic"
-  | "L1_problem"
-  | "L2_solution"
-  | "L3_market"
-  | "L4_business_model"
-  | "L5_pitch"
-  | "L6_traction"
-  | "L7_alumni";
+// LevelId is a plain string -- DB text FK on levels_v2 is the real integrity guard.
+// The 8-member union is removed so the UI can read labels/ords from the DB table.
+export type LevelId = string;
 
 export type MissionKind = "atelier" | "session" | "presentation" | "pitch" | "admin";
 
@@ -45,6 +39,8 @@ export type Event = {
   startsAt: string;
   endsAt: string;
   resultsPublishedAt: string | null;
+  isActive?: boolean;        // TENANT-03: replaces order-by-starts_at convention
+  organizationId?: string;   // TENANT-01: FK to organizations
 };
 
 export type Level = {
@@ -79,7 +75,7 @@ export type DeliverableTemplate = {
   rubric: RubricCriterion[];
   maxScore: number;
   ord: number;
-  // Visual "Bonus" badge in Player UI. Label-only — does NOT affect scoring
+  // Visual "Bonus" badge in Player UI. Label-only -- does NOT affect scoring
   // (recalc_player_score / sumPlayerScoreProject ignore it) and MUST NOT be
   // used to gate / disable any sibling deliverable (R3). Polish v3 2026-05-12.
   isBonus: boolean;
@@ -170,10 +166,10 @@ export type PitchScore = {
 };
 
 // ============================================================================
-// Bonus events (T3X-EXPANSION wave 2 — D-02 / D-03)
+// Bonus events (T3X-EXPANSION wave 2 -- D-02 / D-03)
 // Mirror supabase/migrations/20260510170000_bonus_events_recreate.sql
 // R1 preserved : multiplierFactor stocke en TS, JAMAIS rendu Player en chiffre
-// (UI presents qualitative "Boost actif" badge — cf. Plan 08).
+// (UI presents qualitative "Boost actif" badge -- cf. Plan 08).
 // ============================================================================
 
 export type BonusType =
@@ -193,7 +189,7 @@ export type BonusEvent = {
   description: string;
   docUrl: string | null;
   status: BonusStatus;
-  multiplierFactor: number; // [1.00..3.00] — R1: never display as number to Player
+  multiplierFactor: number; // [1.00..3.00] -- R1: never display as number to Player
   multiplierScope: MultiplierScope;
   multiplierConsumedAt: string | null; // timestamptz when applied (next_deliverable scope)
   claimedAt: string;
@@ -206,12 +202,12 @@ export type BonusEvent = {
 };
 
 /**
- * Reference defaults for each BonusType — D-03 mechanism.
+ * Reference defaults for each BonusType -- D-03 mechanism.
  * Server action claimBonusEventFlow (Plan 06) consults this map to set the
  * initial multiplier_factor and scope when a Player submits a claim.
  *
  * The values can be overridden per-claim by GameMaster via app/admin UI
- * (out-of-scope for this phase — runtime mutation through reviewBonusEventFlow
+ * (out-of-scope for this phase -- runtime mutation through reviewBonusEventFlow
  * still respects the CHECK constraint [1.00..3.00] in DB).
  */
 export const BONUS_DEFAULTS: Record<
@@ -236,14 +232,14 @@ export const BONUS_DEFAULTS: Record<
 };
 
 /**
- * Global cap on multiplier_factor — D-03 anti-stacking abuse.
+ * Global cap on multiplier_factor -- D-03 anti-stacking abuse.
  * lib/score.ts Plan 07 uses Math.min(BONUS_MULTIPLIER_CAP, applicableFactor)
  * to enforce.
  */
 export const BONUS_MULTIPLIER_CAP = 3.0;
 
 // ============================================================================
-// MoSCoW Kanban cards (T3X-EXPANSION wave 2 — D-04)
+// MoSCoW Kanban cards (T3X-EXPANSION wave 2 -- D-04)
 // Mirror supabase/migrations/20260510170100_moscow_cards.sql
 // ============================================================================
 
@@ -286,7 +282,7 @@ export type HelpRequest = {
 };
 
 // ============================================================================
-// Pitch mode + Jurors (quick-260519-jpr — jury pitch replay)
+// Pitch mode + Jurors (quick-260519-jpr -- jury pitch replay)
 // Mirror events.pitch_mode column + event_jurors table.
 // ============================================================================
 
