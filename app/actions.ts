@@ -9,6 +9,9 @@ import {
   fichesEntretienSchema,
   submissionSchema,
   evaluationSchema,
+  composerKindSchema,
+  validationRuleSchema,
+  rubricSchema,
 } from "@/lib/schemas";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
@@ -2910,12 +2913,6 @@ export async function cloneEventFlow(
 // ============================================================================
 // Phase 15 / Plan 03 — Mission CRUD + reorder + template save (ENGINE-01/02)
 // ============================================================================
-
-import {
-  composerKindSchema,
-  validationRuleSchema,
-  rubricSchema,
-} from "@/lib/schemas";
 
 // ---- createMissionFlow ------------------------------------------------------
 
