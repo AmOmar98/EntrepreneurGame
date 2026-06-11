@@ -13,7 +13,7 @@
 
 - [x] **Phase 13: DB Consolidation + Test Infrastructure** - Résoudre le drift database/ vs PROD et installer le filet de sécurité Vitest/Playwright/CI avant tout refactor schéma (completed 2026-06-11)
 - [x] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org (completed 2026-06-11)
-- [ ] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven
+- [x] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven (completed 2026-06-11)
 - [ ] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés
 - [ ] **Phase 17: Observabilité + Perf** - Sentry, PostHog, perf test 500 users, vérification RLS initplan
 - [ ] **Phase 18: July Event — Provisioning + Freeze + Preflight** - Créer l'event juillet via le moteur, provisionner la cohorte, freeze et smoke preflight J-2
@@ -75,7 +75,7 @@ Plans:
 - [x] 15-02-PLAN.md — Events CRUD + clone (remap self-FK) + activate single-active (ENGINE-04, ENGINE-03)
 - [x] 15-03-PLAN.md — Missions CRUD/reorder + éditeur template + rubric builder {key,label,max} + note warn-only (ENGINE-01, ENGINE-02, VALID-02)
 - [x] 15-04-PLAN.md — Levels editor + dé-hardcoding consumer (composer_kind/template_url) + hint ambre soft_recommends + getSimulatedNow (LEVELS-04, ENGINE-05, ENGINE-06, ENGINE-07)
-- [ ] 15-05-PLAN.md — Tests unitaires (schemas éditeur + clone remap) + E2E editor demo smoke + R3 gate + 15-VERIFICATION.md
+- [x] 15-05-PLAN.md — Tests unitaires (schemas éditeur + clone remap) + E2E editor demo smoke + R3 gate + 15-VERIFICATION.md
 **UI hint**: yes
 
 ### Phase 16: Jury paramétrable + Scoring configurable
@@ -118,7 +118,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 13. DB Consolidation + Test Infrastructure | 4/4 | Complete   | 2026-06-11 |
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
-| 15. Mission Engine no-code | 4/5 | In Progress|  |
+| 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
 | 16. Jury paramétrable + Scoring configurable | 0/? | Not started | - |
 | 17. Observabilité + Perf | 0/? | Not started | - |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |

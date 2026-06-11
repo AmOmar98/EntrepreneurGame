@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: verifying
-last_updated: "2026-06-11T21:34:27.888Z"
+last_updated: "2026-06-11T21:51:42.881Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 14
-  completed_plans: 13
-  percent: 33
+  completed_plans: 14
+  percent: 50
 ---
 
 # Project State
@@ -23,16 +23,16 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 
 ## Current Position
 
-Phase: 14 (Multi-tenant Schema + Niveaux data-driven) — EXECUTING
+Phase: 15 (Mission Engine no-code — éditeur GM) — COMPLETE
 Plan: 5 of 5 (complete)
-Status: Phase complete — ready for verification
+Status: Phase 15 complete — all 10 requirements satisfied, gate green
 Last activity: 2026-06-11
 
 ```
 [Phase 13] [Phase 14] [Phase 15] [Phase 16] [Phase 17] [Phase 18]
-    ▲
-  CURRENT
-  0/6 phases complete (0%)
+                           ▲
+                         DONE
+                  2/6 phases complete
 ```
 
 ## Deadline
@@ -59,6 +59,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 15 P15-02 | 6min | 3 tasks | 5 files |
 | Phase 15 P03 | 7min | 3 tasks | 5 files |
 | Phase 15 P15-04 | 9min | 3 tasks | 7 files |
+| Phase 15 P15-05 | 15min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-04 : getSimulatedNow reads gsd_simulate_date cookie (server-only); GM-only via lib/admin.ts call sites
 - 15-04 : isAutoValidate pre-migration dual-check: (composer_kind=multi_url && auto_validate) || (!column && slug===fiches-entretien-v1) so PROD works until migration applied
 - 15-04 : LEVELS-04 + ENGINE-05 + ENGINE-06 + ENGINE-07 complete; HARD_BLOCK_DEPENDENCIES literal untouched (VALID-02)
+- 15-05 : rubricSchema extracted to lib/schemas.ts; remapSoftRecommends to lib/clone-remap.ts; 44 unit / 23 e2e green; 15-VERIFICATION.md all 10 requirements + 6 SC traced; PROD migration apply deferred to Phase 16/18 operator checkpoint
 
 ### Phase Sequence Rationale
 
@@ -136,4 +138,4 @@ _None_
 
 ---
 
-*Last updated: 2026-06-11 — Phase 15 Plan 04 complete (de-hardcoding + levels editor). getSimulatedNow (ENGINE-07), /admin/levels CRUD (LEVELS-04), composer_kind/template_url de-hardcoding (ENGINE-05), soft_recommends_before amber hint (ENGINE-06). R1/R3 audits clean, 23 unit / 15 e2e green.*
+*Last updated: 2026-06-11 — Phase 15 COMPLETE (all 5 plans). Plan 05: rubricSchema + remapSoftRecommends extracted; 44 unit + 23 e2e tests green; 15-VERIFICATION.md all 10 requirements satisfied; PROD migration apply deferred to Phase 16/18 operator checkpoint.*
