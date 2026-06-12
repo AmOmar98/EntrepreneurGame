@@ -36,6 +36,7 @@ import {
 } from "@/lib/admin-import";
 import { addJurorByEmail, removeJuror } from "@/lib/jurors";
 import type { PitchModeState } from "@/lib/types";
+import { reportServerError } from "@/lib/observability";
 
 export type WorkflowState = {
   ok: boolean;
@@ -177,6 +178,7 @@ export async function saveOnboarding(
     })
     .eq("id", player.id);
   if (updateError) {
+    reportServerError(updateError, { action: "saveOnboarding" });
     return { ok: false, message: updateError.message };
   }
 
@@ -451,6 +453,7 @@ export async function submitDeliverable(
     submitted_by: user.id,
   });
   if (insErr) {
+    reportServerError(insErr, { action: "submitDeliverable" });
     return { ok: false, message: insErr.message };
   }
 
@@ -623,6 +626,7 @@ export async function evaluateSubmission(
     if ((insErr as { code?: string }).code === "23505") {
       return { ok: false, message: "Vous avez deja evalue cette soumission." };
     }
+    reportServerError(insErr, { action: "evaluateSubmission" });
     return { ok: false, message: insErr.message };
   }
 
