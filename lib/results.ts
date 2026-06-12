@@ -324,10 +324,16 @@ export async function computeRanking(opts?: {
   const sumByPlayer = new Map<string, number>();
   const countByPlayer = new Map<string, number>();
   for (const r of scoreRowsResolved) {
-    const normalized = normalizePitchScore(r, criteria);
-    // normalizePitchScore returns 0 on NaN — skip 0-normalized rows (NaN guard)
+    // WR-04: skip only when BOTH paths are unusable —
+    // - legacy path: total_score is NaN (malformed DB write)
+    // - dynamic path: scores jsonb is absent or empty
+    // If total_score is NaN but scores jsonb is present and non-empty, proceed
+    // via the dynamic path (normalizePitchScore will use scores). If scores is
+    // absent but total_score is valid, proceed via the legacy path.
     const totalRaw = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
-    if (Number.isNaN(totalRaw) && (!r.scores || Object.keys(r.scores).length === 0)) continue;
+    const hasValidScores = r.scores != null && Object.keys(r.scores).length > 0;
+    if (Number.isNaN(totalRaw) && !hasValidScores) continue;
+    const normalized = normalizePitchScore(r, criteria);
     sumByPlayer.set(r.player_id, (sumByPlayer.get(r.player_id) ?? 0) + normalized);
     countByPlayer.set(r.player_id, (countByPlayer.get(r.player_id) ?? 0) + 1);
   }
