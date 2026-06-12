@@ -547,3 +547,23 @@ GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
 -- ----------------------------------------------------------------------------
 
 DROP POLICY IF EXISTS "events_authenticated_select" ON public.events;
+
+-- ============================================================================
+-- Phase 16 review IN-01 — pitch_criteria + event_settings RLS policies mirror
+-- Verbatim from migrations 20260611240000 and 20260611240100 (PROD 2026-06-12).
+-- A fresh bootstrap from schema.sql + rls.sql needs these CREATE POLICY
+-- statements to avoid fail-closed (RLS enabled but no policy = all denied).
+-- ============================================================================
+
+-- pitch_criteria_event_settings_rls mirror
+create policy pitch_criteria_authenticated_select on public.pitch_criteria
+  for select to authenticated using (true);
+create policy pitch_criteria_gm_all on public.pitch_criteria
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());
+
+create policy event_settings_authenticated_select on public.event_settings
+  for select to authenticated using (true);
+create policy event_settings_gm_all on public.event_settings
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());

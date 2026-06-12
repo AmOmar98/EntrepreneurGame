@@ -107,6 +107,37 @@ ${isInOrg}
 }
 
 // ---------------------------------------------------------------------------
+// database/rls.sql — pitch_criteria + event_settings RLS policies (IN-01)
+// Idempotent: guarded by "pitch_criteria_event_settings_rls mirror" marker.
+// ---------------------------------------------------------------------------
+rls = fs.readFileSync(RLS, "utf8");
+if (!rls.includes("pitch_criteria_event_settings_rls mirror")) {
+  const block = `
+-- ============================================================================
+-- Phase 16 review IN-01 — pitch_criteria + event_settings RLS policies mirror
+-- Verbatim from migrations 20260611240000 and 20260611240100 (PROD 2026-06-12).
+-- A fresh bootstrap from schema.sql + rls.sql needs these CREATE POLICY
+-- statements to avoid fail-closed (RLS enabled but no policy = all denied).
+-- ============================================================================
+
+-- pitch_criteria_event_settings_rls mirror
+create policy pitch_criteria_authenticated_select on public.pitch_criteria
+  for select to authenticated using (true);
+create policy pitch_criteria_gm_all on public.pitch_criteria
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());
+
+create policy event_settings_authenticated_select on public.event_settings
+  for select to authenticated using (true);
+create policy event_settings_gm_all on public.event_settings
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());
+`;
+  fs.writeFileSync(RLS, rls + block);
+  changed.push(RLS + " (pitch_criteria+event_settings RLS)");
+}
+
+// ---------------------------------------------------------------------------
 // database/triggers.sql — recalc_player_engagement paramétré + get_event_setting
 // ---------------------------------------------------------------------------
 const TRG = "database/triggers.sql";
