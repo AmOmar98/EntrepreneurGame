@@ -3597,12 +3597,11 @@ export async function saveJuryGridFlow(
     return { ok: false, message: "Acces reserve au GameMaster." };
   }
 
-  // Delete-then-insert (criteria is a set, not individually updated)
-  const { error: delErr } = await supabase
-    .from("pitch_criteria")
-    .delete()
-    .eq("event_id", parsed.data.eventId);
-  if (delErr) return { ok: false, message: delErr.message };
+  // WR-02: upsert-first then delete stale — avoids the empty window that
+  // delete-then-insert creates. A juror scoring between the two statements
+  // would hit getPitchCriteria() returning empty and fall back to the demo
+  // 4×20 legacy criteria, producing a wrong normalized score.
+  const newKeys = parsed.data.criteria.map((c) => c.key);
 
   if (parsed.data.criteria.length > 0) {
     const rows = parsed.data.criteria.map((c, i) => ({
@@ -3612,11 +3611,28 @@ export async function saveJuryGridFlow(
       max: c.max,
       ord: i,
     }));
-    const { error: insertErr } = await supabase
+    const { error: upsertErr } = await supabase
       .from("pitch_criteria")
-      .insert(rows);
-    if (insertErr) return { ok: false, message: insertErr.message };
+      .upsert(rows, { onConflict: "event_id,key" });
+    if (upsertErr) return { ok: false, message: upsertErr.message };
   }
+
+  // Delete rows whose key is no longer in the new grid (stale cleanup).
+  // Use .not with 'in' filter — PostgREST tuple format: (val1,val2,...).
+  // When the new grid is empty, all rows for this event are stale.
+  const staleFilter =
+    newKeys.length > 0
+      ? supabase
+          .from("pitch_criteria")
+          .delete()
+          .eq("event_id", parsed.data.eventId)
+          .not("key", "in", `(${newKeys.join(",")})`)
+      : supabase
+          .from("pitch_criteria")
+          .delete()
+          .eq("event_id", parsed.data.eventId);
+  const { error: delStaleErr } = await staleFilter;
+  if (delStaleErr) return { ok: false, message: delStaleErr.message };
 
   revalidatePath("/admin/events");
   revalidatePath("/jury");
