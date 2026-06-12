@@ -15,7 +15,7 @@
 - [x] **Phase 14: Multi-tenant Schema + Niveaux data-driven** - Migrer le schéma vers la hiérarchie org→event→cohort, supprimer l'enum level_id, poser les bases RLS inter-org (completed 2026-06-11)
 - [x] **Phase 15: Mission Engine no-code (éditeur GM)** - Éditeur complet missions/livrables/rubrics dans /admin, dé-hardcoding des slugs, ENGINE behaviors data-driven (completed 2026-06-11)
 - [x] **Phase 16: Jury paramétrable + Scoring configurable** - Critères jury dynamiques, event_settings XP/pondération, triggers PL/pgSQL alignés (completed 2026-06-11)
-- [ ] **Phase 17: Observabilité + Perf** - Sentry, PostHog, perf test 500 users, vérification RLS initplan
+- [x] **Phase 17: Observabilité + Perf** - Sentry, PostHog, perf test 500 users, vérification RLS initplan (completed 2026-06-12)
 - [ ] **Phase 18: July Event — Provisioning + Freeze + Preflight** - Créer l'event juillet via le moteur, provisionner la cohorte, freeze et smoke preflight J-2
 
 ---
@@ -108,7 +108,7 @@ Plans:
 Plans:
 - [x] 17-01-PLAN.md — QUAL-04 Sentry (instrumentation server/client/edge + global-error + 3 critical-branch captures, env-gated no-op)
 - [x] 17-02-PLAN.md — QUAL-05 PostHog (lazy env-gated provider + 4 R1-safe funnel events eg_*)
-- [ ] 17-03-PLAN.md — QUAL-06 Perf (500-user seed + P95 script + RLS initplan check + 17-VERIFICATION + operator checkpoint)
+- [x] 17-03-PLAN.md — QUAL-06 Perf (500-user seed + P95 script + RLS initplan check + 17-VERIFICATION + operator checkpoint)
 
 ### Phase 18: July Event — Provisioning + Freeze + Preflight
 **Goal**: L'event de juillet 2026 existe et tourne intégralement sur le nouveau moteur, la cohorte est provisionnée, le preflight J-2 est passé avec smoke aux dates simulées de l'event — l'event peut démarrer sans intervention dev.
@@ -130,7 +130,7 @@ Plans:
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
 | 16. Jury paramétrable + Scoring configurable | 5/5 | Complete   | 2026-06-11 |
-| 17. Observabilité + Perf | 2/3 | In Progress|  |
+| 17. Observabilité + Perf | 3/3 | Complete   | 2026-06-12 |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
 
 ---

@@ -67,7 +67,7 @@
 - [x] **QUAL-03** : CI GitHub Actions — typecheck + lint + build + tests en gate sur chaque push
 - [x] **QUAL-04** : Sentry capte les erreurs serveur/client en prod avec alerting
 - [x] **QUAL-05** : PostHog trace le funnel produit (completion par livrable, drop-offs)
-- [ ] **QUAL-06** : Perf test seed 500 users — P95 des queries mesuré, RLS initplan `(SELECT auth.uid())` vérifié
+- [x] **QUAL-06** : Perf test seed 500 users — P95 des queries mesuré, RLS initplan `(SELECT auth.uid())` vérifié
 
 ### OPS — Consolidation + tech debt v0.3
 
@@ -148,7 +148,7 @@
 | SETTINGS-04 | Phase 16 | Complete |
 | QUAL-04 | Phase 17 | Complete |
 | QUAL-05 | Phase 17 | Complete |
-| QUAL-06 | Phase 17 | Pending |
+| QUAL-06 | Phase 17 | Complete |
 | JULY-01 | Phase 18 | Pending |
 | JULY-02 | Phase 18 | Pending |
 | JULY-03 | Phase 18 | Pending |

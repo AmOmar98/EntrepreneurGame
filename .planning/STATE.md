@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: verifying
-last_updated: "2026-06-12T00:49:13.764Z"
+last_updated: "2026-06-12T01:04:47.647Z"
 last_activity: 2026-06-12
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 22
-  completed_plans: 21
-  percent: 67
+  completed_plans: 22
+  percent: 83
 ---
 
 # Project State
@@ -65,6 +65,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 16 P16-04 | 15min | 3 tasks | 3 files |
 | Phase 17-observabilite-perf P17-01 | 12min | 3 tasks | 9 files |
 | Phase 17-observabilite-perf P17-02 | 10min | 3 tasks | 8 files |
+| Phase 17-observabilite-perf P17-03 | 20min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 16-01 : pitch_criteria table + scores jsonb (JURY-06); event_settings with bonus_multiplier_cap DEFAULT 3.0 (SETTINGS-01/02); get_event_setting_int + parameterized recalc_player_engagement (SETTINGS-03); dual-mode TS accessors with DEFAULT_EVENT_SETTINGS = current hardcoded values; 58 unit + 23 e2e green
 - 16-02 : normalizePitchScore exported from lib/results.ts (dynamic jsonb + retro-compat c5=0->x1.25 preserved cardinal); XP literals replaced by settings.xpFirstSubmission/xpValidateV1/xpValidateV2; jury form dynamic criteria prop + positional c1..c4 + c5=0 always + scoresJson; pitchWeight from getEventSettings; 64 unit + 23 e2e green
 - 17-01 : @sentry/nextjs v10 env-gated (no withSentryConfig); reportServerError helper via Sentry.withScope; 3 captures (saveOnboarding/submitDeliverable/evaluateSubmission insErr); replay OFF; QUAL-04 satisfied
+- 17-02 : posthog-js dynamic import (lazy); 4 eg_* events from state.ok touchpoints; autocapture OFF; R1 grep clean; QUAL-05 satisfied
+- 17-03 : perf-seed default = disposable Supabase project; bracket-counting RLS initplan check (EXISTS-scoped bare auth.uid() = violation, SECURITY DEFINER bodies + scalar comparisons exempt); --check-rls exit 0; P95 run at operator checkpoint; QUAL-06 RLS verdict PASS
 
 ### Phase Sequence Rationale
 
