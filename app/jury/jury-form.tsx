@@ -108,7 +108,13 @@ export function JuryForm({
 
   // Display /100 normalized score (mirrors lib/results.ts normalizePitchScore dynamic path)
   const score100 = maxTotal > 0 ? Math.round((totalRaw / maxTotal) * 100) : 0;
-  const score20 = activeCriteria.length > 0 ? (totalRaw / activeCriteria.length).toFixed(1) : "0.0";
+  // WR-01: only show per-criterion equivalent when all criteria share the same max.
+  // When criteria have non-uniform max values, the average-over-count formula is
+  // misleading (e.g. sum/3 labeled "/30" is wrong if first max is 30 but others differ).
+  const uniformMax = activeCriteria.length > 0 && activeCriteria.every(c => c.max === activeCriteria[0]!.max)
+    ? activeCriteria[0]!.max
+    : null;
+  const score20 = uniformMax !== null ? (totalRaw / activeCriteria.length).toFixed(1) : null;
 
   // Positional c1..c4 mapping (Phase 16 plan verbatim):
   // c1 = scores[activeCriteria[0]?.key] ?? 0
@@ -312,8 +318,17 @@ export function JuryForm({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              equivalent {score20}
-              <span style={{ color: "var(--wf-ink-faint, #94a3b8)" }}> /{activeCriteria.length > 0 ? activeCriteria[0]!.max : 20}</span>
+              {score20 !== null ? (
+                <>
+                  equivalent {score20}
+                  <span style={{ color: "var(--wf-ink-faint, #94a3b8)" }}> /{uniformMax}</span>
+                </>
+              ) : (
+                <>
+                  {totalRaw}
+                  <span style={{ color: "var(--wf-ink-faint, #94a3b8)" }}> /{maxTotal} pts</span>
+                </>
+              )}
             </p>
           </div>
 
