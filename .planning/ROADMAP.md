@@ -104,7 +104,11 @@ Plans:
   1. Une erreur serveur simulée (ex: action Zod invalide) apparaît dans le dashboard Sentry avec stack trace et alerte configurée (email/Slack)
   2. PostHog trace la completion par livrable et les drop-offs — un funnel "onboarding → submit → evaluate → validated" est visible dans PostHog avec données de test
   3. Perf test seed 500 users exécuté : P95 des queries critique (`/journey`, évaluation, jury) mesuré et documenté ; RLS `initplan (SELECT auth.uid())` vérifié (pas de per-row auth.uid() call)
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 17-01-PLAN.md — QUAL-04 Sentry (instrumentation server/client/edge + global-error + 3 critical-branch captures, env-gated no-op)
+- [ ] 17-02-PLAN.md — QUAL-05 PostHog (lazy env-gated provider + 4 R1-safe funnel events eg_*)
+- [ ] 17-03-PLAN.md — QUAL-06 Perf (500-user seed + P95 script + RLS initplan check + 17-VERIFICATION + operator checkpoint)
 
 ### Phase 18: July Event — Provisioning + Freeze + Preflight
 **Goal**: L'event de juillet 2026 existe et tourne intégralement sur le nouveau moteur, la cohorte est provisionnée, le preflight J-2 est passé avec smoke aux dates simulées de l'event — l'event peut démarrer sans intervention dev.
