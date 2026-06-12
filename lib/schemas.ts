@@ -149,7 +149,8 @@ export const saveEventSettingsSchema = z.object({
   engReviewed: z.coerce.number().int().min(0).max(500),
   engValidated: z.coerce.number().int().min(0).max(500),
   pitchWeight: z.coerce.number().min(0).max(1),
-  bonusMultiplierCap: z.coerce.number().min(1).max(10),
+  // default(3.0): backward-compatible with forms/tests predating the field (16-review CR-03)
+  bonusMultiplierCap: z.coerce.number().min(1).max(10).default(3.0),
 });
 
 // ---------------------------------------------------------------------------
