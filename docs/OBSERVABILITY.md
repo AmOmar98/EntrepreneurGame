@@ -63,14 +63,70 @@ Sans `SENTRY_DSN` et `NEXT_PUBLIC_SENTRY_DSN` :
 
 ## PostHog (QUAL-05)
 
-> Section a completer par le plan 17-02.
+Traçage du funnel produit côté client. Totalement env-gate : sans `NEXT_PUBLIC_POSTHOG_KEY`,
+`posthog-js` n'est jamais importé (import dynamique derrière la garde env). Build, CI et
+demo mode restent inchangés.
 
-### Ancres prevues
+### 1. Créer le projet PostHog
 
-- Provider client dans `app/layout.tsx` (env-gate sur `NEXT_PUBLIC_POSTHOG_KEY`).
-- Helper `lib/analytics.ts` avec events `eg_*`.
-- Events captures : `eg_onboarding_completed`, `eg_deliverable_submitted`, `eg_deliverable_validated`, `eg_mentor_eval_submitted`.
-- Session recording OFF ; aucune donnee de score/rang cote Player (R1 cardinal).
+1. Aller sur https://posthog.com et créer un compte gratuit (PostHog Cloud Free suffit pour le volume pilote).
+2. Créer un nouveau projet (ex. `entrepreneur-game`).
+3. Dans Project Settings -> Project API Key, copier la clé (format `phc_...`).
+4. Optionnel : noter l'API host si vous utilisez une instance self-hosted (sinon laisser vide — défaut `https://us.i.posthog.com`).
+
+### 2. Coller les clés dans Vercel
+
+Dans le Dashboard Vercel -> Project -> Settings -> Environment Variables, ajouter en Production :
+
+| Variable | Valeur | Type Vercel |
+|---|---|---|
+| `NEXT_PUBLIC_POSTHOG_KEY` | Clé copiée ci-dessus (phc_...) | Plain (public) |
+| `NEXT_PUBLIC_POSTHOG_HOST` | URL host (optionnel, laisser vide pour US cloud) | Plain (public) |
+
+Après avoir sauvegardé, redeploy (Vercel Deployments -> Redeploy).
+
+### 3. Les 4 événements capturés
+
+| Event | Touchpoint | Ce que ça marque |
+|---|---|---|
+| `eg_onboarding_completed` | `components/onboarding-stepper.tsx` | Porteur a finalisé le KYC et accède pour la 1ère fois au /journey |
+| `eg_deliverable_submitted` | `components/submission-form.tsx` | Porteur a soumis une preuve (V1 ou V2) pour un livrable |
+| `eg_deliverable_validated` | `components/mentor-evaluation-panel.tsx` | Mentor a rendu un verdict validate_v1 ou validate_v2 |
+| `eg_mentor_eval_submitted` | `components/mentor-evaluation-panel.tsx` | Mentor a soumis une évaluation (tous verdicts confondus) |
+
+Props techniques envoyées (exemples) :
+- `eg_deliverable_submitted` : `{ deliverableTemplateId: "persona-v1", version: 1 }`
+- `eg_deliverable_validated` : `{ submissionId: "<uuid>", version: 1 }`
+- `eg_mentor_eval_submitted` : `{ submissionId: "<uuid>", version: 1 }`
+
+### 4. Construire le funnel dans l'interface PostHog
+
+1. Dans PostHog -> Insights -> New insight -> Funnel.
+2. Ajouter les étapes dans l'ordre :
+   - Étape 1 : `eg_onboarding_completed`
+   - Étape 2 : `eg_deliverable_submitted`
+   - Étape 3 : `eg_deliverable_validated`
+   - Étape 4 : `eg_mentor_eval_submitted`
+3. Sauvegarder sous "EIC Funnel — livrables".
+4. Le taux de conversion entre chaque étape = friction produit visible.
+   Un drop-off élevé entre Étape 1 et 2 indique que les porteurs n'accèdent pas aux livrables.
+   Un drop-off entre 2 et 3 indique que les mentors n'évaluent pas dans les délais.
+
+### 5. Confidentialité / R1
+
+- **Session recording OFF** (`disable_session_recording: true`).
+- **Autocapture OFF** (`autocapture: false`) — seuls les événements `eg_*` explicites sont envoyés.
+- **Aucun score, rang, note** dans les payloads des événements côté Player (R1 cardinal).
+  Les props sont uniquement des identifiants techniques (`deliverableTemplateId`, `submissionId`, `version`).
+- L'IP est envoyée à PostHog par défaut (comportement PostHog Cloud) ; pour masquer :
+  ajouter `person_profiles: "never"` dans l'init si RGPD strict requis (hors scope pilote).
+
+### 6. Comportement sans clé (demo / CI)
+
+Sans `NEXT_PUBLIC_POSTHOG_KEY` :
+- `components/analytics-provider.tsx` : l'import dynamique `import("posthog-js")` ne s'exécute jamais.
+- `captureEvent` dans `lib/analytics.ts` : l'instance `_posthog` reste `undefined`, toutes les captures sont des no-ops silencieux.
+- Build, typecheck, lint, tests unitaires (105) et e2e (24) : inchangés.
 
 ---
 
