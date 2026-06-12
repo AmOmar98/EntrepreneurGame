@@ -3647,6 +3647,7 @@ export async function saveEventSettingsFlow(
     engReviewed: formData.get("engReviewed"),
     engValidated: formData.get("engValidated"),
     pitchWeight: formData.get("pitchWeight"),
+    bonusMultiplierCap: formData.get("bonusMultiplierCap"),
   });
   if (!parsed.success) {
     return {
@@ -3677,6 +3678,7 @@ export async function saveEventSettingsFlow(
     eng_reviewed: parsed.data.engReviewed,
     eng_validated: parsed.data.engValidated,
     pitch_weight: parsed.data.pitchWeight,
+    bonus_multiplier_cap: parsed.data.bonusMultiplierCap,
   };
 
   const { error: upsertErr } = await supabase

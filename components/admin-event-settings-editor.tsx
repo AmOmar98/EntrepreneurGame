@@ -221,6 +221,33 @@ export function AdminEventSettingsEditor({ eventId, settings, demo }: Props) {
           </div>
         </fieldset>
 
+        {/* Bonus multiplier cap (CR-03) */}
+        <fieldset style={{ border: "none", padding: 0, margin: "0 0 20px" }}>
+          <legend style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+            Cap bonus multiplicateur
+          </legend>
+          <div style={{ maxWidth: 200 }}>
+            <label
+              htmlFor="bonusMultiplierCap"
+              style={{ fontSize: 12, display: "block", marginBottom: 4 }}
+            >
+              {t.admin_settings_bonus_multiplier_cap} (defaut {settings.bonusMultiplierCap})
+            </label>
+            <input
+              id="bonusMultiplierCap"
+              name="bonusMultiplierCap"
+              type="number"
+              className="input"
+              defaultValue={settings.bonusMultiplierCap}
+              min={1}
+              max={10}
+              step={0.1}
+              required
+              aria-label={t.admin_settings_bonus_multiplier_cap}
+            />
+          </div>
+        </fieldset>
+
         <button
           type="submit"
           className="eic-button eic-button--primary"

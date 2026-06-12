@@ -931,6 +931,7 @@ export const dictionaries = {
     admin_settings_eng_reviewed: "Points engagement — Lu",
     admin_settings_eng_validated: "Points engagement — Valide",
     admin_settings_pitch_weight: "Poids pitch (0.0 a 1.0)",
+    admin_settings_bonus_multiplier_cap: "Cap multiplicateur bonus (1.0 a 10.0)",
     admin_settings_demo_disabled: "Reglages desactives en mode demo — connectez Supabase pour modifier.",
   },
   en: {
@@ -1356,6 +1357,7 @@ export const dictionaries = {
     admin_settings_eng_reviewed: "Engagement points — Reviewed",
     admin_settings_eng_validated: "Engagement points — Validated",
     admin_settings_pitch_weight: "Pitch weight (0.0 to 1.0)",
+    admin_settings_bonus_multiplier_cap: "Bonus multiplier cap (1.0 to 10.0)",
     admin_settings_demo_disabled: "Settings disabled in demo mode — connect Supabase to edit.",
   },
 } as const;
