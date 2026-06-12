@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
-status: executing
-last_updated: "2026-06-12T00:34:04.084Z"
+status: verifying
+last_updated: "2026-06-12T00:49:13.764Z"
 last_activity: 2026-06-12
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 22
-  completed_plans: 20
+  completed_plans: 21
   percent: 67
 ---
 
@@ -25,7 +25,7 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 
 Phase: 16 (Jury paramétrable + Scoring configurable) — IN PROGRESS
 Plan: 5 of 5 (complete)
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-12
 
 ```
@@ -64,6 +64,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 16 P16-02 | 35min | 3 tasks | 9 files |
 | Phase 16 P16-04 | 15min | 3 tasks | 3 files |
 | Phase 17-observabilite-perf P17-01 | 12min | 3 tasks | 9 files |
+| Phase 17-observabilite-perf P17-02 | 10min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
