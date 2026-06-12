@@ -363,8 +363,7 @@ function checkRls() {
     // Also skip auth.uid() that is inside a SECURITY DEFINER function body ($$...$$).
     // These functions are themselves STABLE — they are cached at the call site, not per-row.
     const precedingText = stripped.slice(0, m.index);
-    const lastDollarOpen = precedingText.lastIndexOf("$$");
-    const lastDollarClose = stripped.slice(0, m.index).split("$$").length - 1;
+    const lastDollarClose = precedingText.split("$$").length - 1;
     // Odd number of $$ before position = we are inside a $$....$$ function body
     const insideFunctionBody = lastDollarClose % 2 === 1;
 

@@ -132,11 +132,82 @@ Sans `NEXT_PUBLIC_POSTHOG_KEY` :
 
 ## Perf (QUAL-06)
 
-> Section a completer par le plan 17-03.
+Perf toolkit livré dans le plan 17-03. Les scripts sont en place et prêts à l'emploi.
+L'exécution réelle est une décision opérateur (run optionnel avant freeze event).
 
-### Ancres prevues
+### Décision : projet jetable (defaut) vs PROD hors-event
 
-- `scripts/perf-seed-500.sql` : seed idempotent 500 users sur projet Supabase jetable.
-- `scripts/perf-p95.mjs` : mesure P95 sur chemins critiques (/journey data, eval, jury).
-- Revue statique RLS initplan : policies en `(SELECT auth.uid())` verifiees par grep.
-- Runbook EXPLAIN pour les requetes critiques.
+**Défaut** = projet Supabase jetable (nouveau projet gratuit, isolé de PROD).
+PROD hors-event = décision opérateur explicite ; le cleanup block **doit** être exécuté après.
+
+### 1. Seed : créer 500 utilisateurs synthétiques
+
+**Via Node (recommandé — crée de vrais auth.users) :**
+```bash
+NEXT_PUBLIC_SUPABASE_URL=<url-projet-jetable> \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+node scripts/perf-seed-500.mjs 500 perf-report.json
+```
+
+**Via SQL (Supabase SQL editor ou psql) :**
+```bash
+psql $DATABASE_URL -f scripts/perf-seed-500.sql
+```
+
+Marqueur synthétique : toutes les lignes sont taguées `@perf-seed.invalid` / `perf-seed-player-NNNN`
+pour que le cleanup soit total et ne touche rien d'autre.
+
+### 2. Mesurer le P95 sur les 3 chemins critiques
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=<url> \
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key> \
+SMOKE_PLAYER_EMAIL=<email-porteur> SMOKE_PLAYER_PWD=<pwd> \
+SMOKE_MENTOR_EMAIL=<email-mentor>  SMOKE_MENTOR_PWD=<pwd> \
+SMOKE_JURY_EMAIL=<email-jury>      SMOKE_JURY_PWD=<pwd>   \
+node scripts/perf-p95.mjs 100 perf-out.json
+```
+
+Chemins mesurés :
+- `journey`    : `player_members` + `submissions` (session Porteur)
+- `evaluation` : `submissions` + `evaluations` (session Mentor)
+- `jury`       : `pitch_scores` + `pitch_criteria` (session Jury)
+
+Le rapport JSON est écrit dans `perf-out.json` ; `console.table` affiche le résumé P50/P95/P99.
+
+### 3. Vérification RLS initplan (statique)
+
+```bash
+node scripts/perf-p95.mjs --check-rls
+```
+
+Vérifie que tout `auth.uid()` à l'intérieur d'un sous-requête `EXISTS (...)` est
+wrappé en `(SELECT auth.uid())` (initplan caching, O(1) au lieu de O(n) par ligne).
+Sortie exit 0 = propre ; exit 1 = violation détectée.
+
+Pour confirmer le caching initplan via EXPLAIN ANALYZE dans l'éditeur SQL Supabase :
+```sql
+EXPLAIN ANALYZE
+SELECT id FROM public.submissions WHERE player_id = '<uuid>';
+```
+Rechercher `InitPlan` dans le plan d'exécution — confirme que `auth.uid()` n'est
+pas ré-évalué pour chaque ligne de résultat.
+
+### 4. Cleanup
+
+```bash
+# Via Node
+NEXT_PUBLIC_SUPABASE_URL=<url> SUPABASE_SERVICE_ROLE_KEY=<key> \
+node scripts/perf-seed-500.mjs --cleanup
+
+# Via SQL : décommenter le bloc CLEANUP en bas de scripts/perf-seed-500.sql
+```
+
+Le cleanup supprime toutes les lignes synthétiques dans l'ordre FK-safe (submissions →
+player_members → profiles → auth.users → players → deliverable_templates → missions →
+cohort → event → organization).
+
+### 5. Coller les résultats dans 17-VERIFICATION.md
+
+Après le run, copier le tableau P95 dans `.planning/phases/17-observabilite-perf/17-VERIFICATION.md`
+sous la section QUAL-06 et marquer la ligne de statut comme `VERIFIED`.
