@@ -69,9 +69,15 @@ export function combineScores(
 //      `getEngagementMilestones()`. Mentor/GM surface peut afficher
 //      numériquement (cf. lib/admin-*.ts + colonne admin GM).
 
-const SUBMITTED_POINTS = 100;
-const REVIEWED_POINTS = 25;
-const VALIDATED_POINTS = 50;
+// Phase 16 (SETTINGS-01): exported as DEFAULT_* so callers can pass overrides.
+// Values unchanged — zero behavior change at defaults.
+export const DEFAULT_SUBMITTED_POINTS = 100;
+export const DEFAULT_REVIEWED_POINTS = 25;
+export const DEFAULT_VALIDATED_POINTS = 50;
+// Keep private aliases for in-file usage (backwards compat for any remaining references).
+const SUBMITTED_POINTS = DEFAULT_SUBMITTED_POINTS;
+const REVIEWED_POINTS = DEFAULT_REVIEWED_POINTS;
+const VALIDATED_POINTS = DEFAULT_VALIDATED_POINTS;
 
 type EngagementMilestones = {
   /** Au moins une submission existe pour ce (player, template). +100, irréversible. */
@@ -138,14 +144,22 @@ export function getEngagementMilestones(
 export function sumPlayerScoreEngagement(
   submissions: Submission[],
   evaluations: Evaluation[],
+  opts?: {
+    submittedPoints?: number;
+    reviewedPoints?: number;
+    validatedPoints?: number;
+  },
 ): number {
+  const sp = opts?.submittedPoints ?? SUBMITTED_POINTS;
+  const rp = opts?.reviewedPoints ?? REVIEWED_POINTS;
+  const vp = opts?.validatedPoints ?? VALIDATED_POINTS;
   const templateIds = new Set(submissions.map((s) => s.deliverableTemplateId));
   let total = 0;
   for (const templateId of templateIds) {
     const m = getEngagementMilestones(templateId, submissions, evaluations);
-    if (m.submitted) total += SUBMITTED_POINTS;
-    if (m.reviewed) total += REVIEWED_POINTS;
-    if (m.validated) total += VALIDATED_POINTS;
+    if (m.submitted) total += sp;
+    if (m.reviewed) total += rp;
+    if (m.validated) total += vp;
   }
   return total;
 }
@@ -182,14 +196,20 @@ export function sumPlayerScoreEngagement(
  * @param args.submission       The submission whose score is being boosted (needs submittedAt + playerId).
  * @param args.eventEndsAt      Optional ISO string for event.ends_at (used for rest_of_event scope).
  * @returns boostedScore (capped at rawScore * BONUS_MULTIPLIER_CAP), applied (bonusEvent.id or null).
+ * @note CR-02 (Phase 16 review): this function accepts opts.bonusMultiplierCap to honor
+ *   the configurable event_settings.bonus_multiplier_cap. However there are currently no
+ *   production call-sites — the Mentor/GM UI evaluations never invoke this helper directly.
+ *   Deferred: wire eventSettings.bonusMultiplierCap here when a mentor evaluation surface
+ *   calls applyBonusMultiplier.
  */
 export function applyBonusMultiplier(args: {
   rawScore: number;
   bonusEvents: BonusEvent[];
   submission: Pick<Submission, "submittedAt" | "playerId">;
   eventEndsAt?: string;
+  opts?: { bonusMultiplierCap?: number };
 }): { boostedScore: number; applied: string | null } {
-  const { rawScore, bonusEvents, submission, eventEndsAt } = args;
+  const { rawScore, bonusEvents, submission, eventEndsAt, opts } = args;
   if (rawScore <= 0) return { boostedScore: rawScore, applied: null };
 
   // Filter applicable bonuses : own player, validated, claimed before submission, not consumed
@@ -215,7 +235,8 @@ export function applyBonusMultiplier(args: {
     cur.multiplierFactor > best.multiplierFactor ? cur : best,
   );
 
-  const factor = Math.min(winner.multiplierFactor, BONUS_MULTIPLIER_CAP);
+  const cap = opts?.bonusMultiplierCap ?? BONUS_MULTIPLIER_CAP;
+  const factor = Math.min(winner.multiplierFactor, cap);
   const boostedScore = Math.round(rawScore * factor * 100) / 100; // 2 decimals
   return { boostedScore, applied: winner.id };
 }

@@ -2,7 +2,21 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
+import {
+  httpsUrl,
+  onboardingSchema,
+  fichesEntretienSchema,
+  submissionSchema,
+  evaluationSchema,
+  composerKindSchema,
+  validationRuleSchema,
+  rubricSchema,
+  slugifyToKey,
+  saveJuryGridSchema,
+  saveEventSettingsSchema,
+} from "@/lib/schemas";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
@@ -22,6 +36,7 @@ import {
 } from "@/lib/admin-import";
 import { addJurorByEmail, removeJuror } from "@/lib/jurors";
 import type { PitchModeState } from "@/lib/types";
+import { reportServerError } from "@/lib/observability";
 
 export type WorkflowState = {
   ok: boolean;
@@ -86,15 +101,6 @@ export async function signOut(): Promise<void> {
 // Onboarding (ONBOARD-02, ONBOARD-03, DATA-04)
 // ============================================================================
 
-const onboardingSchema = z.object({
-  teamName: z.string().min(2).max(80),
-  idea: z.string().min(10).max(500),
-  q1: z.coerce.number().int().min(1).max(5),
-  q2: z.coerce.number().int().min(1).max(5),
-  q3: z.coerce.number().int().min(1).max(5),
-  q4: z.coerce.number().int().min(1).max(5),
-  q5: z.coerce.number().int().min(1).max(5),
-});
 
 export async function saveOnboarding(
   _prev: WorkflowState,
@@ -165,10 +171,14 @@ export async function saveOnboarding(
       // onto L1_problem so the journey track shows L0=done, L1=current.
       // Without this, the L0 node stays "current/À rendre" forever even after
       // the KYC form is filled. See memory project_onboarding_level_bump_sql.
+      // W-3 (14-04): write both enum column and text FK to prevent drift after
+      // the levels_v2 migration is applied (Plan 05 operator checkpoint).
       current_level: "L1_problem",
+      current_level_text: "L1_problem",
     })
     .eq("id", player.id);
   if (updateError) {
+    reportServerError(updateError, { action: "saveOnboarding" });
     return { ok: false, message: updateError.message };
   }
 
@@ -180,11 +190,6 @@ export async function saveOnboarding(
 // ============================================================================
 // Submission V1 (SUBMIT-01, SUBMIT-02, SUBMIT-04, DATA-04)
 // ============================================================================
-
-const httpsUrl = z
-  .string()
-  .url()
-  .refine((u) => u.startsWith("https://"), "URL doit commencer par https://");
 
 // quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation system
 // evaluator UUID is now hardcoded in the SECURITY DEFINER trigger
@@ -205,39 +210,7 @@ const HARD_BLOCK_DEPENDENCIES: Record<string, string> = {
 // exactly 10 entries, each a valid https:// URL. Zod errors here are *technical*
 // payload validators (R2 distinction : pedagogical rubric warnings vs payload
 // schema errors — schema errors block parsing, rubric warnings never block).
-const fichesEntretienSchema = z.object({
-  fiches: z
-    .array(z.object({ url: httpsUrl }))
-    .length(10, "10 fiches d'entretien requises (URL HTTPS chacune)"),
-});
-
-const submissionSchema = z
-  .object({
-    deliverableTemplateId: z.string().uuid(),
-    kind: z.enum(["proof_url", "proof_text"]),
-    proofUrl: z.string().optional(),
-    proofText: z.string().max(16000).optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.kind === "proof_url") {
-      const r = httpsUrl.safeParse(data.proofUrl);
-      if (!r.success) {
-        ctx.addIssue({
-          code: "custom",
-          message: "URL https:// requise",
-          path: ["proofUrl"],
-        });
-      }
-    } else {
-      if (!data.proofText || data.proofText.trim().length < 10) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Texte de preuve requis (>=10 caracteres)",
-          path: ["proofText"],
-        });
-      }
-    }
-  });
+// Schemas moved to lib/schemas.ts (pure module, importable in Vitest unit tests).
 
 export async function submitDeliverable(
   _prev: WorkflowState,
@@ -284,11 +257,13 @@ export async function submitDeliverable(
     return { ok: false, message: "Aucun Player rattache a votre compte." };
   }
 
-  // quick-260519-l1l : Resolve template slug to dispatch on special flows
-  // (hard-block dependency + auto-validation for fiches-entretien-v1).
+  // quick-260519-l1l : Resolve template slug + ENGINE-05 columns to dispatch on
+  // special flows (hard-block dependency + auto-validation).
+  // ENGINE-05: also fetch composer_kind + auto_validate for data-driven dispatch.
+  // Pre-migration defensive: columns may be absent → fallback to slug-based behavior.
   const { data: tplRow, error: tplErr } = await supabase
     .from("deliverable_templates")
-    .select("slug")
+    .select("slug, composer_kind, auto_validate")
     .eq("id", parsed.data.deliverableTemplateId)
     .maybeSingle();
   if (tplErr) {
@@ -297,7 +272,12 @@ export async function submitDeliverable(
   if (!tplRow) {
     return { ok: false, message: "Livrable inconnu." };
   }
-  const templateSlug = (tplRow as { slug: string }).slug;
+  const tplData = tplRow as { slug: string; composer_kind?: string | null; auto_validate?: boolean | null };
+  const templateSlug = tplData.slug;
+  // ENGINE-05: data-driven auto-validate check (pre-migration: fallback to slug literal).
+  const isAutoValidate =
+    (tplData.composer_kind === "multi_url" && tplData.auto_validate === true)
+    || (!tplData.composer_kind && templateSlug === "fiches-entretien-v1");
 
   // quick-260519-l1l : Hard-block 2A→2B (R3 exception, Omar 2026-05-19).
   // If this deliverable depends on another being validated first, check that
@@ -332,7 +312,10 @@ export async function submitDeliverable(
   }
 
   // quick-260519-l1l + smoke-j1 fix 2026-05-19 : Auto-validation flow for
-  // fiches-entretien-v1. Player inserts submission with status='validated'.
+  // multi_url auto_validate templates (formerly keyed on fiches-entretien-v1 slug).
+  // ENGINE-05: now dispatches on isAutoValidate (composer_kind=multi_url + auto_validate=true
+  // from DB column, with pre-migration fallback to slug literal — see above).
+  // Player inserts submission with status='validated'.
   // The synthetic evaluations row is now inserted server-side by trigger
   // `trg_auto_eval_fiches_entretien` (SECURITY DEFINER, bypasses RLS
   // `evaluations_mentor_self_insert`) — see
@@ -342,7 +325,7 @@ export async function submitDeliverable(
   // - Trigger fires AFTER INSERT, creates eval row (scores fiche_1..10=25,
   //   total=250, verdict='validate_v1', evaluator=G01 UUID).
   // - Skip mailto (no mentor notif needed for auto-validated submission).
-  if (templateSlug === "fiches-entretien-v1") {
+  if (isAutoValidate) {
     if (parsed.data.kind !== "proof_text" || !parsed.data.proofText) {
       return {
         ok: false,
@@ -470,6 +453,7 @@ export async function submitDeliverable(
     submitted_by: user.id,
   });
   if (insErr) {
+    reportServerError(insErr, { action: "submitDeliverable" });
     return { ok: false, message: insErr.message };
   }
 
@@ -488,29 +472,7 @@ export async function submitDeliverable(
 // `trg_evaluation_recalc` recomputes `players.score_project` automatically;
 // we never touch that column from TypeScript (SCORE-01).
 
-const evaluationSchema = z
-  .object({
-    submissionId: z.string().uuid(),
-    feedback: z.string().min(0).max(4000),
-    verdict: z.enum(["validate_v1", "request_v2", "validate_v2", "reject"]),
-    expectedAction: z.string().max(500).optional(),
-    // scores are sent as a JSON-encoded Record<string, number> via a hidden input.
-    scores: z.record(z.string(), z.coerce.number().min(0).max(25)),
-  })
-  .superRefine((data, ctx) => {
-    // MNT-04 — expected_action MUST be provided (and non-empty) when the
-    // verdict is request_v2. Server-side validation; UI mirrors this.
-    if (data.verdict === "request_v2") {
-      const trimmed = (data.expectedAction ?? "").trim();
-      if (trimmed.length === 0) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["expectedAction"],
-          message: "L'action attendue est obligatoire pour une demande de revision.",
-        });
-      }
-    }
-  });
+// evaluationSchema moved to lib/schemas.ts (re-imported above).
 
 export async function evaluateSubmission(
   _prev: WorkflowState,
@@ -664,6 +626,7 @@ export async function evaluateSubmission(
     if ((insErr as { code?: string }).code === "23505") {
       return { ok: false, message: "Vous avez deja evalue cette soumission." };
     }
+    reportServerError(insErr, { action: "evaluateSubmission" });
     return { ok: false, message: insErr.message };
   }
 
@@ -906,11 +869,11 @@ export async function importPlayersCsv(
     };
   }
 
-  // 4. Resolve current event (latest by starts_at).
+  // 4. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -1174,6 +1137,9 @@ const pitchScoreSchema = z.object({
     .enum(["not_convinced", "needs_work", "convinced", "favorite"])
     .optional()
     .nullable(),
+  // Phase 16: optional dynamic scores jsonb (format: JSON object key->number).
+  // Tolerant: absent or parse failure → legacy c1..c5 path (no breakage).
+  scoresJson: z.string().optional().nullable(),
 });
 
 export async function savePitchScoreFlow(
@@ -1202,6 +1168,8 @@ export async function savePitchScoreFlow(
     // FormData.get returns null when absent ; Zod default kicks in for isDraft.
     isDraft: formData.get("isDraft"),
     verdict: formData.get("verdict") || null,
+    // Phase 16: dynamic scores jsonb. Empty string normalized to null (legacy path).
+    scoresJson: formData.get("scoresJson") || null,
   });
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
@@ -1270,16 +1238,40 @@ export async function savePitchScoreFlow(
   if (parsed.data.verdict) {
     payload.verdict = parsed.data.verdict;
   }
+
+  // Phase 16: parse scoresJson for dynamic path (tolerant: skip on failure).
+  // T-16-04: JSON.parse ignore on failure — legacy c1..c5 path remains authoritative.
+  if (parsed.data.scoresJson) {
+    try {
+      const scoresPayload = JSON.parse(parsed.data.scoresJson) as Record<string, number>;
+      if (scoresPayload && typeof scoresPayload === "object" && !Array.isArray(scoresPayload)) {
+        if (Object.keys(scoresPayload).length > 0) {
+          payload.scores = scoresPayload;
+        }
+      }
+    } catch {
+      // Ignore parse failure — legacy c1..c5 path used
+    }
+  }
+
   const { error: upsertErr } = await supabase
     .from("pitch_scores")
     .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
   if (upsertErr) {
-    // quick-260520-124 ext — graceful degradation if migration not yet applied
-    // (column does not exist). Retry without is_draft/verdict.
+    // quick-260520-124 ext — graceful degradation if migration not yet applied.
     const msg = upsertErr.message ?? "";
     if (msg.includes("is_draft") || msg.includes("verdict")) {
       delete payload.is_draft;
       delete payload.verdict;
+      const { error: retryErr } = await supabase
+        .from("pitch_scores")
+        .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
+      if (retryErr) {
+        return { ok: false, message: retryErr.message };
+      }
+    } else if (msg.includes("scores") || msg.includes("column")) {
+      // Phase 16: pre-migration tolerance for scores column not yet applied.
+      delete payload.scores;
       const { error: retryErr } = await supabase
         .from("pitch_scores")
         .upsert(payload, { onConflict: "event_id,player_id,juror_id" });
@@ -1586,11 +1578,11 @@ export async function createAnnouncementFlow(
     return { ok: false, message: "Acces reserve au GameMaster." };
   }
 
-  // Resolve current event (latest by starts_at — same heuristic as elsewhere).
+  // Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -2564,4 +2556,1161 @@ export async function removeJurorFlow(
     revalidatePath("/admin");
   }
   return { ok: result.ok, message: result.message };
+}
+
+// ---- ENGINE-04 — create event + cohort --------------------------------------
+
+const createEventSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug doit etre en minuscules, chiffres et tirets uniquement."),
+  organizationId: z.string().uuid().nullable().optional(),
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1),
+  cohortName: z.string().min(1),
+});
+
+export async function createEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawOrgId = formData.get("organizationId");
+  const parsed = createEventSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    organizationId: typeof rawOrgId === "string" && rawOrgId.length > 0 ? rawOrgId : null,
+    startsAt: formData.get("startsAt"),
+    endsAt: formData.get("endsAt"),
+    cohortName: formData.get("cohortName"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  const { data: newEvent, error: eventErr } = await supabase
+    .from("events")
+    .insert({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      organization_id: parsed.data.organizationId ?? null,
+      starts_at: parsed.data.startsAt,
+      ends_at: parsed.data.endsAt,
+      is_active: false,
+    })
+    .select("id")
+    .single();
+  if (eventErr || !newEvent) {
+    return { ok: false, message: eventErr?.message ?? "Erreur creation event." };
+  }
+
+  const { error: cohortErr } = await supabase.from("cohorts").insert({
+    event_id: (newEvent as { id: string }).id,
+    slug: parsed.data.slug,
+    name: parsed.data.cohortName,
+  });
+  if (cohortErr) {
+    return { ok: false, message: cohortErr.message };
+  }
+
+  revalidatePath("/admin/events");
+  return { ok: true, message: "Event cree avec succes." };
+}
+
+// ---- ENGINE-03 / TENANT-03 — activate event (single-active invariant) -------
+
+const activateEventSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+export async function activateEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = activateEventSchema.safeParse({
+    eventId: formData.get("eventId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // Resolve the event's organization_id so we can scope the deactivation.
+  const { data: evtRow, error: evtErr } = await supabase
+    .from("events")
+    .select("organization_id")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (evtErr) {
+    return { ok: false, message: evtErr.message };
+  }
+
+  const orgId = (evtRow as { organization_id: string | null } | null)?.organization_id ?? null;
+
+  // Step 1: deactivate all events in the same org (single-active invariant).
+  // Always scope: org events when orgId is set, null-org events only when orgId is null.
+  // Never issue an unbounded UPDATE (would deactivate every event across all orgs).
+  let deactivateQuery = supabase.from("events").update({ is_active: false });
+  if (orgId) {
+    deactivateQuery = deactivateQuery.eq("organization_id", orgId) as typeof deactivateQuery;
+  } else {
+    deactivateQuery = deactivateQuery.is("organization_id", null) as typeof deactivateQuery;
+  }
+  const { error: deactivateErr } = await deactivateQuery;
+  if (deactivateErr) {
+    return { ok: false, message: deactivateErr.message };
+  }
+
+  // Step 2: activate target event.
+  const { error: activateErr } = await supabase
+    .from("events")
+    .update({ is_active: true })
+    .eq("id", parsed.data.eventId);
+  if (activateErr) {
+    return { ok: false, message: activateErr.message };
+  }
+
+  revalidatePath("/admin/events");
+  revalidatePath("/admin");
+  revalidatePath("/journey");
+  return { ok: true, message: "Event active." };
+}
+
+// ---- ENGINE-03 — clone event (missions + templates, self-FK remap) ----------
+
+const cloneEventSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+type MissionRow = {
+  id: string;
+  event_id: string;
+  title: string;
+  level_id: string | null;
+  ord: number;
+  kind: string | null;
+  scheduled_at: string | null;
+};
+
+type TemplateRow = {
+  id: string;
+  mission_id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  rubric: unknown;
+  max_score: number;
+  ord: number;
+  is_bonus: boolean;
+  is_active: boolean | null;
+  composer_kind: string | null;
+  template_url: string | null;
+  auto_validate: boolean | null;
+  soft_recommends_before: string | null;
+  validation_rules: unknown;
+};
+
+export async function cloneEventFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = cloneEventSchema.safeParse({
+    eventId: formData.get("eventId"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "Non authentifie." };
+  }
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) {
+    return { ok: false, message: profileErr.message };
+  }
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // 1. Fetch source event.
+  const { data: srcEvent, error: srcEvtErr } = await supabase
+    .from("events")
+    .select("id, slug, name, starts_at, ends_at, organization_id, is_active")
+    .eq("id", parsed.data.eventId)
+    .maybeSingle();
+  if (srcEvtErr || !srcEvent) {
+    return { ok: false, message: srcEvtErr?.message ?? "Event source introuvable." };
+  }
+
+  const src = srcEvent as {
+    id: string;
+    slug: string;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+    organization_id: string | null;
+    is_active: boolean | null;
+  };
+
+  // 2. Insert cloned event.
+  const clonedSlug = `${src.slug}-clone-${Date.now()}`;
+  const { data: newEvent, error: newEvtErr } = await supabase
+    .from("events")
+    .insert({
+      name: `${src.name} (copie)`,
+      slug: clonedSlug,
+      starts_at: src.starts_at,
+      ends_at: src.ends_at,
+      organization_id: src.organization_id,
+      is_active: false,
+    })
+    .select("id")
+    .single();
+  if (newEvtErr || !newEvent) {
+    return { ok: false, message: newEvtErr?.message ?? "Erreur creation event clone." };
+  }
+  const newEventId = (newEvent as { id: string }).id;
+
+  // 3. Fetch source missions.
+  const { data: srcMissions, error: missionErr } = await supabase
+    .from("missions")
+    .select("id, event_id, title, level_id, ord, kind, scheduled_at")
+    .eq("event_id", parsed.data.eventId)
+    .order("ord", { ascending: true });
+  if (missionErr) {
+    return { ok: false, message: missionErr.message };
+  }
+
+  // old mission id -> new mission id
+  const missionIdMap = new Map<string, string>();
+
+  for (const m of (srcMissions ?? []) as MissionRow[]) {
+    const { data: newMission, error: mErr } = await supabase
+      .from("missions")
+      .insert({
+        event_id: newEventId,
+        title: m.title,
+        level_id: m.level_id,
+        ord: m.ord,
+        kind: m.kind,
+        scheduled_at: m.scheduled_at,
+      })
+      .select("id")
+      .single();
+    if (mErr || !newMission) {
+      return { ok: false, message: mErr?.message ?? "Erreur clonage mission." };
+    }
+    missionIdMap.set(m.id, (newMission as { id: string }).id);
+  }
+
+  // 4. Fetch source deliverable_templates for all source missions.
+  const srcMissionIds = (srcMissions ?? []).map((m: MissionRow) => m.id);
+  let srcTemplates: TemplateRow[] = [];
+  if (srcMissionIds.length > 0) {
+    const { data: tplData, error: tplErr } = await supabase
+      .from("deliverable_templates")
+      .select(
+        "id, mission_id, slug, title, description, rubric, max_score, ord, is_bonus, is_active, composer_kind, template_url, auto_validate, soft_recommends_before, validation_rules",
+      )
+      .in("mission_id", srcMissionIds)
+      .order("ord", { ascending: true });
+    if (tplErr) {
+      return { ok: false, message: tplErr.message };
+    }
+    srcTemplates = (tplData ?? []) as TemplateRow[];
+  }
+
+  // old template id -> new template id
+  const templateIdMap = new Map<string, string>();
+
+  // WR-05: single timestamp + per-item index to guarantee unique slugs even
+  // when the loop completes within the same millisecond.
+  const cloneTs = Date.now();
+
+  // Pass 1: insert all clones with soft_recommends_before=null (avoids self-FK constraint during insert).
+  for (let tplIdx = 0; tplIdx < srcTemplates.length; tplIdx++) {
+    const tpl = srcTemplates[tplIdx];
+    const newMissionId = missionIdMap.get(tpl.mission_id);
+    if (!newMissionId) {
+      return { ok: false, message: `Mission cible introuvable pour template ${tpl.slug}.` };
+    }
+    const { data: newTpl, error: tplInsertErr } = await supabase
+      .from("deliverable_templates")
+      .insert({
+        mission_id: newMissionId,
+        slug: `${tpl.slug}-clone-${cloneTs}-${tplIdx}`,
+        title: tpl.title,
+        description: tpl.description,
+        rubric: tpl.rubric,
+        max_score: tpl.max_score,
+        ord: tpl.ord,
+        is_bonus: tpl.is_bonus,
+        is_active: tpl.is_active === null ? true : tpl.is_active,
+        composer_kind: tpl.composer_kind ?? "simple",
+        template_url: tpl.template_url,
+        auto_validate: tpl.auto_validate ?? false,
+        soft_recommends_before: null,
+        validation_rules: tpl.validation_rules ?? [],
+      })
+      .select("id")
+      .single();
+    if (tplInsertErr || !newTpl) {
+      return { ok: false, message: tplInsertErr?.message ?? "Erreur clonage template." };
+    }
+    templateIdMap.set(tpl.id, (newTpl as { id: string }).id);
+  }
+
+  // Pass 2: remap soft_recommends_before via old->new template map.
+  // Only templates that had a non-null soft_recommends_before need updating.
+  // CR-03: on any remap failure, best-effort cleanup to avoid orphaned records.
+  for (const tpl of srcTemplates) {
+    if (!tpl.soft_recommends_before) continue;
+    const newTplId = templateIdMap.get(tpl.id);
+    const newPrereqId = templateIdMap.get(tpl.soft_recommends_before);
+    if (!newTplId) continue;
+    // If the prereq exists in the clone map, remap; otherwise leave null (points to outside the clone).
+    if (!newPrereqId) continue;
+    const { error: remapErr } = await supabase
+      .from("deliverable_templates")
+      .update({ soft_recommends_before: newPrereqId })
+      .eq("id", newTplId);
+    if (remapErr) {
+      // Best-effort cleanup: delete cloned templates, missions, event (FK-safe order).
+      const newTemplateIds = [...templateIdMap.values()];
+      if (newTemplateIds.length > 0) {
+        await supabase.from("deliverable_templates").delete().in("id", newTemplateIds);
+      }
+      const newMissionIds = [...missionIdMap.values()];
+      if (newMissionIds.length > 0) {
+        await supabase.from("missions").delete().in("id", newMissionIds);
+      }
+      await supabase.from("events").delete().eq("id", newEventId);
+      return { ok: false, message: `Clone echoue (nettoyage effectue): ${remapErr.message}` };
+    }
+  }
+
+  revalidatePath("/admin/events");
+  return {
+    ok: true,
+    message: `Event clone avec succes. Vous pouvez maintenant le modifier. /admin/events/${newEventId}/missions`,
+  };
+}
+
+// ============================================================================
+// Phase 15 / Plan 03 — Mission CRUD + reorder + template save (ENGINE-01/02)
+// ============================================================================
+
+// ---- createMissionFlow ------------------------------------------------------
+
+const createMissionSchema = z.object({
+  eventId: z.string().uuid(),
+  title: z.string().min(1),
+  levelId: z.string().min(1),
+  kind: z.enum(["atelier", "session", "presentation", "pitch", "admin"]),
+  scheduledAt: z.string().nullable().optional(),
+  ord: z.coerce.number().int().min(0),
+});
+
+export async function createMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const parsed = createMissionSchema.safeParse({
+    eventId: formData.get("eventId"),
+    title: formData.get("title"),
+    levelId: formData.get("levelId"),
+    kind: formData.get("kind"),
+    scheduledAt: formData.get("scheduledAt") || null,
+    ord: formData.get("ord"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: insertErr } = await supabase
+    .from("missions")
+    .insert({
+      event_id: parsed.data.eventId,
+      title: parsed.data.title,
+      level_id: parsed.data.levelId,
+      kind: parsed.data.kind,
+      scheduled_at: parsed.data.scheduledAt ?? null,
+      ord: parsed.data.ord,
+    });
+  if (insertErr) return { ok: false, message: insertErr.message };
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Mission creee." };
+}
+
+// ---- updateMissionFlow ------------------------------------------------------
+
+const updateMissionSchema = z.object({
+  missionId: z.string().uuid(),
+  eventId: z.string().uuid(),
+  title: z.string().min(1),
+  levelId: z.string().min(1),
+  kind: z.enum(["atelier", "session", "presentation", "pitch", "admin"]),
+  scheduledAt: z.string().nullable().optional(),
+  ord: z.coerce.number().int().min(0),
+  isActive: z.coerce.boolean(),
+});
+
+export async function updateMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const rawIsActive = formData.get("isActive");
+  const parsed = updateMissionSchema.safeParse({
+    missionId: formData.get("missionId"),
+    eventId: formData.get("eventId"),
+    title: formData.get("title"),
+    levelId: formData.get("levelId"),
+    kind: formData.get("kind"),
+    scheduledAt: formData.get("scheduledAt") || null,
+    ord: formData.get("ord"),
+    isActive: rawIsActive === "true" || rawIsActive === "1" || rawIsActive === "on",
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: updErr } = await supabase
+    .from("missions")
+    .update({
+      title: parsed.data.title,
+      level_id: parsed.data.levelId,
+      kind: parsed.data.kind,
+      scheduled_at: parsed.data.scheduledAt ?? null,
+      ord: parsed.data.ord,
+      is_active: parsed.data.isActive,
+    })
+    .eq("id", parsed.data.missionId);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Mission mise a jour." };
+}
+
+// ---- reorderMissionFlow -----------------------------------------------------
+
+const reorderMissionSchema = z.object({
+  eventId: z.string().uuid(),
+  items: z.array(
+    z.object({ id: z.string().uuid(), ord: z.number().int().min(0) })
+  ),
+});
+
+export async function reorderMissionFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse(formData.get("items") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "Donnees de reorder invalides." };
+  }
+
+  const parsed = reorderMissionSchema.safeParse({
+    eventId: formData.get("eventId"),
+    items: rawItems,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Batch UPDATE loop (same pattern as reorderMoscowCardsFlow)
+  for (const it of parsed.data.items) {
+    const { error: updErr } = await supabase
+      .from("missions")
+      .update({ ord: it.ord })
+      .eq("id", it.id);
+    if (updErr) return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  return { ok: true, message: "Ordre sauvegarde." };
+}
+
+// ---- saveDeliverableTemplateFlow --------------------------------------------
+
+// slugifyToKey imported from @/lib/schemas (WR-02 canonical implementation)
+
+const saveDeliverableTemplateSchema = z.object({
+  templateId: z.string().uuid().nullable().optional(),
+  missionId: z.string().uuid(),
+  eventId: z.string().uuid(),
+  slug: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string(),
+  composerKind: composerKindSchema,
+  templateUrl: httpsUrl.nullable().optional(),
+  autoValidate: z.coerce.boolean(),
+  isBonus: z.coerce.boolean(),
+  maxScore: z.coerce.number().int().min(1).max(200),
+  ord: z.coerce.number().int().min(0),
+  isActive: z.coerce.boolean(),
+  softRecommendsBefore: z.string().uuid().nullable().optional(),
+  rubric: rubricSchema,
+  validationRules: z.array(validationRuleSchema),
+});
+
+export async function saveDeliverableTemplateFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  // Parse rubric JSON from hidden input
+  let rawRubric: unknown;
+  let rawValidationRules: unknown;
+  try {
+    rawRubric = JSON.parse(formData.get("rubric") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "Rubric JSON invalide." };
+  }
+  try {
+    rawValidationRules = JSON.parse(formData.get("validationRules") as string ?? "[]");
+  } catch {
+    return { ok: false, message: "ValidationRules JSON invalide." };
+  }
+
+  const rawTemplateId = formData.get("templateId") as string | null;
+  const rawSoftRecommends = formData.get("softRecommendsBefore") as string | null;
+  const rawTemplateUrl = formData.get("templateUrl") as string | null;
+
+  const parsed = saveDeliverableTemplateSchema.safeParse({
+    templateId: rawTemplateId || null,
+    missionId: formData.get("missionId"),
+    eventId: formData.get("eventId"),
+    slug: formData.get("slug"),
+    title: formData.get("title"),
+    description: formData.get("description") ?? "",
+    composerKind: formData.get("composerKind"),
+    templateUrl: rawTemplateUrl || null,
+    autoValidate: formData.get("autoValidate") === "true" || formData.get("autoValidate") === "on",
+    isBonus: formData.get("isBonus") === "true" || formData.get("isBonus") === "on",
+    maxScore: formData.get("maxScore"),
+    ord: formData.get("ord"),
+    isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on" || formData.get("isActive") === null,
+    softRecommendsBefore: rawSoftRecommends || null,
+    rubric: rawRubric,
+    validationRules: rawValidationRules,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Normalize rubric: ensure each criterion has a key (slugify from label when absent).
+  // CRITICAL: rubric MUST be stored as [{key, label, max}] — mentor eval forms depend on this exact shape.
+  const normalizedRubric = parsed.data.rubric.map((c) => ({
+    key: c.key && c.key.trim() ? c.key.trim() : slugifyToKey(c.label),
+    label: c.label,
+    max: c.max,
+  }));
+
+  const payload = {
+    mission_id: parsed.data.missionId,
+    slug: parsed.data.slug,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    composer_kind: parsed.data.composerKind,
+    template_url: parsed.data.templateUrl ?? null,
+    auto_validate: parsed.data.autoValidate,
+    is_bonus: parsed.data.isBonus,
+    max_score: parsed.data.maxScore,
+    ord: parsed.data.ord,
+    is_active: parsed.data.isActive,
+    soft_recommends_before: parsed.data.softRecommendsBefore ?? null,
+    rubric: normalizedRubric,
+    validation_rules: parsed.data.validationRules,
+  };
+
+  if (parsed.data.templateId) {
+    // UPDATE existing template
+    const { error: updErr } = await supabase
+      .from("deliverable_templates")
+      .update(payload)
+      .eq("id", parsed.data.templateId);
+    if (updErr) return { ok: false, message: updErr.message };
+  } else {
+    // INSERT new template
+    const { error: insertErr } = await supabase
+      .from("deliverable_templates")
+      .insert(payload);
+    if (insertErr) return { ok: false, message: insertErr.message };
+  }
+
+  revalidatePath(`/admin/events/${parsed.data.eventId}/missions`, "page");
+  revalidatePath("/journey");
+  revalidatePath("/mentor");
+  return { ok: true, message: "Livrable enregistre." };
+}
+
+// ============================================================================
+// Phase 15 / Plan 04 — Program levels CRUD (LEVELS-04)
+// ============================================================================
+
+const createLevelSchema = z.object({
+  id: z.string().min(1).max(64),
+  label: z.string().min(1).max(200),
+  description: z.string().optional(),
+  ord: z.coerce.number().int().min(0),
+});
+
+export async function createLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = createLevelSchema.safeParse({
+    id: formData.get("id"),
+    label: formData.get("label"),
+    description: formData.get("description") ?? undefined,
+    ord: formData.get("ord"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: insErr } = await supabase.from("levels_v2").insert({
+    id: parsed.data.id,
+    label: parsed.data.label,
+    description: parsed.data.description ?? null,
+    ord: parsed.data.ord,
+  });
+  if (insErr) return { ok: false, message: insErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau cree." };
+}
+
+const updateLevelSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1).max(200),
+  description: z.string().optional(),
+});
+
+export async function updateLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = updateLevelSchema.safeParse({
+    id: formData.get("id"),
+    label: formData.get("label"),
+    description: formData.get("description") ?? undefined,
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const { error: updErr } = await supabase
+    .from("levels_v2")
+    .update({ label: parsed.data.label, description: parsed.data.description ?? null })
+    .eq("id", parsed.data.id);
+  if (updErr) return { ok: false, message: updErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau mis a jour." };
+}
+
+const reorderLevelSchema = z.object({
+  items: z.array(z.object({ id: z.string().min(1), ord: z.coerce.number().int().min(0) })).min(1),
+});
+
+export async function reorderLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const rawItems = formData.get("items");
+  let items: unknown;
+  try {
+    items = typeof rawItems === "string" ? JSON.parse(rawItems) : null;
+  } catch {
+    return { ok: false, message: "Items JSON invalide." };
+  }
+
+  const parsed = reorderLevelSchema.safeParse({ items });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  for (const it of parsed.data.items) {
+    const { error: updErr } = await supabase
+      .from("levels_v2")
+      .update({ ord: it.ord })
+      .eq("id", it.id);
+    if (updErr) return { ok: false, message: updErr.message };
+  }
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Ordre sauvegarde." };
+}
+
+const deleteLevelSchema = z.object({
+  id: z.string().min(1),
+});
+
+export async function deleteLevelFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) return { ok: false, message: "Backend non configure." };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = deleteLevelSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Donnees invalides" };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  // Guard: block delete when missions reference this level.
+  const { count, error: countErr } = await supabase
+    .from("missions")
+    .select("id", { count: "exact", head: true })
+    .eq("level_id", parsed.data.id);
+  if (countErr) return { ok: false, message: countErr.message };
+
+  if (count && count > 0) {
+    return {
+      ok: false,
+      message: `Ce niveau est utilise par ${count} mission${count > 1 ? "s" : ""}.`,
+    };
+  }
+
+  const { error: delErr } = await supabase
+    .from("levels_v2")
+    .delete()
+    .eq("id", parsed.data.id);
+  if (delErr) return { ok: false, message: delErr.message };
+
+  revalidatePath("/admin/levels");
+  revalidatePath("/journey");
+  return { ok: true, message: "Niveau supprime." };
+}
+
+// ============================================================================
+// Phase 15 / ENGINE-07 — GM date simulation cookie setter (WR-04)
+// ============================================================================
+
+const SIMULATE_DATE_COOKIE = "gsd_simulate_date";
+
+const setSimulatedDateSchema = z.object({
+  simulateDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+});
+
+/**
+ * Sets or clears the gsd_simulate_date httpOnly cookie (GM-only).
+ * Pass simulateDate="" or omit to clear.
+ */
+export async function setSimulatedDateFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Backend non configure." };
+  }
+  const supabase = await createClient();
+  if (!supabase) {
+    return { ok: false, message: "Backend non configure." };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles").select("app_role").eq("user_id", user.id).maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") return { ok: false, message: "Acces reserve au GameMaster." };
+
+  const raw = (formData.get("simulateDate") as string | null) ?? "";
+  const parsed = setSimulatedDateSchema.safeParse({ simulateDate: raw || null });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Date invalide (YYYY-MM-DD)." };
+  }
+
+  const cookieStore = await cookies();
+  if (parsed.data.simulateDate) {
+    cookieStore.set(SIMULATE_DATE_COOKIE, parsed.data.simulateDate, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+    });
+  } else {
+    cookieStore.delete(SIMULATE_DATE_COOKIE);
+  }
+
+  revalidatePath("/admin/levels");
+  return {
+    ok: true,
+    message: parsed.data.simulateDate
+      ? `Simulation active : ${parsed.data.simulateDate}`
+      : "Simulation desactivee.",
+  };
+}
+
+// ============================================================================
+// Phase 16 / JURY-09 — saveJuryGridFlow (GM-only, delete-then-insert)
+// ============================================================================
+
+export async function saveJuryGridFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  // Parse criteria JSON from hidden input
+  let rawCriteria: unknown;
+  try {
+    rawCriteria = JSON.parse(
+      (formData.get("criteriaJson") as string | null) ?? "[]",
+    );
+  } catch {
+    return { ok: false, message: "Criteria JSON invalide." };
+  }
+
+  const parsed = saveJuryGridSchema.safeParse({
+    eventId: formData.get("eventId"),
+    criteria: rawCriteria,
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Donnees invalides.",
+    };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  // WR-02: upsert-first then delete stale — avoids the empty window that
+  // delete-then-insert creates. A juror scoring between the two statements
+  // would hit getPitchCriteria() returning empty and fall back to the demo
+  // 4×20 legacy criteria, producing a wrong normalized score.
+  const newKeys = parsed.data.criteria.map((c) => c.key);
+
+  if (parsed.data.criteria.length > 0) {
+    const rows = parsed.data.criteria.map((c, i) => ({
+      event_id: parsed.data.eventId,
+      key: c.key,
+      label: c.label,
+      max: c.max,
+      ord: i,
+    }));
+    const { error: upsertErr } = await supabase
+      .from("pitch_criteria")
+      .upsert(rows, { onConflict: "event_id,key" });
+    if (upsertErr) return { ok: false, message: upsertErr.message };
+  }
+
+  // Delete rows whose key is no longer in the new grid (stale cleanup).
+  // Use .not with 'in' filter — PostgREST tuple format: (val1,val2,...).
+  // When the new grid is empty, all rows for this event are stale.
+  const staleFilter =
+    newKeys.length > 0
+      ? supabase
+          .from("pitch_criteria")
+          .delete()
+          .eq("event_id", parsed.data.eventId)
+          .not("key", "in", `(${newKeys.join(",")})`)
+      : supabase
+          .from("pitch_criteria")
+          .delete()
+          .eq("event_id", parsed.data.eventId);
+  const { error: delStaleErr } = await staleFilter;
+  if (delStaleErr) return { ok: false, message: delStaleErr.message };
+
+  revalidatePath("/admin/events");
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: "Grille jury enregistree." };
+}
+
+// ============================================================================
+// Phase 16 / SETTINGS-04 — saveEventSettingsFlow (GM-only, upsert on event_id)
+// ============================================================================
+
+export async function saveEventSettingsFlow(
+  _prev: WorkflowState,
+  formData: FormData,
+): Promise<WorkflowState> {
+  if (!hasSupabaseEnv()) {
+    return { ok: false, message: "Mode demo — aucune ecriture possible." };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, message: "Backend non configure." };
+
+  const parsed = saveEventSettingsSchema.safeParse({
+    eventId: formData.get("eventId"),
+    xpFirstSubmission: formData.get("xpFirstSubmission"),
+    xpValidateV1: formData.get("xpValidateV1"),
+    xpValidateV2: formData.get("xpValidateV2"),
+    engSubmitted: formData.get("engSubmitted"),
+    engReviewed: formData.get("engReviewed"),
+    engValidated: formData.get("engValidated"),
+    pitchWeight: formData.get("pitchWeight"),
+    bonusMultiplierCap: formData.get("bonusMultiplierCap"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Donnees invalides.",
+    };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Non authentifie." };
+
+  const { data: profileRow, error: profileErr } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileErr) return { ok: false, message: profileErr.message };
+  const role = (profileRow as { app_role?: AppRole } | null)?.app_role;
+  if (role !== "game_master") {
+    return { ok: false, message: "Acces reserve au GameMaster." };
+  }
+
+  const settingsPayload = {
+    xp_first_submission: parsed.data.xpFirstSubmission,
+    xp_validate_v1: parsed.data.xpValidateV1,
+    xp_validate_v2: parsed.data.xpValidateV2,
+    eng_submitted: parsed.data.engSubmitted,
+    eng_reviewed: parsed.data.engReviewed,
+    eng_validated: parsed.data.engValidated,
+    pitch_weight: parsed.data.pitchWeight,
+    bonus_multiplier_cap: parsed.data.bonusMultiplierCap,
+  };
+
+  const { error: upsertErr } = await supabase
+    .from("event_settings")
+    .upsert(
+      { event_id: parsed.data.eventId, ...settingsPayload },
+      { onConflict: "event_id" },
+    );
+  if (upsertErr) return { ok: false, message: upsertErr.message };
+
+  revalidatePath("/admin/events");
+  revalidatePath("/jury");
+  revalidatePath("/results");
+  return { ok: true, message: "Reglages enregistres." };
 }

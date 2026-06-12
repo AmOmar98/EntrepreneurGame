@@ -15,6 +15,7 @@ import { getCohortPulse } from "@/lib/cohort-pulse";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJourneyData } from "@/lib/journey";
+import { getLevels } from "@/lib/levels";
 import { WELCOME_GUIDE_URL } from "@/lib/template-links";
 import {
   getLevelStates,
@@ -47,13 +48,19 @@ export default async function JourneyPage() {
   // pulse + announcements). Announcements is fetched eagerly even when the
   // empty-branch eventually discards it; tradeoff favors the common (non-empty)
   // path. Each helper short-circuits safely on missing Supabase / user.
-  const [data, cohortPulse, announcements] = await Promise.all([
+  const [data, cohortPulse, announcements, levels] = await Promise.all([
     getJourneyData(user?.id ?? ""),
     getCohortPulse(user?.id ?? ""),
     hasSupabaseEnv() && user
       ? getAnnouncementsForPlayer(user.id, 5)
       : Promise.resolve([] as Awaited<ReturnType<typeof getAnnouncementsForPlayer>>),
+    getLevels(),
   ]);
+
+  // Build short labels from DB/demo levels: "Niveau N - Name" -> "Name".
+  const levelLabels: Record<string, string> = Object.fromEntries(
+    levels.map((l) => [l.id, l.label.split(" - ")[1] ?? l.label]),
+  );
 
   if (data.empty || !data.player) {
     return (
@@ -61,7 +68,7 @@ export default async function JourneyPage() {
         <main className="eic-journey">
           <div aria-hidden="true" className="eic-journey__bg" />
           <div className="eic-journey__main">
-            <CohortPulse entries={cohortPulse} />
+            <CohortPulse entries={cohortPulse} levelLabels={levelLabels} />
             <div style={{ padding: 32, maxWidth: 720, margin: "0 auto" }}>
               <h1 className="eic-hero__title">{t.journey_title}</h1>
               <p className="eic-hero__subtitle">{t.journey_empty_account}</p>
@@ -74,7 +81,7 @@ export default async function JourneyPage() {
   }
 
   // Compute level states from currentLevel (single source of truth: Player row).
-  const levelStatesMap = getLevelStates(data.player.currentLevel);
+  const levelStatesMap = getLevelStates(levels, data.player.currentLevel);
   const levelStateEntries: [LevelId, LevelState][] = Array.from(
     levelStatesMap.entries(),
   );
@@ -125,10 +132,11 @@ export default async function JourneyPage() {
     <AppShell role="player" variant="player">
       <PlayerAnnouncementStrip announcements={announcements} />
       <WelcomeGuideStrip />
-      <CohortPulse entries={cohortPulse} />
+      <CohortPulse entries={cohortPulse} levelLabels={levelLabels} />
       <JourneyClient
         currentLevel={data.player.currentLevel}
         hero={hero}
+        levelLabels={levelLabels}
         levelStateEntries={levelStateEntries}
         missions={data.missions}
         objectivesByLevel={{}}

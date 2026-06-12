@@ -4,7 +4,7 @@
 // evaluations. Mirrors the conventions of lib/admin.ts and lib/mentor.ts.
 // Dual-mode safe: returns null when Supabase env is absent.
 import { createClient } from "@/utils/supabase/server";
-import { levelLabel } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import type {
   Evaluation,
   LevelId,
@@ -188,6 +188,8 @@ export async function getPlayerDetail(playerId: string): Promise<PlayerDetail | 
   const supabase = await createClient();
   if (!supabase) return null;
 
+  const levelsMap = await getLevelsMap();
+
   // 1. Player row.
   const { data: playerRow, error: playerErr } = await supabase
     .from("players")
@@ -296,7 +298,7 @@ export async function getPlayerDetail(playerId: string): Promise<PlayerDetail | 
 
   return {
     player,
-    levelLabel: levelLabel(player.currentLevel),
+    levelLabel: levelsMap.get(player.currentLevel)?.label ?? player.currentLevel,
     members,
     submissions,
   };

@@ -9,16 +9,17 @@
 //   grep -nE "Player|player\\." components/cohort-pulse.tsx
 //     -> only inside this header guard (no Player prop, no player.* render).
 import { dictionaries } from "@/lib/i18n";
-import { getShortLevelLabel } from "@/lib/journey-progression";
 import type { CohortPulseEntry } from "@/lib/cohort-pulse";
 
 const t = dictionaries.fr;
 
 export type CohortPulseProps = {
   entries: CohortPulseEntry[];
+  /** Short labels keyed by levelId. Derived from Level.label on the server. */
+  levelLabels?: Record<string, string>;
 };
 
-export function CohortPulse({ entries }: CohortPulseProps) {
+export function CohortPulse({ entries, levelLabels }: CohortPulseProps) {
   // Anti-leak guard: empty cohort or no submission anywhere -> show the
   // "empty" copy instead of bars at 0% (less anxiety-inducing for the
   // first Player to land on /journey at 8h30 J1).
@@ -40,7 +41,7 @@ export function CohortPulse({ entries }: CohortPulseProps) {
       <ul className="eic-cohort-pulse__list" role="list">
         {entries.map((e) => {
           const ratio = e.total > 0 ? Math.round((e.count / e.total) * 100) : 0;
-          const shortLabel = getShortLevelLabel(e.levelId);
+          const shortLabel = levelLabels?.[e.levelId] ?? e.levelId;
           return (
             <li key={e.levelId} className="eic-cohort-pulse__row">
               <span className="eic-cohort-pulse__label">

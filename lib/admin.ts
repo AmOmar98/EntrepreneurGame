@@ -4,7 +4,8 @@
 // Dual-mode (DATA-03): demo mode (no Supabase env) returns empty / zero defaults
 // rather than leaking seed data.
 import { createClient } from "@/utils/supabase/server";
-import { levelLabel } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
+import { getSimulatedNow } from "@/lib/get-simulated-now";
 import type { LevelId, Player, SubmissionStatus } from "@/lib/types";
 
 // ============================================================================
@@ -107,11 +108,13 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
   const supabase = await createClient();
   if (!supabase) return [];
 
-  // 1. Resolve current event (mirror mentor.ts).
+  const levelsMap = await getLevelsMap();
+
+  // 1. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -217,7 +220,10 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
   }
 
   // 6. Compute "elapsed missions" = missions whose scheduled_at <= now (null = future).
-  const now = Date.now();
+  // ENGINE-07: getSimulatedNow() allows GM to simulate a date via ?simulate_date=YYYY-MM-DD.
+  // Falls back to Date.now() when no override is active. GM-only: this function is only
+  // called from /admin server components; Player surfaces are unaffected.
+  const now = await getSimulatedNow();
   let elapsedMissions = 0;
   for (const m of missions) {
     if (!m.scheduled_at) continue;
@@ -255,7 +261,7 @@ export async function getCohortOverview(): Promise<CohortRow[]> {
 
     return {
       player,
-      levelLabel: levelLabel(player.currentLevel),
+      levelLabel: levelsMap.get(player.currentLevel)?.label ?? player.currentLevel,
       status,
       nextDeliverableTitle: nextTitle,
     };
@@ -281,11 +287,11 @@ export async function getGlobalCounters(): Promise<GlobalCounters> {
   const supabase = await createClient();
   if (!supabase) return zero;
 
-  // Resolve current event.
+  // Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {

@@ -3,7 +3,11 @@
 // fetches today's missions + their deliverable templates, computes statuses.
 // Dual-mode (DATA-03): in demo mode (no Supabase env) returns an empty payload
 // rather than leaking seed names into the UI.
+// Phase 14 / Plan 02: hardcoded level maps and levelLabel/levelOrd helpers removed.
+// getJourneyData fetches levels via getLevels() to populate JourneyData.levelLabel.
 import { createClient } from "@/utils/supabase/server";
+import { getLevels } from "@/lib/levels";
+import { getEventSettings } from "@/lib/event-settings";
 import type {
   DeliverableTemplate,
   LevelId,
@@ -68,39 +72,9 @@ export function computeDeliverableStatus(
   return { status: latest.status, latestSubmissionId: latest.id };
 }
 
-const LEVEL_LABELS: Record<LevelId, string> = {
-  L0_diagnostic: "Niveau 0 - Diagnostic",
-  L1_problem: "Niveau 1 - Probleme",
-  L2_solution: "Niveau 2 - Solution",
-  L3_market: "Niveau 3 - Marche",
-  L4_business_model: "Niveau 4 - Modele economique",
-  L5_pitch: "Niveau 5 - Pitch",
-  L6_traction: "Niveau 6 - Traction",
-  L7_alumni: "Niveau 7 - Alumni",
-};
-
-export function levelLabel(levelId: LevelId): string {
-  return LEVEL_LABELS[levelId] ?? String(levelId);
-}
-
-const LEVEL_ORDS: Record<LevelId, number> = {
-  L0_diagnostic: 0,
-  L1_problem: 1,
-  L2_solution: 2,
-  L3_market: 3,
-  L4_business_model: 4,
-  L5_pitch: 5,
-  L6_traction: 6,
-  L7_alumni: 7,
-};
-
-/**
- * Numeric ordinal (0..7) for a LevelId. Mirrors database/schema.sql ord values.
- * Used by the admin radar (Phase 9 GMR-02) and any UI that needs to compare levels.
- */
-export function levelOrd(levelId: LevelId): number {
-  return LEVEL_ORDS[levelId] ?? 0;
-}
+// Hardcoded level label/ord maps and their helper exports removed in Phase 14 / Plan 02.
+// Callers must look up labels/ords from the levels array returned by getLevels()
+// (lib/levels.ts). Plan 03 (wave 3) migrates every external call site.
 
 // ============================================================================
 // Row mappers (snake_case -> camelCase, mirrors the pattern used in app/actions.ts)
@@ -167,6 +141,12 @@ type DeliverableTemplateRow = {
   max_score: number;
   ord: number;
   is_bonus?: boolean | null;
+  // Phase 15 engine columns — optional for pre-migration window compatibility.
+  composer_kind?: string | null;
+  template_url?: string | null;
+  auto_validate?: boolean | null;
+  soft_recommends_before?: string | null;
+  validation_rules?: unknown[] | null;
 };
 
 function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplate {
@@ -180,6 +160,15 @@ function mapDeliverableTemplate(row: DeliverableTemplateRow): DeliverableTemplat
     maxScore: row.max_score,
     ord: row.ord,
     isBonus: Boolean(row.is_bonus),
+    // Phase 15 engine columns: defensive defaults for pre-migration window.
+    composerKind:
+      row.composer_kind === "moscow" || row.composer_kind === "multi_url"
+        ? row.composer_kind
+        : "simple",
+    templateUrl: row.template_url ?? null,
+    autoValidate: Boolean(row.auto_validate),
+    softRecommendsBefore: row.soft_recommends_before ?? null,
+    validationRules: [],
   };
 }
 
@@ -220,6 +209,12 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   const player = await getPlayerForUser(userId);
   if (!player) return EMPTY;
 
+  // Fetch levels for label lookup (replaces removed levelLabel() helper).
+  const levels = await getLevels();
+  const levelsMap = new Map(levels.map((l) => [l.id, l]));
+  const resolveLabel = (levelId: LevelId): string =>
+    levelsMap.get(levelId)?.label ?? String(levelId);
+
   // Resolve event via cohort.
   const { data: cohortRow } = await supabase
     .from("cohorts")
@@ -227,9 +222,14 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     .eq("id", player.cohortId)
     .maybeSingle();
   if (!cohortRow) {
-    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+    return { player, levelLabel: resolveLabel(player.currentLevel), missions: [], empty: true };
   }
   const eventId = (cohortRow as { event_id: string }).event_id;
+
+  // Phase 16 (SETTINGS-01): fetch event settings for XP rule values.
+  // DEFAULT_EVENT_SETTINGS fallback ensures pre-migration + demo behavior is
+  // byte-identical to the previous hardcoded literals.
+  const settings = await getEventSettings(eventId);
 
   // Fetch missions for this event ordered.
   const { data: missionRows } = await supabase
@@ -263,7 +263,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
   const displayMissions = todayMissions.length > 0 ? todayMissions : allMissions;
 
   if (displayMissions.length === 0) {
-    return { player, levelLabel: levelLabel(player.currentLevel), missions: [], empty: true };
+    return { player, levelLabel: resolveLabel(player.currentLevel), missions: [], empty: true };
   }
 
   const missionIds = displayMissions.map((m) => m.id);
@@ -347,16 +347,18 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
         subs.map((s) => ({ id: s.id, version: s.version, status: s.status })),
       );
       // R1 revised — Player-facing XP per deliverable.
-      // +100 base on first submission (any version), +score from latest eval,
-      // +50 if verdict=validate_v1, +100 if verdict=validate_v2 (50 base + 50 V2 bonus).
+      // +xpFirstSubmission on first submission, +score from latest eval,
+      // +xpValidateV1 if verdict=validate_v1, +xpValidateV2 if verdict=validate_v2.
+      // XP rules read from EventSettings (SETTINGS-01/03); DEFAULT_EVENT_SETTINGS
+      // fallback preserves behavior when pre-migration or demo (values = 100/50/100).
       let earnedXp = 0;
       if (subs.length > 0) {
-        earnedXp += 100;
+        earnedXp += settings.xpFirstSubmission;
         const evalEntry = latestEvalByTplId.get(template.id);
         if (evalEntry) {
           earnedXp += evalEntry.totalScore;
-          if (evalEntry.verdict === "validate_v1") earnedXp += 50;
-          if (evalEntry.verdict === "validate_v2") earnedXp += 100;
+          if (evalEntry.verdict === "validate_v1") earnedXp += settings.xpValidateV1;
+          if (evalEntry.verdict === "validate_v2") earnedXp += settings.xpValidateV2;
         }
       }
       return { template, status, latestSubmissionId, earnedXp };
@@ -370,7 +372,7 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
 
   return {
     player,
-    levelLabel: levelLabel(player.currentLevel),
+    levelLabel: resolveLabel(player.currentLevel),
     missions,
     empty: false,
   };

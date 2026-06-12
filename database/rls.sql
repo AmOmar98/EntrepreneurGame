@@ -420,3 +420,150 @@ GRANT EXECUTE ON FUNCTION public.recalc_player_engagement(p_player_id uuid) TO a
 
 REVOKE EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) TO authenticated;
+
+-- ============================================================================
+-- Phase 14 (v0.4) — RLS org-scope (mirror of 20260611120300_rls_org_scope.sql)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT EXISTS(
+    SELECT 1
+    FROM public.events e
+    JOIN public.cohorts c   ON c.event_id = e.id
+    JOIN public.players p   ON p.cohort_id = c.id
+    JOIN public.player_members pm ON pm.player_id = p.id
+    WHERE e.organization_id = p_org_id
+      AND pm.user_id = (select auth.uid())
+  )
+$$;
+
+-- REVOKE from PUBLIC first, then GRANT to authenticated only (kc2 pattern)
+REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 2. RLS for levels_v2: game_master can manage; authenticated can read
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "levels_v2_authenticated_select" ON public.levels_v2;
+CREATE POLICY "levels_v2_authenticated_select" ON public.levels_v2
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "levels_v2_gm_all" ON public.levels_v2;
+CREATE POLICY "levels_v2_gm_all" ON public.levels_v2
+  AS PERMISSIVE
+  FOR ALL TO authenticated
+  USING (public.is_game_master())
+  WITH CHECK (public.is_game_master());
+
+-- ----------------------------------------------------------------------------
+-- 3. Org-scoped SELECT policy on public.events
+--    Tolerates NULL organization_id (pre-backfill safety clause).
+--    Game-master sees all events regardless of org (preserves admin surfaces).
+--    Uses (select auth.uid()) inside is_in_org (via helper) and is_game_master().
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "events_org_scope_select" ON public.events;
+CREATE POLICY "events_org_scope_select" ON public.events
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (
+    organization_id IS NULL
+    OR public.is_in_org(organization_id)
+    OR public.is_game_master()
+  );
+
+-- ----------------------------------------------------------------------------
+-- 4. RLS for public.organizations
+--    Authenticated users can read orgs they belong to (via is_in_org).
+--    Game-master can read all orgs.
+-- ----------------------------------------------------------------------------
+
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "organizations_member_select" ON public.organizations;
+CREATE POLICY "organizations_member_select" ON public.organizations
+  AS PERMISSIVE
+  FOR SELECT TO authenticated
+  USING (
+    public.is_in_org(id)
+    OR public.is_game_master()
+  );
+
+DROP POLICY IF EXISTS "organizations_gm_all" ON public.organizations;
+CREATE POLICY "organizations_gm_all" ON public.organizations
+  AS PERMISSIVE
+  FOR ALL TO authenticated
+  USING (public.is_game_master())
+  WITH CHECK (public.is_game_master());
+
+-- ============================================================================
+-- Phase 14 review CR-01 — events_org_scope_enforce mirror (applied 2026-06-12)
+-- is_in_org élargi (player membership OR mentor OR juror) puis DROP de la
+-- policy SELECT permissive "events_authenticated_select" — le scope org est
+-- désormais le gate effectif (avec is_game_master()).
+-- NB : la version antérieure d'is_in_org plus haut dans ce fichier est
+-- remplacée par celle-ci (CREATE OR REPLACE — dernière définition gagne).
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT
+    -- player: member of a team in a cohort of an event of this org
+    EXISTS(
+      SELECT 1
+      FROM public.events e
+      JOIN public.cohorts c   ON c.event_id = e.id
+      JOIN public.players p   ON p.cohort_id = c.id
+      JOIN public.player_members pm ON pm.player_id = p.id
+      WHERE e.organization_id = p_org_id
+        AND pm.user_id = (select auth.uid())
+    )
+    -- mentor: EIC staff, org-global until a mentor↔org mapping exists
+    OR public.is_mentor()
+    -- juror: assigned to an event of this org
+    OR EXISTS(
+      SELECT 1
+      FROM public.events e
+      JOIN public.jurors j ON j.event_id = e.id
+      WHERE e.organization_id = p_org_id
+        AND j.user_id = (select auth.uid())
+    )
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 2. Drop the legacy broad SELECT policy that shadowed org scoping (CR-01).
+--    events_org_scope_select (org member OR GM OR NULL-org) becomes the gate.
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "events_authenticated_select" ON public.events;
+
+-- ============================================================================
+-- Phase 16 review IN-01 — pitch_criteria + event_settings RLS policies mirror
+-- Verbatim from migrations 20260611240000 and 20260611240100 (PROD 2026-06-12).
+-- A fresh bootstrap from schema.sql + rls.sql needs these CREATE POLICY
+-- statements to avoid fail-closed (RLS enabled but no policy = all denied).
+-- ============================================================================
+
+-- pitch_criteria_event_settings_rls mirror
+create policy pitch_criteria_authenticated_select on public.pitch_criteria
+  for select to authenticated using (true);
+create policy pitch_criteria_gm_all on public.pitch_criteria
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());
+
+create policy event_settings_authenticated_select on public.event_settings
+  for select to authenticated using (true);
+create policy event_settings_gm_all on public.event_settings
+  for all to authenticated
+  using (public.is_game_master()) with check (public.is_game_master());

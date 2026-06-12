@@ -88,11 +88,11 @@ export async function getPitchPrepForUser(userId: string): Promise<PitchPrepData
   const playerId = (memberRow as { player_id?: string } | null)?.player_id ?? null;
   if (!playerId) return empty;
 
-  // 2. Latest event row (single pilot event for AgreenTech 2026).
+  // 2. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow } = await supabase
     .from("events")
     .select("pitch_order_json, pitch_order_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   const event = (eventRow ?? null) as {
