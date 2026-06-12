@@ -7,6 +7,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitDeliverable, type WorkflowState } from "@/app/actions";
+import { captureEvent, ANALYTICS_EVENTS } from "@/lib/analytics";
 import { dictionaries } from "@/lib/i18n";
 import { AutoSaveBadge } from "@/components/auto-save-badge";
 import { FieldCompletionCounter } from "@/components/field-completion-counter";
@@ -43,11 +44,15 @@ export function SubmissionForm({
 
   useEffect(() => {
     if (state.ok) {
+      captureEvent(ANALYTICS_EVENTS.eg_deliverable_submitted, {
+        deliverableTemplateId,
+        version,
+      });
       // A1 — Purge draft from localStorage before refreshing the route.
       clear();
       router.refresh();
     }
-  }, [state.ok, clear, router]);
+  }, [state.ok, deliverableTemplateId, version, clear, router]);
 
   return (
     <>
