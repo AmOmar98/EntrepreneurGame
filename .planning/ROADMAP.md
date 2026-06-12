@@ -106,7 +106,7 @@ Plans:
   3. Perf test seed 500 users exécuté : P95 des queries critique (`/journey`, évaluation, jury) mesuré et documenté ; RLS `initplan (SELECT auth.uid())` vérifié (pas de per-row auth.uid() call)
 **Plans**: 3 plans
 Plans:
-- [ ] 17-01-PLAN.md — QUAL-04 Sentry (instrumentation server/client/edge + global-error + 3 critical-branch captures, env-gated no-op)
+- [x] 17-01-PLAN.md — QUAL-04 Sentry (instrumentation server/client/edge + global-error + 3 critical-branch captures, env-gated no-op)
 - [ ] 17-02-PLAN.md — QUAL-05 PostHog (lazy env-gated provider + 4 R1-safe funnel events eg_*)
 - [ ] 17-03-PLAN.md — QUAL-06 Perf (500-user seed + P95 script + RLS initplan check + 17-VERIFICATION + operator checkpoint)
 
@@ -130,7 +130,7 @@ Plans:
 | 14. Multi-tenant Schema + Niveaux data-driven | 5/5 | Complete   | 2026-06-11 |
 | 15. Mission Engine no-code | 5/5 | Complete   | 2026-06-11 |
 | 16. Jury paramétrable + Scoring configurable | 5/5 | Complete   | 2026-06-11 |
-| 17. Observabilité + Perf | 0/? | Not started | - |
+| 17. Observabilité + Perf | 1/3 | In Progress|  |
 | 18. July Event — Provisioning + Freeze + Preflight | 0/? | Not started | - |
 
 ---

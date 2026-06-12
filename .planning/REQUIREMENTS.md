@@ -65,7 +65,7 @@
 - [x] **QUAL-01** : Vitest couvre les server actions critiques (soumission, évaluation, éditeur, clonage) avec tests verts
 - [x] **QUAL-02** : Playwright E2E couvre 5 flows — onboarding, soumission livrable, éval mentor, pitch jury, export GM (absorbe SEED-002)
 - [x] **QUAL-03** : CI GitHub Actions — typecheck + lint + build + tests en gate sur chaque push
-- [ ] **QUAL-04** : Sentry capte les erreurs serveur/client en prod avec alerting
+- [x] **QUAL-04** : Sentry capte les erreurs serveur/client en prod avec alerting
 - [ ] **QUAL-05** : PostHog trace le funnel produit (completion par livrable, drop-offs)
 - [ ] **QUAL-06** : Perf test seed 500 users — P95 des queries mesuré, RLS initplan `(SELECT auth.uid())` vérifié
 
@@ -146,7 +146,7 @@
 | SETTINGS-02 | Phase 16 | Complete |
 | SETTINGS-03 | Phase 16 | Complete |
 | SETTINGS-04 | Phase 16 | Complete |
-| QUAL-04 | Phase 17 | Pending |
+| QUAL-04 | Phase 17 | Complete |
 | QUAL-05 | Phase 17 | Pending |
 | QUAL-06 | Phase 17 | Pending |
 | JULY-01 | Phase 18 | Pending |

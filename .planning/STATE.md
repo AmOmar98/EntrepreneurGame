@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: Scale Foundation
 status: executing
-last_updated: "2026-06-11T23:26:16.967Z"
-last_activity: 2026-06-11
+last_updated: "2026-06-12T00:34:04.084Z"
+last_activity: 2026-06-12
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 19
-  completed_plans: 18
-  percent: 50
+  completed_phases: 4
+  total_plans: 22
+  completed_plans: 20
+  percent: 67
 ---
 
 # Project State
@@ -24,9 +24,9 @@ See: `.planning/PROJECT.md` (mis à jour 2026-06-11 — v0.4 Scale Foundation st
 ## Current Position
 
 Phase: 16 (Jury paramétrable + Scoring configurable) — IN PROGRESS
-Plan: 4 of 5 (complete)
+Plan: 5 of 5 (complete)
 Status: Ready to execute
-Last activity: 2026-06-11
+Last activity: 2026-06-12
 
 ```
 [Phase 13] [Phase 14] [Phase 15] [Phase 16] [Phase 17] [Phase 18]
@@ -63,6 +63,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 | Phase 16 P01 | 20min | 3 tasks | 6 files |
 | Phase 16 P16-02 | 35min | 3 tasks | 9 files |
 | Phase 16 P16-04 | 15min | 3 tasks | 3 files |
+| Phase 17-observabilite-perf P17-01 | 12min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,7 @@ Event début juillet 2026 — freeze/preflight J-2 ~2026-07-01 (~3 semaines de b
 - 15-05 : rubricSchema extracted to lib/schemas.ts; remapSoftRecommends to lib/clone-remap.ts; 44 unit / 23 e2e green; 15-VERIFICATION.md all 10 requirements + 6 SC traced; PROD migration apply deferred to Phase 16/18 operator checkpoint
 - 16-01 : pitch_criteria table + scores jsonb (JURY-06); event_settings with bonus_multiplier_cap DEFAULT 3.0 (SETTINGS-01/02); get_event_setting_int + parameterized recalc_player_engagement (SETTINGS-03); dual-mode TS accessors with DEFAULT_EVENT_SETTINGS = current hardcoded values; 58 unit + 23 e2e green
 - 16-02 : normalizePitchScore exported from lib/results.ts (dynamic jsonb + retro-compat c5=0->x1.25 preserved cardinal); XP literals replaced by settings.xpFirstSubmission/xpValidateV1/xpValidateV2; jury form dynamic criteria prop + positional c1..c4 + c5=0 always + scoresJson; pitchWeight from getEventSettings; 64 unit + 23 e2e green
+- 17-01 : @sentry/nextjs v10 env-gated (no withSentryConfig); reportServerError helper via Sentry.withScope; 3 captures (saveOnboarding/submitDeliverable/evaluateSubmission insErr); replay OFF; QUAL-04 satisfied
 
 ### Phase Sequence Rationale
 
