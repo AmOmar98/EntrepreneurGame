@@ -1,4 +1,4 @@
-# scripts/check-r2-severity.ps1 — R2 cardinal gate (validator severity), PowerShell port.
+﻿# scripts/check-r2-severity.ps1 — R2 cardinal gate (validator severity), PowerShell port.
 #
 # Cardinal R2 (cf. CLAUDE.md "Pre-edit guards") :
 #   Player deliverable validators MUST be `severity: "warn"`, never `"error"`.
@@ -37,11 +37,13 @@ foreach ($dir in $includeDirs) {
     $lineNum = 0
     foreach ($line in Get-Content -LiteralPath $file.FullName) {
       $lineNum++
+      $trimmed = $line.Trim()
+      if ($trimmed.StartsWith('//') -or $trimmed.StartsWith('*') -or $trimmed.StartsWith('/*')) { continue }
       if ($line -match $pattern) {
         [void]$found.Add([pscustomobject]@{
           Path = $rel
           Line = $lineNum
-          Text = $line.Trim()
+          Text = $trimmed
         })
       }
     }

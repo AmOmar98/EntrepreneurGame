@@ -40,8 +40,8 @@ if [ -z "$matches" ]; then
   exit 0
 fi
 
-# Strip whitelisted paths.
-filtered="$(echo "$matches" | grep -vE '^app/actions\.ts:' || true)"
+# Strip whitelisted paths and comment-only lines (e.g. explanatory doc comments in lib/schemas.ts).
+filtered="$(echo "$matches" | grep -vE '^app/actions\.ts:' | grep -vE ':[0-9]+:[[:space:]]*(//|\*|/\*)' || true)"
 
 if [ -z "$filtered" ]; then
   count="$(echo "$matches" | wc -l | tr -d '[:space:]')"

@@ -1,0 +1,58 @@
+{
+  "tickId": "TICK-20261111T125030Z",
+  "timestamp": "2026-11-11T12:50:30.792Z",
+  "eventLabel": "REL-01-BASELINE",
+  "verdict": "VERT",
+  "supabaseProjectId": "vzzbjxmfkmvqkaqxalhr",
+  "vercelProjectId": "prj_u3jR0YiNr2WnCFEoG6g1yDShikdH",
+  "http": {
+    "home": {
+      "ok": true,
+      "status": 307,
+      "ms": 668,
+      "markerOk": true
+    },
+    "login": {
+      "ok": true,
+      "status": 200,
+      "ms": 367,
+      "markerOk": true
+    }
+  },
+  "vercel": {
+    "ok": true,
+    "productionDeployment": {
+      "uid": "dpl_7AexVk5Zfnc7WvBPZfFqDRnJ2wQP",
+      "state": "READY",
+      "readySubstate": "PROMOTED",
+      "target": "production",
+      "url": "entrepreneur-game-osgnrj2ct-amomar98s-projects.vercel.app",
+      "branch": "main",
+      "sha": "381a3ce",
+      "createdAt": "2026-05-23T16:29:13.551Z"
+    },
+    "latestDeployment": {
+      "uid": "dpl_FisUBgpXw1hcT4mWWULAtTadZq2T",
+      "state": "READY",
+      "readySubstate": "STAGED",
+      "target": "preview",
+      "url": "entrepreneur-game-e4yw4trxl-amomar98s-projects.vercel.app",
+      "branch": "milestone/v0.4-scale-foundation",
+      "sha": "937468f",
+      "createdAt": "2026-06-12T01:06:15.563Z"
+    }
+  },
+  "git": {
+    "branch": "milestone/v0.4-scale-foundation",
+    "headSha": "937468f",
+    "mainSha": "8f3d9f0",
+    "dirtyCount": 67
+  },
+  "cardinalGates": {
+    "r1": true,
+    "r2": true,
+    "r3": true
+  },
+  "warnings": [],
+  "hardTriggers": []
+}
