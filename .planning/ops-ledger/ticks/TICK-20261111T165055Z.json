@@ -1,0 +1,60 @@
+{
+  "tickId": "TICK-20261111T165055Z",
+  "timestamp": "2026-11-11T16:50:55.143Z",
+  "eventLabel": "IDEAWAVE-PREP-PROD",
+  "verdict": "WARN",
+  "supabaseProjectId": "vzzbjxmfkmvqkaqxalhr",
+  "vercelProjectId": "prj_u3jR0YiNr2WnCFEoG6g1yDShikdH",
+  "http": {
+    "home": {
+      "ok": true,
+      "status": 307,
+      "ms": 927,
+      "markerOk": true
+    },
+    "login": {
+      "ok": true,
+      "status": 200,
+      "ms": 1666,
+      "markerOk": true
+    }
+  },
+  "vercel": {
+    "ok": true,
+    "productionDeployment": {
+      "uid": "dpl_AjeiLwGZ1kZqEBxadJ2CZw7qVhD4",
+      "state": "QUEUED",
+      "readySubstate": null,
+      "target": "production",
+      "url": "entrepreneur-game-prmwycm5e-amomar98s-projects.vercel.app",
+      "branch": "main",
+      "sha": "b5c56a0",
+      "createdAt": "2026-11-11T16:50:21.888Z"
+    },
+    "latestDeployment": {
+      "uid": "dpl_AjeiLwGZ1kZqEBxadJ2CZw7qVhD4",
+      "state": "QUEUED",
+      "readySubstate": null,
+      "target": "production",
+      "url": "entrepreneur-game-prmwycm5e-amomar98s-projects.vercel.app",
+      "branch": "main",
+      "sha": "b5c56a0",
+      "createdAt": "2026-11-11T16:50:21.888Z"
+    }
+  },
+  "git": {
+    "branch": "main",
+    "headSha": "b5c56a0",
+    "mainSha": "b5c56a0",
+    "dirtyCount": 0
+  },
+  "cardinalGates": {
+    "r1": true,
+    "r2": true,
+    "r3": true
+  },
+  "warnings": [
+    "HTTP latency > 1500ms (/: 927ms, /login: 1666ms)"
+  ],
+  "hardTriggers": []
+}
