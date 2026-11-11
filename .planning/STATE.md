@@ -15,6 +15,14 @@ progress:
 
 # Project State
 
+## Orientation update — 2026-09-29
+
+Omar confirmed the next direction: **production-ready for EIC first, prepared for other organizations later**, covering reliability, user experience and event management together. Follow-up recorded 2026-09-30: launch target = **Idea'Wave Cycle 1 initiation workshop, Tuesday 3 November 2026**, from the supplied provisional calendar (dates subject to change). Workshop time and concurrent-user target remain open. See [launch calendar](../docs/PRODUCTION_ROADMAP.md#ideawave-launch-calendar).
+
+Start with [the current documentation index](../docs/README.md), [repository audit](../docs/REPO_AUDIT.md) and [proposed production roadmap](../docs/PRODUCTION_ROADMAP.md). The quick-task record is [260929-ohc](quick/260929-ohc-repository-orientation-and-future-work-o/PLAN.md).
+
+The historical state below is retained as evidence, not current release status: its phase/count summaries conflict. ROADMAP records Phases 13–17 implemented and Phase 18 unstarted; Phase 17 verification still lists operational checks as pending. No live deployment/database state was verified in this review. The July deadline below is historical and must be re-scoped before scheduling a release.
+
 ## Project Reference
 
 **Core value**: Plateforme d'accompagnement entrepreneurial gamifiée EIC/UEMF, personnalisable par bootcamp/programme via un éditeur GameMaster no-code.
@@ -139,6 +147,8 @@ _None_
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260929-owr | Record Idea'Wave initiation workshop launch target and programme calendar | 2026-09-30 | — (uncommitted docs) | [260929-owr-record-ideawave-initiation-workshop-laun](./quick/260929-owr-record-ideawave-initiation-workshop-laun/SUMMARY.md) |
+| 260929-ohc | Repository map, local audit, developer guide and proposed EIC-first production roadmap | 2026-09-29 | — (uncommitted docs) | [260929-ohc-repository-orientation-and-future-work-o](./quick/260929-ohc-repository-orientation-and-future-work-o/SUMMARY.md) |
 | 260524-o7v | cleanup root dev-server logs + f2-fix screenshot + .playwright-mcp/ (3.5 MB reclaimed, gitignored noise) | 2026-05-24 | — (no code) | [260524-o7v-cleanup-root-dev-server-logs-f2-fix-scre](./quick/260524-o7v-cleanup-root-dev-server-logs-f2-fix-scre/) |
 
 ## Historique Milestones
