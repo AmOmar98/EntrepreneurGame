@@ -9,41 +9,49 @@ create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
 $$;
 
+drop trigger if exists trg_events_updated_at on public.events;
 create trigger trg_events_updated_at
   before update on public.events
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_missions_updated_at on public.missions;
 create trigger trg_missions_updated_at
   before update on public.missions
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_deliverable_templates_updated_at on public.deliverable_templates;
 create trigger trg_deliverable_templates_updated_at
   before update on public.deliverable_templates
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_cohorts_updated_at on public.cohorts;
 create trigger trg_cohorts_updated_at
   before update on public.cohorts
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_profiles_updated_at on public.profiles;
 create trigger trg_profiles_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_players_updated_at on public.players;
 create trigger trg_players_updated_at
   before update on public.players
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_evaluations_updated_at on public.evaluations;
 create trigger trg_evaluations_updated_at
   before update on public.evaluations
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_pitch_scores_updated_at on public.pitch_scores;
 create trigger trg_pitch_scores_updated_at
   before update on public.pitch_scores
   for each row execute function public.set_updated_at();
@@ -141,6 +149,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_evaluation_recalc on public.evaluations;
 create trigger trg_evaluation_recalc
   after insert or update or delete on public.evaluations
   for each row execute function public.on_evaluation_change();
@@ -153,7 +162,7 @@ create or replace function public.guard_player_onboarding()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   if old.onboarded_at is not null and new.onboarded_at is null then
     raise exception 'players.onboarded_at cannot be cleared once set';
@@ -162,6 +171,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_player_onboarding on public.players;
 create trigger trg_player_onboarding
   before update on public.players
   for each row execute function public.guard_player_onboarding();
@@ -235,4 +245,5 @@ end $$;
 -- Voir supabase/migrations/20260611240200_phase16_triggers_parameterized.sql
 -- pour get_event_setting_int(p_event_id, p_key, p_default) et la version
 -- paramétrée de recalc_player_engagement (SECURITY DEFINER, search_path,
--- REVOKE FROM PUBLIC + GRANT authenticated).
+-- et 20261111134000_revoke_authenticated_execute_internal_secdef.sql pour
+-- la restriction EXECUTE à service_role uniquement).

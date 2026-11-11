@@ -73,28 +73,38 @@ alter table public.pitch_scores enable row level security;
 -- Reference / catalog tables: authenticated read-all, game_master full r/w
 -- ============================================================================
 
+drop policy if exists "events_authenticated_select" on public.events;
 create policy "events_authenticated_select" on public.events
   for select to authenticated using (true);
+drop policy if exists "events_gm_all" on public.events;
 create policy "events_gm_all" on public.events
   for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
 
+drop policy if exists "levels_authenticated_select" on public.levels;
 create policy "levels_authenticated_select" on public.levels
   for select to authenticated using (true);
+drop policy if exists "levels_gm_all" on public.levels;
 create policy "levels_gm_all" on public.levels
   for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
 
+drop policy if exists "missions_authenticated_select" on public.missions;
 create policy "missions_authenticated_select" on public.missions
   for select to authenticated using (true);
+drop policy if exists "missions_gm_all" on public.missions;
 create policy "missions_gm_all" on public.missions
   for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
 
+drop policy if exists "deliverable_templates_authenticated_select" on public.deliverable_templates;
 create policy "deliverable_templates_authenticated_select" on public.deliverable_templates
   for select to authenticated using (true);
+drop policy if exists "deliverable_templates_gm_all" on public.deliverable_templates;
 create policy "deliverable_templates_gm_all" on public.deliverable_templates
   for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
 
+drop policy if exists "cohorts_authenticated_select" on public.cohorts;
 create policy "cohorts_authenticated_select" on public.cohorts
   for select to authenticated using (true);
+drop policy if exists "cohorts_gm_all" on public.cohorts;
 create policy "cohorts_gm_all" on public.cohorts
   for all to authenticated using (public.is_game_master()) with check (public.is_game_master());
 
@@ -102,19 +112,23 @@ create policy "cohorts_gm_all" on public.cohorts
 -- profiles
 -- ============================================================================
 
+drop policy if exists "profiles_self_or_mentor_select" on public.profiles;
 create policy "profiles_self_or_mentor_select" on public.profiles
   for select to authenticated
-  using (user_id = auth.uid() or public.is_mentor());
+  using (user_id = (select auth.uid()) or public.is_mentor());
 
+drop policy if exists "profiles_self_or_gm_insert" on public.profiles;
 create policy "profiles_self_or_gm_insert" on public.profiles
   for insert to authenticated
-  with check (user_id = auth.uid() or public.is_game_master());
+  with check (user_id = (select auth.uid()) or public.is_game_master());
 
+drop policy if exists "profiles_self_or_gm_update" on public.profiles;
 create policy "profiles_self_or_gm_update" on public.profiles
   for update to authenticated
-  using (user_id = auth.uid() or public.is_game_master())
-  with check (user_id = auth.uid() or public.is_game_master());
+  using (user_id = (select auth.uid()) or public.is_game_master())
+  with check (user_id = (select auth.uid()) or public.is_game_master());
 
+drop policy if exists "profiles_gm_delete" on public.profiles;
 create policy "profiles_gm_delete" on public.profiles
   for delete to authenticated
   using (public.is_game_master());
@@ -123,19 +137,23 @@ create policy "profiles_gm_delete" on public.profiles
 -- players
 -- ============================================================================
 
+drop policy if exists "players_member_or_mentor_select" on public.players;
 create policy "players_member_or_mentor_select" on public.players
   for select to authenticated
   using (public.is_my_player(id) or public.is_mentor());
 
+drop policy if exists "players_member_or_gm_update" on public.players;
 create policy "players_member_or_gm_update" on public.players
   for update to authenticated
   using (public.is_my_player(id) or public.is_game_master())
   with check (public.is_my_player(id) or public.is_game_master());
 
+drop policy if exists "players_gm_insert" on public.players;
 create policy "players_gm_insert" on public.players
   for insert to authenticated
   with check (public.is_game_master());
 
+drop policy if exists "players_gm_delete" on public.players;
 create policy "players_gm_delete" on public.players
   for delete to authenticated
   using (public.is_game_master());
@@ -144,19 +162,23 @@ create policy "players_gm_delete" on public.players
 -- player_members
 -- ============================================================================
 
+drop policy if exists "player_members_self_or_mentor_select" on public.player_members;
 create policy "player_members_self_or_mentor_select" on public.player_members
   for select to authenticated
-  using (user_id = auth.uid() or public.is_mentor());
+  using (user_id = (select auth.uid()) or public.is_mentor());
 
+drop policy if exists "player_members_gm_insert" on public.player_members;
 create policy "player_members_gm_insert" on public.player_members
   for insert to authenticated
   with check (public.is_game_master());
 
+drop policy if exists "player_members_gm_update" on public.player_members;
 create policy "player_members_gm_update" on public.player_members
   for update to authenticated
   using (public.is_game_master())
   with check (public.is_game_master());
 
+drop policy if exists "player_members_gm_delete" on public.player_members;
 create policy "player_members_gm_delete" on public.player_members
   for delete to authenticated
   using (public.is_game_master());
@@ -165,28 +187,32 @@ create policy "player_members_gm_delete" on public.player_members
 -- submissions
 -- ============================================================================
 
+drop policy if exists "submissions_member_or_mentor_select" on public.submissions;
 create policy "submissions_member_or_mentor_select" on public.submissions
   for select to authenticated
   using (public.is_my_player(player_id) or public.is_mentor());
 
+drop policy if exists "submissions_member_self_insert" on public.submissions;
 create policy "submissions_member_self_insert" on public.submissions
   for insert to authenticated
   with check (
-    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    (public.is_my_player(player_id) and submitted_by = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "submissions_member_self_update" on public.submissions;
 create policy "submissions_member_self_update" on public.submissions
   for update to authenticated
   using (
-    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    (public.is_my_player(player_id) and submitted_by = (select auth.uid()))
     or public.is_game_master()
   )
   with check (
-    (public.is_my_player(player_id) and submitted_by = auth.uid())
+    (public.is_my_player(player_id) and submitted_by = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "submissions_gm_delete" on public.submissions;
 create policy "submissions_gm_delete" on public.submissions
   for delete to authenticated
   using (public.is_game_master());
@@ -195,6 +221,7 @@ create policy "submissions_gm_delete" on public.submissions
 -- evaluations
 -- ============================================================================
 
+drop policy if exists "evaluations_member_or_mentor_select" on public.evaluations;
 create policy "evaluations_member_or_mentor_select" on public.evaluations
   for select to authenticated
   using (
@@ -207,24 +234,27 @@ create policy "evaluations_member_or_mentor_select" on public.evaluations
     )
   );
 
+drop policy if exists "evaluations_mentor_self_insert" on public.evaluations;
 create policy "evaluations_mentor_self_insert" on public.evaluations
   for insert to authenticated
   with check (
-    (public.is_mentor() and evaluator_id = auth.uid())
+    (public.is_mentor() and evaluator_id = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "evaluations_mentor_self_update" on public.evaluations;
 create policy "evaluations_mentor_self_update" on public.evaluations
   for update to authenticated
   using (
-    (public.is_mentor() and evaluator_id = auth.uid())
+    (public.is_mentor() and evaluator_id = (select auth.uid()))
     or public.is_game_master()
   )
   with check (
-    (public.is_mentor() and evaluator_id = auth.uid())
+    (public.is_mentor() and evaluator_id = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "evaluations_gm_delete" on public.evaluations;
 create policy "evaluations_gm_delete" on public.evaluations
   for delete to authenticated
   using (public.is_game_master());
@@ -233,59 +263,60 @@ create policy "evaluations_gm_delete" on public.evaluations
 -- pitch_scores
 -- ============================================================================
 
+drop policy if exists "pitch_scores_member_or_mentor_select" on public.pitch_scores;
 create policy "pitch_scores_member_or_mentor_select" on public.pitch_scores
   for select to authenticated
   using (public.is_my_player(player_id) or public.is_mentor());
 
+drop policy if exists "pitch_scores_mentor_self_insert" on public.pitch_scores;
 create policy "pitch_scores_mentor_self_insert" on public.pitch_scores
   for insert to authenticated
   with check (
-    (public.is_mentor() and juror_id = auth.uid())
+    (public.is_mentor() and juror_id = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "pitch_scores_mentor_self_update" on public.pitch_scores;
 create policy "pitch_scores_mentor_self_update" on public.pitch_scores
   for update to authenticated
   using (
-    (public.is_mentor() and juror_id = auth.uid())
+    (public.is_mentor() and juror_id = (select auth.uid()))
     or public.is_game_master()
   )
   with check (
-    (public.is_mentor() and juror_id = auth.uid())
+    (public.is_mentor() and juror_id = (select auth.uid()))
     or public.is_game_master()
   );
 
+drop policy if exists "pitch_scores_gm_delete" on public.pitch_scores;
 create policy "pitch_scores_gm_delete" on public.pitch_scores
   for delete to authenticated
   using (public.is_game_master());
 
 -- ============================================================================
--- announcements anon SELECT (quick-260523-hhy)
+-- announcements anon SELECT (quick-260523-hhy, bootstrap-guarded for DB-01)
 -- ============================================================================
--- Broadcast public content (no PII, no secrets). Required because the RSC
--- initial render path queries announcements before the Supabase session
--- cookie is attached, executing as anon. Without this policy + grants,
--- postgres logs surface `permission denied for table announcements`.
---
--- Provenance: .planning/quick/260523-hhy-rls-announcements/NEW.sql applied
--- PROD 2026-05-23 (project_id=vzzbjxmfkmvqkaqxalhr).
-drop policy if exists "announcements_anon_select" on public.announcements;
-create policy "announcements_anon_select" on public.announcements
-  for select to anon
-  using (true);
+-- Broadcast public content (no PII, no secrets). Guarded with to_regclass so
+-- fresh bootstrap (before 20260510140001_phase09_gamemaster_live.sql creates
+-- public.announcements) succeeds cleanly and live re-apply updates policies.
+
+revoke all on schema public from anon;
+grant usage on schema public to anon;
+
+do $$
+begin
+  if to_regclass('public.announcements') is not null then
+    drop policy if exists "announcements_anon_select" on public.announcements;
+    create policy "announcements_anon_select" on public.announcements
+      for select to anon
+      using (true);
+    grant select on public.announcements to anon;
+  end if;
+end $$;
 
 -- ============================================================================
 -- Final grants
 -- ============================================================================
-
-revoke all on schema public from anon;
-
--- anon minimum re-grants (quick-260523-hhy)
--- Only `announcements` is exposed anon-readable (broadcast public content).
--- No other table in `public` has an anon-targeted policy, so this grant
--- alone does not expose any other table.
-grant usage on schema public to anon;
-grant select on public.announcements to anon;
 
 grant usage on schema public to authenticated;
 grant select on all tables in schema public to authenticated;
@@ -293,12 +324,6 @@ grant insert, update, delete on all tables in schema public to authenticated;
 grant usage, select on all sequences in schema public to authenticated;
 
 -- service_role : bypass RLS pour les server actions et queries server-side
--- (cf. lib/results.ts:computeRanking quand events.results_published_at != null,
--- et app/actions.ts:importPlayersCsv pour les invites magic-link).
--- Si le schema public a ete recreate via "drop schema public cascade; create
--- schema public;" (cf. schema.sql ligne 4), service_role perd ses grants par
--- defaut Supabase et il faut les restaurer explicitement, sinon "permission
--- denied for table cohorts" sur les queries service-role.
 grant usage on schema public to service_role;
 grant select, insert, update, delete on all tables in schema public to service_role;
 grant usage, select on all sequences in schema public to service_role;
@@ -309,261 +334,241 @@ alter default privileges in schema public grant execute on functions to service_
 
 -- ============================================================================
 -- Quick 260523-kc2 D2: RLS initplan fix (auth.uid() wrapped in SELECT)
+-- Bootstrap-guarded for DB-01 so fresh bootstrap before migrations succeeds.
 -- ============================================================================
--- Wraps auth.uid() in (SELECT auth.uid()) for 5 policies, reducing per-row
--- re-evaluation from O(n) to O(1). Mirrors PROD applied 2026-05-23 via
--- .planning/quick/260523-kc2-advisors-fix/D2.sql.
--- D2: Wrap auth.uid() in (SELECT auth.uid()) for 5 RLS policies
--- Post-mortem section D line 124. Performance: O(1) instead of O(n) re-eval.
--- Each DROP+CREATE pair is verbatim copy from pg_policies with replacement applied.
--- Transaction wrapping ensures rollback on any syntax error.
 
-BEGIN;
+do $$
+begin
+  if to_regclass('public.help_requests') is not null then
+    drop policy if exists help_requests_player_insert_own on public.help_requests;
+    create policy help_requests_player_insert_own on public.help_requests
+      for insert to authenticated
+      with check (public.is_my_player(player_id) and (requested_by = (select auth.uid())));
+  end if;
 
--- 1/5 help_requests_player_insert_own (INSERT, with_check only)
-DROP POLICY help_requests_player_insert_own ON public.help_requests;
-CREATE POLICY help_requests_player_insert_own ON public.help_requests
-  FOR INSERT TO authenticated
-  WITH CHECK (is_my_player(player_id) AND (requested_by = (SELECT auth.uid())));
+  if to_regclass('public.jurors') is not null then
+    drop policy if exists jurors_self_select on public.jurors;
+    create policy jurors_self_select on public.jurors
+      for select to authenticated
+      using (user_id = (select auth.uid()));
+  end if;
 
--- 2/5 jurors_self_select (SELECT, qual only)
-DROP POLICY jurors_self_select ON public.jurors;
-CREATE POLICY jurors_self_select ON public.jurors
-  FOR SELECT TO authenticated
-  USING (user_id = (SELECT auth.uid()));
+  if to_regprocedure('public.is_juror(uuid)') is not null
+     and exists (
+       select 1 from information_schema.columns
+       where table_schema = 'public'
+         and table_name = 'events'
+         and column_name = 'pitch_mode_state'
+     ) then
+    drop policy if exists pitch_scores_juror_self_insert on public.pitch_scores;
+    create policy pitch_scores_juror_self_insert on public.pitch_scores
+      for insert to authenticated
+      with check (((juror_id = (select auth.uid())) and public.is_juror(event_id)) or public.is_game_master());
 
--- 3/5 pitch_scores_juror_self_insert (INSERT, with_check only)
-DROP POLICY pitch_scores_juror_self_insert ON public.pitch_scores;
-CREATE POLICY pitch_scores_juror_self_insert ON public.pitch_scores
-  FOR INSERT TO authenticated
-  WITH CHECK (((juror_id = (SELECT auth.uid())) AND is_juror(event_id)) OR is_game_master());
+    drop policy if exists pitch_scores_juror_self_update on public.pitch_scores;
+    create policy pitch_scores_juror_self_update on public.pitch_scores
+      for update to authenticated
+      using (((juror_id = (select auth.uid())) and public.is_juror(event_id)) or public.is_game_master())
+      with check (((juror_id = (select auth.uid())) and public.is_juror(event_id)) or public.is_game_master());
 
--- 4/5 pitch_scores_juror_self_update (UPDATE, qual AND with_check)
-DROP POLICY pitch_scores_juror_self_update ON public.pitch_scores;
-CREATE POLICY pitch_scores_juror_self_update ON public.pitch_scores
-  FOR UPDATE TO authenticated
-  USING (((juror_id = (SELECT auth.uid())) AND is_juror(event_id)) OR is_game_master())
-  WITH CHECK (((juror_id = (SELECT auth.uid())) AND is_juror(event_id)) OR is_game_master());
-
--- 5/5 pitch_scores_select_visibility (SELECT, qual only — complex nested EXISTS)
-DROP POLICY pitch_scores_select_visibility ON public.pitch_scores;
-CREATE POLICY pitch_scores_select_visibility ON public.pitch_scores
-  FOR SELECT TO authenticated
-  USING (
-    is_game_master()
-    OR ((juror_id = (SELECT auth.uid())) AND is_juror(event_id))
-    OR (
-      is_juror(event_id)
-      AND EXISTS (
-        SELECT 1
-        FROM events e
-        WHERE e.id = pitch_scores.event_id
-          AND (
-            e.pitch_mode_state = 'closed'::pitch_mode_state
-            OR e.results_published_at IS NOT NULL
+    drop policy if exists pitch_scores_select_visibility on public.pitch_scores;
+    execute $pol$
+      create policy pitch_scores_select_visibility on public.pitch_scores
+        for select to authenticated
+        using (
+          public.is_game_master()
+          or ((juror_id = (select auth.uid())) and public.is_juror(event_id))
+          or (
+            public.is_juror(event_id)
+            and exists (
+              select 1
+              from public.events e
+              where e.id = pitch_scores.event_id
+                and (
+                  e.pitch_mode_state = 'closed'::public.pitch_mode_state
+                  or e.results_published_at is not null
+                )
+            )
           )
-      )
+        )
+    $pol$;
+  end if;
+end $$;
+
+-- ============================================================================
+-- Phase 14 (v0.4) — RLS org-scope (mirror of 20260611120300 & 20260611220000)
+-- Bootstrap-safe: uses base player/mentor check if public.jurors does not exist
+-- yet, and upgrades to include public.jurors when present.
+-- ============================================================================
+
+create or replace function public.is_in_org(p_org_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = public as $$
+  select
+    exists(
+      select 1
+      from public.events e
+      join public.cohorts c   on c.event_id = e.id
+      join public.players p   on p.cohort_id = c.id
+      join public.player_members pm on pm.player_id = p.id
+      where e.organization_id = p_org_id
+        and pm.user_id = (select auth.uid())
     )
-  );
-
-COMMIT;
-
--- ============================================================================
--- Quick 260523-kc2 D3: SECURITY DEFINER functions — anon revoke via PUBLIC
--- ============================================================================
--- For each of 11 SECURITY DEFINER functions: REVOKE EXECUTE FROM PUBLIC
--- (anon inherits via PUBLIC) + GRANT EXECUTE TO authenticated.
--- Mirrors PROD applied 2026-05-23 via .planning/quick/260523-kc2-advisors-fix/D3.sql.
--- D3: Restrict EXECUTE on 11 SECURITY DEFINER functions to authenticated only.
--- Post-mortem section D line 123. Scope per L131: anon only (authenticated retains).
---
--- Initial naive attempt (REVOKE FROM anon) was a NO-OP because anon never had
--- an explicit grant — EXECUTE was inherited from PUBLIC (Postgres default).
--- Correct pattern: REVOKE FROM PUBLIC then GRANT TO authenticated. anon is
--- still a PUBLIC member but PUBLIC no longer has EXECUTE, so anon is denied.
--- authenticated gets explicit grant. service_role bypasses all (set up by
--- Supabase platform default, not affected here).
---
--- Safety check (orchestrator-confirmed 2026-05-23): zero .rpc() calls in
--- client/server code to these functions. All 11 are RLS helpers, triggers,
--- or server-action callbacks via service_role.
-
-REVOKE EXECUTE ON FUNCTION public.current_app_role() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.current_app_role() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.fn_auto_eval_fiches_entretien() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.fn_auto_eval_fiches_entretien() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.is_game_master() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_game_master() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.is_juror(p_event_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_juror(p_event_id uuid) TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.is_mentor() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_mentor() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.is_my_player(p_player_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_my_player(p_player_id uuid) TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.on_evaluation_change() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.on_evaluation_change() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.on_evaluation_engagement_change() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.on_evaluation_engagement_change() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.on_submission_engagement_change() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.on_submission_engagement_change() TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.recalc_player_engagement(p_player_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.recalc_player_engagement(p_player_id uuid) TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.recalc_player_score(p_player_id uuid) TO authenticated;
-
--- ============================================================================
--- Phase 14 (v0.4) — RLS org-scope (mirror of 20260611120300_rls_org_scope.sql)
--- ============================================================================
-
-CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public AS $$
-  SELECT EXISTS(
-    SELECT 1
-    FROM public.events e
-    JOIN public.cohorts c   ON c.event_id = e.id
-    JOIN public.players p   ON p.cohort_id = c.id
-    JOIN public.player_members pm ON pm.player_id = p.id
-    WHERE e.organization_id = p_org_id
-      AND pm.user_id = (select auth.uid())
-  )
+    or public.is_mentor()
 $$;
 
--- REVOKE from PUBLIC first, then GRANT to authenticated only (kc2 pattern)
-REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
+do $$
+begin
+  if to_regclass('public.jurors') is not null then
+    execute $fn$
+      create or replace function public.is_in_org(p_org_id uuid)
+      returns boolean
+      language sql stable security definer
+      set search_path = public as $body$
+        select
+          exists(
+            select 1
+            from public.events e
+            join public.cohorts c   on c.event_id = e.id
+            join public.players p   on p.cohort_id = c.id
+            join public.player_members pm on pm.player_id = p.id
+            where e.organization_id = p_org_id
+              and pm.user_id = (select auth.uid())
+          )
+          or public.is_mentor()
+          or exists(
+            select 1
+            from public.events e
+            join public.jurors j on j.event_id = e.id
+            where e.organization_id = p_org_id
+              and j.user_id = (select auth.uid())
+          )
+      $body$;
+    $fn$;
+  end if;
+end $$;
 
--- ----------------------------------------------------------------------------
--- 2. RLS for levels_v2: game_master can manage; authenticated can read
--- ----------------------------------------------------------------------------
+-- ============================================================================
+-- RLS for levels_v2, events org-scope, organizations, pitch_criteria, event_settings
+-- ============================================================================
 
-DROP POLICY IF EXISTS "levels_v2_authenticated_select" ON public.levels_v2;
-CREATE POLICY "levels_v2_authenticated_select" ON public.levels_v2
-  AS PERMISSIVE
-  FOR SELECT TO authenticated
-  USING (true);
+drop policy if exists "levels_v2_authenticated_select" on public.levels_v2;
+create policy "levels_v2_authenticated_select" on public.levels_v2
+  as permissive
+  for select to authenticated
+  using (true);
 
-DROP POLICY IF EXISTS "levels_v2_gm_all" ON public.levels_v2;
-CREATE POLICY "levels_v2_gm_all" ON public.levels_v2
-  AS PERMISSIVE
-  FOR ALL TO authenticated
-  USING (public.is_game_master())
-  WITH CHECK (public.is_game_master());
+drop policy if exists "levels_v2_gm_all" on public.levels_v2;
+create policy "levels_v2_gm_all" on public.levels_v2
+  as permissive
+  for all to authenticated
+  using (public.is_game_master())
+  with check (public.is_game_master());
 
--- ----------------------------------------------------------------------------
--- 3. Org-scoped SELECT policy on public.events
---    Tolerates NULL organization_id (pre-backfill safety clause).
---    Game-master sees all events regardless of org (preserves admin surfaces).
---    Uses (select auth.uid()) inside is_in_org (via helper) and is_game_master().
--- ----------------------------------------------------------------------------
-
-DROP POLICY IF EXISTS "events_org_scope_select" ON public.events;
-CREATE POLICY "events_org_scope_select" ON public.events
-  AS PERMISSIVE
-  FOR SELECT TO authenticated
-  USING (
-    organization_id IS NULL
-    OR public.is_in_org(organization_id)
-    OR public.is_game_master()
+drop policy if exists "events_org_scope_select" on public.events;
+create policy "events_org_scope_select" on public.events
+  as permissive
+  for select to authenticated
+  using (
+    organization_id is null
+    or public.is_in_org(organization_id)
+    or public.is_game_master()
   );
 
--- ----------------------------------------------------------------------------
--- 4. RLS for public.organizations
---    Authenticated users can read orgs they belong to (via is_in_org).
---    Game-master can read all orgs.
--- ----------------------------------------------------------------------------
+drop policy if exists "events_authenticated_select" on public.events;
 
-ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+alter table public.organizations enable row level security;
 
-DROP POLICY IF EXISTS "organizations_member_select" ON public.organizations;
-CREATE POLICY "organizations_member_select" ON public.organizations
-  AS PERMISSIVE
-  FOR SELECT TO authenticated
-  USING (
+drop policy if exists "organizations_member_select" on public.organizations;
+create policy "organizations_member_select" on public.organizations
+  as permissive
+  for select to authenticated
+  using (
     public.is_in_org(id)
-    OR public.is_game_master()
+    or public.is_game_master()
   );
 
-DROP POLICY IF EXISTS "organizations_gm_all" ON public.organizations;
-CREATE POLICY "organizations_gm_all" ON public.organizations
-  AS PERMISSIVE
-  FOR ALL TO authenticated
-  USING (public.is_game_master())
-  WITH CHECK (public.is_game_master());
+drop policy if exists "organizations_gm_all" on public.organizations;
+create policy "organizations_gm_all" on public.organizations
+  as permissive
+  for all to authenticated
+  using (public.is_game_master())
+  with check (public.is_game_master());
 
--- ============================================================================
--- Phase 14 review CR-01 — events_org_scope_enforce mirror (applied 2026-06-12)
--- is_in_org élargi (player membership OR mentor OR juror) puis DROP de la
--- policy SELECT permissive "events_authenticated_select" — le scope org est
--- désormais le gate effectif (avec is_game_master()).
--- NB : la version antérieure d'is_in_org plus haut dans ce fichier est
--- remplacée par celle-ci (CREATE OR REPLACE — dernière définition gagne).
--- ============================================================================
-
-CREATE OR REPLACE FUNCTION public.is_in_org(p_org_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public AS $$
-  SELECT
-    -- player: member of a team in a cohort of an event of this org
-    EXISTS(
-      SELECT 1
-      FROM public.events e
-      JOIN public.cohorts c   ON c.event_id = e.id
-      JOIN public.players p   ON p.cohort_id = c.id
-      JOIN public.player_members pm ON pm.player_id = p.id
-      WHERE e.organization_id = p_org_id
-        AND pm.user_id = (select auth.uid())
-    )
-    -- mentor: EIC staff, org-global until a mentor↔org mapping exists
-    OR public.is_mentor()
-    -- juror: assigned to an event of this org
-    OR EXISTS(
-      SELECT 1
-      FROM public.events e
-      JOIN public.jurors j ON j.event_id = e.id
-      WHERE e.organization_id = p_org_id
-        AND j.user_id = (select auth.uid())
-    )
-$$;
-
-REVOKE EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_in_org(p_org_id uuid) TO authenticated;
-
--- ----------------------------------------------------------------------------
--- 2. Drop the legacy broad SELECT policy that shadowed org scoping (CR-01).
---    events_org_scope_select (org member OR GM OR NULL-org) becomes the gate.
--- ----------------------------------------------------------------------------
-
-DROP POLICY IF EXISTS "events_authenticated_select" ON public.events;
-
--- ============================================================================
--- Phase 16 review IN-01 — pitch_criteria + event_settings RLS policies mirror
--- Verbatim from migrations 20260611240000 and 20260611240100 (PROD 2026-06-12).
--- A fresh bootstrap from schema.sql + rls.sql needs these CREATE POLICY
--- statements to avoid fail-closed (RLS enabled but no policy = all denied).
--- ============================================================================
-
--- pitch_criteria_event_settings_rls mirror
+drop policy if exists pitch_criteria_authenticated_select on public.pitch_criteria;
 create policy pitch_criteria_authenticated_select on public.pitch_criteria
   for select to authenticated using (true);
+drop policy if exists pitch_criteria_gm_all on public.pitch_criteria;
 create policy pitch_criteria_gm_all on public.pitch_criteria
   for all to authenticated
   using (public.is_game_master()) with check (public.is_game_master());
 
+drop policy if exists event_settings_authenticated_select on public.event_settings;
 create policy event_settings_authenticated_select on public.event_settings
   for select to authenticated using (true);
+drop policy if exists event_settings_gm_all on public.event_settings;
 create policy event_settings_gm_all on public.event_settings
   for all to authenticated
   using (public.is_game_master()) with check (public.is_game_master());
+
+-- ============================================================================
+-- SECURITY DEFINER Function Privilege Hardening (260523-kc2 D3 + 261111-db1)
+--   - 6 RLS boolean/role helpers: REVOKE FROM PUBLIC, GRANT TO authenticated
+--   - 7 internal/trigger functions: REVOKE FROM PUBLIC, anon, authenticated;
+--     GRANT TO service_role only (Advisor 0029 hardening)
+-- ============================================================================
+
+revoke execute on function public.current_app_role() from public;
+grant execute on function public.current_app_role() to authenticated;
+
+revoke execute on function public.is_game_master() from public;
+grant execute on function public.is_game_master() to authenticated;
+
+revoke execute on function public.is_mentor() from public;
+grant execute on function public.is_mentor() to authenticated;
+
+revoke execute on function public.is_my_player(uuid) from public;
+grant execute on function public.is_my_player(uuid) to authenticated;
+
+revoke execute on function public.is_in_org(uuid) from public;
+grant execute on function public.is_in_org(uuid) to authenticated;
+
+revoke execute on function public.on_evaluation_change() from public, anon, authenticated;
+grant execute on function public.on_evaluation_change() to service_role;
+
+revoke execute on function public.recalc_player_score(uuid) from public, anon, authenticated;
+grant execute on function public.recalc_player_score(uuid) to service_role;
+
+do $$
+begin
+  if to_regprocedure('public.is_juror(uuid)') is not null then
+    revoke execute on function public.is_juror(uuid) from public;
+    grant execute on function public.is_juror(uuid) to authenticated;
+  end if;
+
+  if to_regprocedure('public.fn_auto_eval_fiches_entretien()') is not null then
+    revoke execute on function public.fn_auto_eval_fiches_entretien() from public, anon, authenticated;
+    grant execute on function public.fn_auto_eval_fiches_entretien() to service_role;
+  end if;
+
+  if to_regprocedure('public.on_evaluation_engagement_change()') is not null then
+    revoke execute on function public.on_evaluation_engagement_change() from public, anon, authenticated;
+    grant execute on function public.on_evaluation_engagement_change() to service_role;
+  end if;
+
+  if to_regprocedure('public.on_submission_engagement_change()') is not null then
+    revoke execute on function public.on_submission_engagement_change() from public, anon, authenticated;
+    grant execute on function public.on_submission_engagement_change() to service_role;
+  end if;
+
+  if to_regprocedure('public.recalc_player_engagement(uuid)') is not null then
+    revoke execute on function public.recalc_player_engagement(uuid) from public, anon, authenticated;
+    grant execute on function public.recalc_player_engagement(uuid) to service_role;
+  end if;
+
+  if to_regprocedure('public.get_event_setting_int(uuid, text, integer)') is not null then
+    revoke execute on function public.get_event_setting_int(uuid, text, integer) from public, anon, authenticated;
+    grant execute on function public.get_event_setting_int(uuid, text, integer) to service_role;
+  end if;
+end $$;
