@@ -13,6 +13,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, RotateCw, X } from "lucide-react";
 import { evaluateSubmission, type WorkflowState } from "@/app/actions";
+import { captureEvent, ANALYTICS_EVENTS } from "@/lib/analytics";
 import {
   MentorConfirmationBanner,
   parseEvaluationToastPayload,
@@ -58,11 +59,18 @@ export function MentorEvaluationPanel({
 
   useEffect(() => {
     if (state.ok) {
+      // R1: only technical ids (submissionId, version) — no score/total/note.
+      captureEvent(ANALYTICS_EVENTS.eg_mentor_eval_submitted, { submissionId, version });
+      // eg_deliverable_validated fires only for validate verdicts (funnel stage marker).
+      // verdict literal is a stage label, not a numeric score — R1-safe.
+      if (verdict === "validate_v1" || verdict === "validate_v2") {
+        captureEvent(ANALYTICS_EVENTS.eg_deliverable_validated, { submissionId, version });
+      }
       // Refresh server data so the readonly summary appears below if the user
       // navigates back to this page.
       router.refresh();
     }
-  }, [state.ok, router]);
+  }, [state.ok, submissionId, version, verdict, router]);
 
   const updateScore = (key: string, val: number) => {
     setScores((prev) => ({ ...prev, [key]: val }));

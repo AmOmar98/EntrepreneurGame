@@ -11,9 +11,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { JourneyLevelNode } from "@/components/journey-level-node";
 import {
-  LEVEL_IDS,
   getLevelNumber,
-  getShortLevelLabel,
   type LevelState,
 } from "@/lib/journey-progression";
 import type { LevelId } from "@/lib/types";
@@ -27,6 +25,8 @@ const TRACK_WIDTH = 16;
 export type JourneyTrackProps = {
   levelStates: Map<LevelId, LevelState>;
   currentLevel: LevelId;
+  /** Short labels keyed by levelId. Derived from Level.label on the server. */
+  levelLabels: Record<string, string>;
   onLevelClick?: (id: LevelId) => void;
   onLevelHover?: (id: LevelId | null) => void;
 };
@@ -34,18 +34,20 @@ export type JourneyTrackProps = {
 // Descendant order on desktop: L7 top -> L0 bottom (matches wireframe).
 // Ascendant order on mobile: L0 bottom -> L7 top (visually = L7 top -> L0 bottom
 // when iterating top-to-bottom; same array, different fill direction).
-function orderedForDesktop(): LevelId[] {
-  return [...LEVEL_IDS].reverse();
+// levelIds is the sorted-by-ord list from the levelStates Map keys (insertion order = ord order).
+function orderedForDesktop(levelIds: LevelId[]): LevelId[] {
+  return [...levelIds].reverse();
 }
-function orderedForMobile(): LevelId[] {
+function orderedForMobile(levelIds: LevelId[]): LevelId[] {
   // Mobile = ascendant. Iterating top-to-bottom we want L7 at top, L0 at bottom
   // because user's eye reads top-down but charge fills upward (bottom -> top).
-  return [...LEVEL_IDS].reverse();
+  return [...levelIds].reverse();
 }
 
 export function JourneyTrack({
   levelStates,
   currentLevel,
+  levelLabels,
   onLevelClick,
   onLevelHover,
 }: JourneyTrackProps) {
@@ -60,7 +62,8 @@ export function JourneyTrack({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  const ordered = isDesktop ? orderedForDesktop() : orderedForMobile();
+  const levelIds = Array.from(levelStates.keys());
+  const ordered = isDesktop ? orderedForDesktop(levelIds) : orderedForMobile(levelIds);
   const N = ordered.length;
   const currentIdx = ordered.findIndex((id) => id === currentLevel);
   const height = isDesktop ? HEIGHT_DESKTOP : HEIGHT_MOBILE;
@@ -98,7 +101,7 @@ export function JourneyTrack({
         const state = levelStates.get(id) ?? "locked";
         const topPct = (i / (N - 1)) * 100;
         const number = getLevelNumber(id);
-        const label = getShortLevelLabel(id);
+        const label = levelLabels[id] ?? id;
         const aria =
           state === "current"
             ? `Niveau ${number} - ${label} (en cours)`

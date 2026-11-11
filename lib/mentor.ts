@@ -4,7 +4,7 @@
 // review by the connected mentor.
 // Dual-mode (DATA-03): demo mode (no Supabase env) returns [] - no seed leak.
 import { createClient } from "@/utils/supabase/server";
-import { levelLabel } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import type { LevelId, Player, SubmissionStatus } from "@/lib/types";
 
 // ============================================================================
@@ -79,17 +79,19 @@ export async function getMentorPlayersOverview(
   const supabase = await createClient();
   if (!supabase) return [];
 
+  const levelsMap = await getLevelsMap();
+
   // Identify the connected user (used to scope "pending for me" submissions).
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
 
-  // 1. Resolve current event (single seed event for the pilot - EVENT-01).
+  // 1. Resolve current event (GM-designated active event via is_active).
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -231,7 +233,7 @@ export async function getMentorPlayersOverview(
 
   const rows: MentorPlayerOverview[] = players.map((player) => ({
     player,
-    levelLabel: levelLabel(player.currentLevel),
+    levelLabel: levelsMap.get(player.currentLevel)?.label ?? player.currentLevel,
     submittedCount: submittedByPlayer.get(player.id) ?? 0,
     totalDeliverables,
     pendingSubmissionIds: pendingByPlayer.get(player.id) ?? [],

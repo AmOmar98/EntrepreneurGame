@@ -36,6 +36,7 @@ Hotfix appliqués via Supabase MCP `apply_migration` en dehors du CLI push. Le f
 | 2026-05-17 | `20260517225015` | `rls_initplan_fix` | Supabase advisor `auth_rls_initplan` — wrap `auth.uid()` (15 policies) |
 | 2026-05-17 | `20260517225027` | `multiple_permissive_fix` | Supabase advisor `multiple_permissive_policies` — split `xxx_gm_all` sur 5 tables |
 | 2026-05-17 | `20260517225034` | `fk_indexes` | Supabase advisor `unindexed_foreign_keys` — 7 covering indexes |
+| 2026-11-11 | `20261111134235` | `revoke_authenticated_execute_internal_secdef` | Advisor `0029` hardening : REVOKE EXECUTE FROM PUBLIC, anon, authenticated sur les 7 fonctions triggers/recalc internes (`cf. quick 261111-db1`) |
 
 ## Apply order pour bootstrap fresh
 

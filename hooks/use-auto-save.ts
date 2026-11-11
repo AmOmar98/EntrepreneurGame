@@ -17,9 +17,26 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 export type AutoSaveOptions = {
   /** Polling interval in milliseconds. Default: 8000. */
   intervalMs?: number;
-  /** localStorage key for this draft, e.g. `eg_draft_<deliverableTemplateId>`. */
+  /** localStorage key for this draft, e.g. `eg_draft_<playerId>_<deliverableTemplateId>_v1`. */
   key: string;
+  /** Optional legacy key fallback for migrating un-scoped drafts (`eg_draft_<deliverableTemplateId>`). */
+  legacyKey?: string;
+  /** Optional callback invoked when a stored draft is hydrated on mount. */
+  onRestore?: (stored: Record<string, string>) => void;
 };
+
+export function buildDraftStorageKey({
+  playerId,
+  deliverableTemplateId,
+  version = 1,
+}: {
+  playerId?: string | null;
+  deliverableTemplateId: string;
+  version?: 1 | 2;
+}): string {
+  const owner = playerId && playerId.trim().length > 0 ? playerId.trim() : "anon";
+  return `eg_draft_${owner}_${deliverableTemplateId}_v${version}`;
+}
 
 export type AutoSaveResult = {
   /** Timestamp of the last successful localStorage write, or null if never saved. */
@@ -33,22 +50,30 @@ export type AutoSaveResult = {
 
 export function useAutoSave(
   formRef: RefObject<HTMLFormElement | null>,
-  { intervalMs = 8000, key }: AutoSaveOptions,
+  { intervalMs = 8000, key, legacyKey, onRestore }: AutoSaveOptions,
 ): AutoSaveResult {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   // Tracks the last serialized form state to avoid unnecessary writes.
   const lastSerializedRef = useRef<string | null>(null);
+  const clearedRef = useRef<boolean>(false);
+  const onRestoreRef = useRef(onRestore);
+  onRestoreRef.current = onRestore;
 
   // Hydrate form fields from localStorage on mount.
   // Must run before first paint to avoid FOUC on text restoration.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    clearedRef.current = false;
     const form = formRef.current;
     if (!form) return;
     try {
-      const raw = window.localStorage.getItem(key);
+      const primaryRaw = window.localStorage.getItem(key);
+      const fallbackRaw =
+        !primaryRaw && legacyKey ? window.localStorage.getItem(legacyKey) : null;
+      const raw = primaryRaw ?? fallbackRaw;
       if (!raw) return;
       const stored = JSON.parse(raw) as Record<string, string>;
+      onRestoreRef.current?.(stored);
       for (const [name, value] of Object.entries(stored)) {
         const el = form.elements.namedItem(name) as
           | HTMLInputElement
@@ -65,7 +90,7 @@ export function useAutoSave(
     } catch {
       // Corrupted JSON or storage unavailable — ignore silently.
     }
-  }, [key]);
+  }, [key, legacyKey]);
   // NOTE: formRef intentionally excluded from deps — the ref object is stable,
   // its .current is what matters and is read at effect time (not captured).
   // (eslint-plugin-react-hooks not registered in eslint.config.mjs; no
@@ -76,6 +101,7 @@ export function useAutoSave(
     if (typeof window === "undefined") return;
 
     const tick = () => {
+      if (clearedRef.current) return;
       const form = formRef.current;
       if (!form) return;
 
@@ -104,15 +130,22 @@ export function useAutoSave(
     };
 
     const id = window.setInterval(tick, intervalMs);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      tick();
+    };
   }, [intervalMs, key]);
   // NOTE: formRef intentionally excluded from deps — stable ref, read at tick time.
   // (See note above re: eslint-plugin-react-hooks not registered.)
 
   const clear = (): void => {
     if (typeof window === "undefined") return;
+    clearedRef.current = true;
     try {
       window.localStorage.removeItem(key);
+      if (legacyKey) {
+        window.localStorage.removeItem(legacyKey);
+      }
       lastSerializedRef.current = null;
     } catch {
       // Storage unavailable — noop.

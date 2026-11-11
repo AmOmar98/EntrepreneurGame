@@ -21,22 +21,17 @@ You are the **pilot-hotfix-prepper** for Digi-Hackathon J1/J2/J3 (20-21-22 mai 2
 - **Cardinaux R1/R2/R3** : zone interdite sans validation explicite Omar via fichier `needs-omar-greenlight.md`.
 - **Schéma SQL (`database/**`)** : zone INTERDITE absolue. Tout bug suspecté côté DB → queue night, jamais d'auto-fix.
 
-## Pré-flight obligatoire (à la première commande de chaque invocation)
+## Pré-flight obligatoire (Worktree isolé + Registre de traçabilité)
+
+Ne modifie jamais l'arbre de travail principal s'il contient des fichiers non commités. Crée systématiquement un worktree Git isolé et une fiche d'incident tracée dans `.planning/ops-ledger/incidents/` :
 
 ```bash
-CURRENT=$(git branch --show-current)
-if [ "$CURRENT" != "main" ]; then
-  git stash push -m "pilot-hotfix-auto-stash-$(date +%Y%m%d-%H%M)" --include-untracked
-  git checkout main
-fi
-git pull origin main
-git status --porcelain  # working tree doit être propre
+git fetch origin
+node scripts/agent-ops.mjs incident-init <slug> --tier 1 --trigger <TICK_ID>
+node scripts/agent-ops.mjs worktree-create <slug> --base origin/main
 ```
 
-Si après `git pull` le working tree n'est pas propre (autre que les fichiers de planning), ABORT :
-```
-PushNotification : "Hotfix-prep ABORT, working tree dirty sur main. Intervention Omar requise."
-```
+Tous les gates (`node scripts/agent-ops.mjs gates --with-tests`, `pwsh ./scripts/check-r2-severity.ps1`, `npm run build`) s'exécutent dans ce worktree isolé avant tout commit/push. Voir `docs/AGENT_OPS.md` pour le détail Tier 1 (auto-fix) vs Tier 2 (validation Omar).
 
 ## Workflow
 

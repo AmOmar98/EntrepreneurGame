@@ -12,9 +12,14 @@
 // that with a service-role client *only after publication* — the page route
 // itself is still gated by middleware auth and the role check in
 // app/results/page.tsx, so we are not exposing data publicly.
+//
+// Phase 16 / Plan 02: normalizePitchScore exported + dynamic criteria path.
+// Archives retro-compat: c5=0 -> *1.25 branch preserved for AgreenTech+Digi rows.
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { canSeeFullRanking } from "@/lib/pitch-mode";
+import { getPitchCriteria } from "@/lib/pitch-criteria";
+import type { PitchCriterion } from "@/lib/pitch-criteria";
 import type { Player, LevelId, AppRole } from "@/lib/types";
 
 // ============================================================================
@@ -75,7 +80,39 @@ type PitchScoreLite = {
   // c5 is selected solely to normalise pitchAvg back to /100 (legacy 5-crit
   // total_score is /100; new 4-crit total_score is /80 → *1.25).
   c5: number | string;
+  // Phase 16: dynamic jsonb path (nullable; legacy rows keep null).
+  scores: Record<string, number> | null;
 };
+
+// ============================================================================
+// normalizePitchScore — exported pure function (Phase 16 JURY-08)
+// ============================================================================
+//
+// Dynamic path  : scores jsonb present  → sum values / sum(criteria.max) * 100
+// Legacy 4-crit : scores null, c5=0     → totalRaw * 1.25 (retro-compat ×1.25)
+// Legacy 5-crit : scores null, c5>0     → totalRaw as-is (already /100)
+// Edge cases    : NaN total_score → 0; empty criteria with dynamic → 0
+//
+// ARCHIVES INTACTES (cardinal): the c5Raw > 0 ? totalRaw : totalRaw * 1.25 branch
+// must never be changed — it preserves AgreenTech + Digi archived rankings.
+
+export function normalizePitchScore(
+  r: { player_id: string; total_score: number | string; c5: number | string; scores: Record<string, number> | null },
+  criteria: PitchCriterion[],
+): number {
+  // Dynamic path: scores jsonb present with at least one key
+  if (r.scores && Object.keys(r.scores).length > 0) {
+    const maxTotal = criteria.reduce((acc, c) => acc + c.max, 0);
+    const rawSum = Object.values(r.scores).reduce((a, b) => a + (b ?? 0), 0);
+    return maxTotal > 0 ? (rawSum / maxTotal) * 100 : 0;
+  }
+  // Legacy path: c1..c5 columns
+  const totalRaw = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
+  const c5Raw = typeof r.c5 === "string" ? Number(r.c5) : r.c5;
+  if (Number.isNaN(totalRaw)) return 0;
+  // 4-crit retro-compat: c5=0 means total_score is /80 → scale to /100 by *1.25
+  return c5Raw > 0 ? totalRaw : totalRaw * 1.25;
+}
 
 // ============================================================================
 // Helpers
@@ -133,7 +170,7 @@ export async function isResultsPublished(): Promise<{
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id, results_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -163,12 +200,12 @@ export async function computeRanking(opts?: {
   const rlsClient = await createClient();
   if (!rlsClient) return { eventId: null, publishedAt: null, rows: [] };
 
-  // 1. Resolve current event (latest by starts_at). RLS-aware — events SELECT
-  // is open to all authenticated users.
+  // 1. Resolve current event (GM-designated active event via is_active). RLS-aware —
+  // events SELECT is open to all authenticated users.
   const { data: eventRow, error: eventErr } = await rlsClient
     .from("events")
     .select("id, results_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr) {
@@ -247,12 +284,17 @@ export async function computeRanking(opts?: {
   if (players.length === 0) return { eventId, publishedAt, rows: [] };
 
   // 3. Pitch scores for this event. Same fallback strategy as above.
+  // Phase 16: select scores jsonb for dynamic normalization path.
   async function fetchPitchScores(client: NonNullable<typeof rlsClient>) {
     return client
       .from("pitch_scores")
-      .select("player_id, total_score, c5")
+      .select("player_id, total_score, c5, scores")
       .eq("event_id", eventId);
   }
+
+  // Phase 16: fetch pitch criteria for normalizePitchScore dynamic path.
+  // Falls back to DEMO_PITCH_CRITERIA (4 legacy criteria) in demo/pre-migration.
+  const criteria = await getPitchCriteria(eventId);
 
   let scoreRowsResolved: PitchScoreLite[] = [];
   if (serviceClient && !usedFallback) {
@@ -277,18 +319,21 @@ export async function computeRanking(opts?: {
   }
 
   // 4. Aggregate pitch scores per player (mean + count).
-  // Design v2 backward-compat: when a vote was cast under the 4-criteria
-  // design (c5=0), total_score is /80 → scale to /100 by *1.25. Legacy
-  // 5-criteria votes (c5>0) keep their /100 total as-is. Result: pitchAvg
-  // is always on the /100 scale and rankings stay comparable across mixed
-  // historical data.
+  // Phase 16: normalizePitchScore handles both dynamic (scores jsonb) and legacy
+  // (c1..c5) paths. Archives retro-compat preserved: c5=0 -> *1.25 for AgreenTech.
   const sumByPlayer = new Map<string, number>();
   const countByPlayer = new Map<string, number>();
   for (const r of scoreRowsResolved) {
+    // WR-04: skip only when BOTH paths are unusable —
+    // - legacy path: total_score is NaN (malformed DB write)
+    // - dynamic path: scores jsonb is absent or empty
+    // If total_score is NaN but scores jsonb is present and non-empty, proceed
+    // via the dynamic path (normalizePitchScore will use scores). If scores is
+    // absent but total_score is valid, proceed via the legacy path.
     const totalRaw = typeof r.total_score === "string" ? Number(r.total_score) : r.total_score;
-    const c5Raw = typeof r.c5 === "string" ? Number(r.c5) : r.c5;
-    if (Number.isNaN(totalRaw)) continue;
-    const normalized = c5Raw > 0 ? totalRaw : totalRaw * 1.25;
+    const hasValidScores = r.scores != null && Object.keys(r.scores).length > 0;
+    if (Number.isNaN(totalRaw) && !hasValidScores) continue;
+    const normalized = normalizePitchScore(r, criteria);
     sumByPlayer.set(r.player_id, (sumByPlayer.get(r.player_id) ?? 0) + normalized);
     countByPlayer.set(r.player_id, (countByPlayer.get(r.player_id) ?? 0) + 1);
   }

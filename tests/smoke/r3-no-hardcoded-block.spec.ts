@@ -7,6 +7,12 @@
 // player is attached. We still check the rule on every interactive element:
 // no Player-facing CTA should have a `disabled` attribute that isn't paired
 // with the amber locked hint affordance.
+//
+// Phase 15 extension: the new GM editor routes (/admin/events, /admin/levels,
+// /admin/events/[id]/missions) and the soft_recommends_before amber hint on
+// the Player deliverable page must NOT introduce new hard-block patterns.
+// In demo mode these pages redirect to /login, so the assertion covers
+// the login page (the fallback render path).
 import { test, expect } from "@playwright/test";
 
 test.describe("R3 — No hardcoded blocking, amber hint affordance only", () => {
@@ -44,5 +50,54 @@ test.describe("R3 — No hardcoded blocking, amber hint affordance only", () => 
         `${route} returned ${res?.status()}`,
       ).toBeLessThan(500);
     }
+  });
+
+  // Phase 15: /admin/events does not 5xx in demo mode
+  test("/admin/events does not 5xx in demo mode (Phase 15 — ENGINE-04)", async ({
+    page,
+  }) => {
+    const res = await page.goto("/admin/events");
+    expect(
+      res?.status() ?? 0,
+      `/admin/events returned ${res?.status()} — must be < 500`,
+    ).toBeLessThan(500);
+  });
+
+  // Phase 15: /admin/levels does not 5xx in demo mode
+  test("/admin/levels does not 5xx in demo mode (Phase 15 — LEVELS-04)", async ({
+    page,
+  }) => {
+    const res = await page.goto("/admin/levels");
+    expect(
+      res?.status() ?? 0,
+      `/admin/levels returned ${res?.status()} — must be < 500`,
+    ).toBeLessThan(500);
+  });
+
+  // Phase 15: /admin/events/[id]/missions does not 5xx in demo mode
+  test("/admin/events/[id]/missions does not 5xx in demo mode (Phase 15 — ENGINE-01/02)", async ({
+    page,
+  }) => {
+    const res = await page.goto(
+      "/admin/events/00000000-0000-4000-a000-000000000001/missions",
+    );
+    expect(
+      res?.status() ?? 0,
+      `/admin/events/[id]/missions returned ${res?.status()} — must be < 500`,
+    ).toBeLessThan(500);
+  });
+
+  // Phase 15: soft_recommends_before amber hint must NOT produce a disabled
+  // anchor or blocking disabled button on the Player deliverable page.
+  // In demo mode the page redirects to /login; this verifies no 5xx.
+  test("/journey/deliverable/[id] does not 5xx (soft_recommends_before hint — R3)", async ({
+    page,
+  }) => {
+    const DEMO_DELIVERABLE_ID = "00000000-0000-0000-0000-000000000001";
+    const res = await page.goto(`/journey/deliverable/${DEMO_DELIVERABLE_ID}`);
+    expect(
+      res?.status() ?? 0,
+      "Deliverable page with soft_recommends_before must not 5xx",
+    ).toBeLessThan(500);
   });
 });

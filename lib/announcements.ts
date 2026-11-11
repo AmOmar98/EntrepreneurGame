@@ -63,8 +63,8 @@ function mapAnnouncement(
 // ============================================================================
 
 /**
- * Fetch the most recent announcements for the current event (latest by
- * starts_at). Capped at `limit` rows (default 25).
+ * Fetch the most recent announcements for the current event (GM-designated
+ * active event via is_active). Capped at `limit` rows (default 25).
  */
 export async function getRecentAnnouncements(limit = 25): Promise<Announcement[]> {
   const supabase = await createClient();
@@ -73,7 +73,7 @@ export async function getRecentAnnouncements(limit = 25): Promise<Announcement[]
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .select("id")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
   if (eventErr || !eventRow) return [];
@@ -156,13 +156,9 @@ export async function getAnnouncementsForPlayer(
   const supabase = await createClient();
   if (!supabase) return [];
 
-  // Resolve player + level.
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const playerId = (membership as { player_id?: string } | null)?.player_id ?? null;
+  // Resolve player + level (active-event aware per EVT-01).
+  const { resolveActivePlayerIdForUser } = await import("@/lib/player-membership");
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, userId);
 
   let levelId: LevelId | null = null;
   if (playerId) {

@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { Pill } from "@/components/ui";
 import { dictionaries } from "@/lib/i18n";
-import { getLevelNumber, getShortLevelLabel } from "@/lib/journey-progression";
+import { getLevelNumber } from "@/lib/journey-progression";
 import type { LevelId } from "@/lib/types";
 
 const t = dictionaries.fr;
@@ -14,6 +14,8 @@ const t = dictionaries.fr;
 export type JourneyHeroNextStepProps = {
   // Target level the CTA points at (drives kicker and CTA button).
   levelId: LevelId;
+  /** Short label for the level (e.g. "Problème"). Passed from server page via levelLabels map. */
+  levelLabel?: string;
   // CTA destination (deliverable detail page or onClick handler).
   ctaHref: string;
   ctaLabel: string;
@@ -32,6 +34,7 @@ export type JourneyHeroNextStepProps = {
 
 export function JourneyHeroNextStep({
   levelId,
+  levelLabel,
   ctaHref,
   ctaLabel,
   title,
@@ -40,7 +43,7 @@ export function JourneyHeroNextStep({
   compact = false,
 }: JourneyHeroNextStepProps) {
   const number = getLevelNumber(levelId);
-  const label = getShortLevelLabel(levelId);
+  const label = levelLabel ?? levelId;
   const kicker = `${t.journey_v2_kicker_prefix} ${number} - ${label.toUpperCase()}`;
   const className = compact ? "eic-hero eic-hero--compact" : "eic-hero";
 

@@ -32,7 +32,7 @@ export async function getCurrentPitchModeState(): Promise<{
   const { data: eventRow, error } = await supabase
     .from("events")
     .select("id, pitch_mode_state, pitch_mode_closed_at, results_published_at")
-    .order("starts_at", { ascending: false })
+    .eq("is_active", true)
     .limit(1)
     .maybeSingle();
 

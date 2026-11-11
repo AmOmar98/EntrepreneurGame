@@ -12,8 +12,9 @@
 //   4. grep -rn "atlas-soil\|Tamwilcom\|Bank of Africa\|Innov Invest\|Bluespace" lib
 //      -> no matches outside intent comments.
 import { hasSupabaseEnv } from "@/lib/supabase-status";
-import type { DeliverableTemplate, Mission, Player } from "@/lib/types";
+import type { DeliverableTemplate, Level, Mission, Player } from "@/lib/types";
 import { demoDeliverableTemplates } from "./deliverableTemplates";
+import { demoLevels } from "./levels";
 import { demoMissions } from "./missions";
 import { demoPlayers } from "./players";
 
@@ -27,4 +28,8 @@ export function seedMissions(): Mission[] {
 
 export function seedDeliverableTemplates(): DeliverableTemplate[] {
   return hasSupabaseEnv() ? [] : demoDeliverableTemplates;
+}
+
+export function seedLevels(): Level[] {
+  return hasSupabaseEnv() ? [] : demoLevels;
 }

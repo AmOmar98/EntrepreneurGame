@@ -8,8 +8,7 @@
 // Player tries to access another Player's deliverable URL.
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-// PLY-11: ExternalLink icon ready for OneDrive/external links when they land (main branch dbbb28a).
-// import { ExternalLink } from "lucide-react";
+import { Info } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Pill } from "@/components/ui";
 import { EngagementMilestonesBadges } from "@/components/engagement-milestones-badges";
@@ -27,6 +26,7 @@ import { SubmissionTicket } from "@/components/submission-ticket";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { getMoscowCardsForPlayerDeliverable } from "@/lib/moscow";
+import { resolveActivePlayerIdForUser } from "@/lib/player-membership";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type {
   RubricCriterion,
@@ -35,10 +35,7 @@ import type {
   SubmissionStatus,
   Verdict,
 } from "@/lib/types";
-import {
-  EXAMPLES_FOLDER_URL,
-  getTemplateLink,
-} from "@/lib/template-links";
+import { EXAMPLES_FOLDER_URL } from "@/lib/template-links";
 import { createClient } from "@/utils/supabase/server";
 
 const t = dictionaries.fr;
@@ -51,13 +48,19 @@ type DeliverableTemplateRow = {
   rubric: RubricCriterion[] | null;
   max_score: number;
   is_bonus?: boolean | null;
+  // ENGINE-05: data-driven columns (pre-migration defensive: may be null/absent)
+  composer_kind?: string | null;
+  template_url?: string | null;
+  auto_validate?: boolean | null;
+  soft_recommends_before?: string | null;
 };
 
-// T3X-EXPANSION wave 3 / plan 12-10 — MoSCoW Kanban surfacing slug.
-// When the deliverable template matches this slug, surface <MoscowKanban>
+// T3X-EXPANSION wave 3 / plan 12-10 — MoSCoW Kanban surfacing.
+// ENGINE-05: Now reads composer_kind column instead of MOSCOW_DELIVERABLE_SLUG literal.
+// When the template's composer_kind === "moscow", surface <MoscowKanban>
 // IN ADDITION to the existing SubmissionForm/Ticket flow (R3 : ProofWorkflow
 // fallback preserved, never replaces).
-const MOSCOW_DELIVERABLE_SLUG = "fiche-produit-plan-dev-v1";
+// Pre-migration defensive: composer_kind may be absent → defaults to "simple".
 
 type SubmissionRow = {
   id: string;
@@ -146,33 +149,35 @@ export default async function DeliverableDetailPage({
     );
   }
 
-  // Resolve Player membership (ownership precondition).
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) {
+  // Resolve Player membership (ownership precondition, active-event aware per EVT-01).
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  if (!playerId) {
     notFound();
   }
-  const playerId = (membership as { player_id: string }).player_id;
 
   // Fetch the deliverable template by id.
+  // ENGINE-05: also fetch mission_id, composer_kind, template_url, auto_validate,
+  // soft_recommends_before (pre-migration: may be absent → defensive ?? fallbacks).
   const { data: tplRow } = await supabase
     .from("deliverable_templates")
-    .select("id, slug, title, description, rubric, max_score, is_bonus")
+    .select("id, mission_id, slug, title, description, rubric, max_score, is_bonus, composer_kind, template_url, auto_validate, soft_recommends_before")
     .eq("id", id)
     .maybeSingle();
   if (!tplRow) {
     notFound();
   }
-  const tpl = tplRow as DeliverableTemplateRow;
+  const tpl = tplRow as DeliverableTemplateRow & { mission_id?: string | null };
   const rubric = Array.isArray(tpl.rubric) ? tpl.rubric : [];
 
-  // T3X-EXPANSION wave 3 / plan 12-10 — surface MoscowKanban conditionally
-  // for the dev-plan deliverable. ProofWorkflow / SubmissionForm fallback
-  // remains accessible below (R3 : never block).
-  const isMoscowDeliverable = tpl.slug === MOSCOW_DELIVERABLE_SLUG;
+  // ENGINE-05 defensive reads (pre-migration: columns may be absent).
+  const composerKind: string = tpl?.composer_kind ?? "simple";
+  const templateUrl: string | null = tpl?.template_url ?? null;
+  const autoValidate: boolean = tpl?.auto_validate ?? false;
+
+  // T3X-EXPANSION wave 3 / plan 12-10 — surface MoscowKanban conditionally.
+  // ENGINE-05: uses composer_kind column (pre-migration defensive ?? "simple" above).
+  // ProofWorkflow / SubmissionForm fallback remains accessible below (R3 : never block).
+  const isMoscowDeliverable = composerKind === "moscow";
   const moscowCards = isMoscowDeliverable
     ? await getMoscowCardsForPlayerDeliverable(playerId, tpl.id)
     : null;
@@ -180,20 +185,37 @@ export default async function DeliverableDetailPage({
   // quick-260519-l1l : Fiches d'entretien (02b) composer + R3 exception hard-block
   // gate on prep-questions-v1 (02a). Signed Omar 2026-05-19. ONLY hard-block in
   // pilot — every other deliverable transition stays amber-warn-only.
-  const isFichesEntretienDeliverable = tpl.slug === "fiches-entretien-v1";
+  // ENGINE-05: uses composer_kind + auto_validate columns (defensive defaults above).
+  const isFichesEntretienDeliverable = composerKind === "multi_url" && autoValidate === true;
   let fichesGateLocked = false;
   let fichesGateReason: string | undefined;
   // quick-260519-uuy / Task 3 — hoist prep-questions-v1 template id so the
   // composer can render an actionable Link back to the prerequisite. Stays
   // null when the prep template is absent (e.g. demo seed without 02a).
   // The slug remains a literal here (R3 exception, signed Omar 2026-05-19).
+  // EVT-01: scope lookup to tpl.mission_id first so multi-event DBs never collide.
   let prepQuestionsDeliverableId: string | null = null;
   if (isFichesEntretienDeliverable) {
-    const { data: prepTpl } = await supabase
-      .from("deliverable_templates")
-      .select("id")
-      .eq("slug", "prep-questions-v1")
-      .maybeSingle();
+    let prepTpl: { id: string } | null = null;
+    if (tpl.mission_id) {
+      const { data: sameMissionPrep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("mission_id", tpl.mission_id)
+        .eq("slug", "prep-questions-v1")
+        .limit(1)
+        .maybeSingle();
+      prepTpl = (sameMissionPrep as { id: string } | null) ?? null;
+    }
+    if (!prepTpl) {
+      const { data: fallbackPrep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("slug", "prep-questions-v1")
+        .limit(1)
+        .maybeSingle();
+      prepTpl = (fallbackPrep as { id: string } | null) ?? null;
+    }
     if (prepTpl) {
       prepQuestionsDeliverableId = (prepTpl as { id: string }).id;
       const { data: prepSubs } = await supabase
@@ -211,6 +233,35 @@ export default async function DeliverableDetailPage({
         fichesGateReason =
           "Préparation 2A à valider par votre mentor avant de débloquer les fiches d'entretien (02b).";
       }
+    }
+  }
+
+  // ENGINE-06: soft_recommends_before amber hint (R3 CARDINAL — advisory only, zero disabled DOM).
+  // Fetch the prerequisite template title + check if player already validated it.
+  let softRecommendsHintVisible = false;
+  let prerequisiteTitle = "";
+  if (tpl.soft_recommends_before) {
+    const { data: prereqTpl } = await supabase
+      .from("deliverable_templates")
+      .select("id, title")
+      .eq("id", tpl.soft_recommends_before)
+      .maybeSingle();
+    if (prereqTpl) {
+      const prereqRow = prereqTpl as { id: string; title: string };
+      prerequisiteTitle = prereqRow.title;
+      // Check if this player already validated the prerequisite.
+      const { data: prereqSubs } = await supabase
+        .from("submissions")
+        .select("status")
+        .eq("player_id", playerId)
+        .eq("deliverable_template_id", prereqRow.id)
+        .order("version", { ascending: false })
+        .limit(1);
+      const prereqValidated =
+        prereqSubs && prereqSubs.length > 0 &&
+        (prereqSubs[0] as { status: string }).status === "validated";
+      // Only show hint when prereq exists but is NOT yet validated.
+      softRecommendsHintVisible = !prereqValidated;
     }
   }
 
@@ -393,21 +444,30 @@ export default async function DeliverableDetailPage({
           </section>
         ) : null}
 
-        {/* Ressources EIC AgreenTech : template OneDrive (par slug) + dossier
-            exemples completes (global). Liens externes, ouverture nouvel onglet.
-            Si slug sans mapping (livrables demo, futurs slugs), seul l'exemple
+        {/* ENGINE-06 / R3 CARDINAL — soft_recommends_before amber hint.
+            Advisory ONLY: no disabled DOM, no pointer-events:none, no grayed CTAs.
+            Renders when the prerequisite template is not yet validated. */}
+        {softRecommendsHintVisible ? (
+          <p className="eic-locked-hint--amber" role="note" style={{ marginTop: 12, marginBottom: 0 }}>
+            <Info size={14} aria-hidden style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+            {t.admin_engine_soft_recommends_hint.replace("[titre]", prerequisiteTitle)}
+          </p>
+        ) : null}
+
+        {/* Ressources EIC : template OneDrive (data-driven via template_url column,
+            ENGINE-05) + dossier exemples completes (global). Liens externes,
+            ouverture nouvel onglet. Si template_url absent, seul l'exemple
             global s'affiche. */}
         {(() => {
-          const link = getTemplateLink(tpl.slug);
           return (
             <section style={{ marginTop: 16 }}>
               <h2 style={{ fontSize: 14, fontWeight: 600, color: "#475569", margin: "0 0 6px" }}>
                 Ressources EIC
               </h2>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {link ? (
+                {templateUrl ? (
                   <a
-                    href={link.templateUrl}
+                    href={templateUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -530,6 +590,7 @@ export default async function DeliverableDetailPage({
             deliverableTemplateId={id}
             deliverableTitle={tpl.title}
             evaluation={latestEvaluation}
+            playerId={playerId}
             previousSubmission={latest}
             rewardXp={tpl.max_score}
             rubric={rubric}
@@ -547,7 +608,7 @@ export default async function DeliverableDetailPage({
             >
               {t.submission_v2_title}
             </h2>
-            <SubmissionForm deliverableTemplateId={id} version={2} />
+            <SubmissionForm deliverableTemplateId={id} playerId={playerId} version={2} />
           </>
         ) : isFichesEntretienDeliverable ? (
           // quick-260519-l1l : dedicated 10-URL composer for fiches-entretien-v1
@@ -561,7 +622,7 @@ export default async function DeliverableDetailPage({
             prepQuestionsDeliverableId={prepQuestionsDeliverableId}
           />
         ) : (
-          <SubmissionForm deliverableTemplateId={id} />
+          <SubmissionForm deliverableTemplateId={id} playerId={playerId} />
         )}
       </main>
     </AppShell>

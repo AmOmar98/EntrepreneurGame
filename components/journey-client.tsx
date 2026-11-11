@@ -18,7 +18,6 @@ import {
 } from "@/hooks/use-pixel-trigger";
 import { dictionaries } from "@/lib/i18n";
 import {
-  getShortLevelLabel,
   type LevelState,
 } from "@/lib/journey-progression";
 import type { JourneyMission } from "@/lib/journey";
@@ -48,6 +47,8 @@ export type JourneyClientProps = {
   totalEarnedXp: number;
   // Optional objective text per level (mapped on the server).
   objectivesByLevel: Partial<Record<LevelId, string>>;
+  /** Short labels keyed by levelId (e.g. "Problème"). Derived from Level.label on the server. */
+  levelLabels: Record<string, string>;
 };
 
 export function JourneyClient({
@@ -57,6 +58,7 @@ export function JourneyClient({
   hero,
   totalEarnedXp,
   objectivesByLevel,
+  levelLabels,
 }: JourneyClientProps) {
   const [openLevel, setOpenLevel] = useState<LevelId | null>(null);
   const [hovered, setHovered] = useState<LevelId | null>(null);
@@ -115,6 +117,7 @@ export function JourneyClient({
                 ctaHref={hero.ctaHref}
                 ctaLabel={hero.ctaLabel}
                 levelId={hero.levelId}
+                levelLabel={levelLabels[hero.levelId]}
                 meta={hero.meta}
                 subtitle={hero.subtitle}
                 title={hero.title}
@@ -127,6 +130,7 @@ export function JourneyClient({
           <div className="eic-journey__track-col">
             <JourneyTrack
               currentLevel={currentLevel}
+              levelLabels={levelLabels}
               levelStates={levelStates}
               onLevelClick={handleLevelClick}
               onLevelHover={setHovered}
@@ -136,7 +140,7 @@ export function JourneyClient({
           <div className="eic-journey__tip-col">
             {hovered ? (
               <HoveredHint
-                label={getShortLevelLabel(hovered)}
+                label={levelLabels[hovered] ?? hovered}
                 state={hoveredState ?? "locked"}
               />
             ) : (
@@ -156,6 +160,7 @@ export function JourneyClient({
       {openLevel && openState ? (
         <JourneyDrawer
           levelId={openLevel}
+          levelLabel={levelLabels[openLevel]}
           missions={missions}
           objective={objectivesByLevel[openLevel] ?? null}
           onClose={handleClose}

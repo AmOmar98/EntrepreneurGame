@@ -1,53 +1,56 @@
-# EIC Venture Journey
+# Entrepreneur Game
 
-V2 pilot app for the Entrepreneur Game / EIC Venture Journey.
+EIC/UEMF's platform for running entrepreneurship programs: teams complete missions, submit deliverables, receive mentor feedback, and present to a jury. GameMasters configure events, missions, evaluation criteria and scoring.
+
+The next product direction is **a production-ready version for EIC first, prepared for other organizations later**. The [production roadmap](docs/PRODUCTION_ROADMAP.md) covers reliability, user experience and event management together.
+
+Launch target: **3 November 2026**, the Idea'Wave Cycle 1 initiation workshop, according to the supplied provisional programme calendar. See the [launch calendar](docs/PRODUCTION_ROADMAP.md#ideawave-launch-calendar) for related dates and proposed rehearsal milestones.
+
+## Start here
+
+- [Documentation index](docs/README.md) — reading order and operational references.
+- [Repository guide](docs/REPOSITORY_GUIDE.md) — architecture, roles, routes and where to make changes.
+- [Development guide](docs/DEVELOPMENT.md) — setup, checks and contribution workflow.
+- [Repository audit](docs/REPO_AUDIT.md) — verified baseline, known gaps and evidence.
+- [Production roadmap](docs/PRODUCTION_ROADMAP.md) — prioritized work and release criteria.
 
 ## Run locally
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` or `http://localhost:3001` if you start the alternate dev port.
+Open `http://localhost:3000`. CI currently uses Node 20; see the development guide for the local verification environment and runtime alignment work.
 
-## What is built
+Without Supabase configuration, the app provides a **limited demo mode**: some pages show seed or empty data; protected dashboards may redirect to login. Full submission, review and jury workflows require a configured Supabase development project and test accounts. Existing `.env.local` files are loaded automatically; use the [explicit demo commands](docs/DEVELOPMENT.md#local-demo) when one is present.
 
-- Next.js App Router application with a cockpit, founder startup interface, coach overview, EIC admin analytics, startup admin, review queue, committee pack, ops checklist, and mailto lab.
-- Founder-facing checkpoints: Make it, Sell it, Look after it.
-- XP model with confirmed XP, pending XP, prestige XP, deliverable validation, and capped bonus achievements.
-- Link-based deliverable and bonus proof flow using `mailto:` drafts to assigned coach plus EIC.
-- Server route handlers for the requested exports:
-  - `/api/export/cohort.csv`
-  - `/api/export/review-queue.csv`
-  - `/api/export/committee/com-2026-05`
-  - `/api/export/kpi-snapshot.csv`
-  - `/api/export/eml/com-2026-05`
-- Seeded pilot data so the app runs before Supabase credentials exist.
-- Supabase-ready auth helpers, middleware, server actions, SQL schema, triggers, and pilot RLS.
+## What is in this checkout
 
-## Supabase integration path
+- Next.js 15 App Router, React 19 and TypeScript; custom CSS and design tokens.
+- Supabase authentication, PostgreSQL data and row-level access policies.
+- Player onboarding, journey, versioned submissions, bonus claims and help requests.
+- Mentor review, evaluations and comments.
+- Jury assignment, pitch sessions, configurable criteria and results.
+- GameMaster event creation/cloning/activation, mission and deliverable editors, levels, scoring settings and CSV exports.
+- Vitest unit tests, Playwright browser checks, GitHub Actions CI, and optional Sentry/PostHog instrumentation.
 
-The app has a demo fallback in `lib/data.ts`. When Supabase env vars are present, middleware protects the app and server actions write to Supabase tables.
+The audited branch is `milestone/v0.4-scale-foundation`, at `937468f` on 2026-09-29. Code completion and historical planning checkboxes do **not** establish the current deployed version. Production configuration, database parity and operational readiness still need evidence; see the audit.
 
-Apply the SQL in this order:
+## Checks
 
 ```bash
-database/schema.sql
-database/triggers.sql
-database/rls.sql
+npm run typecheck
+npm run lint
+npm run test:unit
+npm run build
+npm run test:e2e
 ```
 
-Then create users in Supabase Auth, add their rows to `profiles` and `user_roles`, create startups through `/admin/startups`, and assign founders/coaches.
+Browser checks currently exercise demo behavior, not authenticated database persistence. See [verification guidance](docs/DEVELOPMENT.md#verification).
 
-## Deploy
+## Database and deployment
 
-The app is deployed on Vercel for the pilot. See [`docs/DEPLOY.md`](docs/DEPLOY.md) for the full deployment guide:
+New migrations belong in `supabase/migrations/`; `database/migrations/` is historical. Follow [the migration policy](database/MANIFEST.md) for authorship, and read the [audit's bootstrap findings](docs/REPO_AUDIT.md) before attempting database setup. The historical fresh-database instructions are not currently a verified setup procedure.
 
-- First-time setup (Vercel link + env vars + Supabase Auth config)
-- Continuous deploy procedure (push to `master`)
-- Rollback procedure (code + DB)
-- Custom domain configuration
-- Troubleshooting
-
-After every production deploy, execute the smoke test checklist in [`.planning/phases/05-pitch-jury-results-smoke-test-e2e-deploiement-vercel-prod/SMOKE-TEST-E2E.md`](.planning/phases/05-pitch-jury-results-smoke-test-e2e-deploiement-vercel-prod/SMOKE-TEST-E2E.md) before opening to internal testers.
+Existing operator references: [deployment](docs/DEPLOY.md), [smoke tests](docs/SMOKE.md), [preflight](docs/PILOT-PREFLIGHT.md), [observability](docs/OBSERVABILITY.md). Confirm the target environment and deployed revision before using operational procedures.

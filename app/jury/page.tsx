@@ -8,6 +8,7 @@ import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getJuryOverview } from "@/lib/jury";
 import { getCurrentPitchModeState } from "@/lib/pitch-mode";
 import { isCurrentUserJuror } from "@/lib/jurors";
+import { getPitchCriteria } from "@/lib/pitch-criteria";
 import { JuryForm } from "./jury-form";
 import { JuryDialForm } from "./jury-dial-form";
 import { JurySessionForm } from "./jury-session-form";
@@ -45,6 +46,11 @@ export default async function JuryPage({
   const { eventId, rows } = hasSupabaseEnv()
     ? await getJuryOverview()
     : { eventId: null, rows: [] };
+
+  // Phase 16 (JURY-07): fetch dynamic criteria only in Supabase mode with a valid eventId.
+  // PRESERVE demo early-exit: this fetch occurs AFTER the hasSupabaseEnv() guard above.
+  // Falls back to DEMO_PITCH_CRITERIA (4 legacy) when pre-migration or no criteria defined.
+  const criteria = hasSupabaseEnv() && eventId ? await getPitchCriteria(eventId) : undefined;
 
   // quick-260519-jpr Wave 2 — pitch mode state + juror invitation gate.
   // GameMaster bypasses notInvited (always sees jury surface). Mentor invited
@@ -251,6 +257,7 @@ export default async function JuryPage({
                     eventId={eventId}
                     dict={t}
                     pitchModeState={pitchModeState}
+                    criteria={criteria}
                   />
                 )}
               </article>

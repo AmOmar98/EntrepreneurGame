@@ -2,8 +2,8 @@
 // Lists all deliverable_templates joined with their mission + level,
 // for the GameMaster /admin/deliverables page (toggle is_active).
 import { createClient } from "@/utils/supabase/server";
+import { getLevelsMap } from "@/lib/levels";
 import type { LevelId } from "@/lib/types";
-import { levelLabel } from "@/lib/journey";
 
 export type AdminDeliverableRow = {
   id: string;
@@ -37,6 +37,8 @@ export async function getAdminDeliverables(): Promise<AdminDeliverableRow[]> {
   const supabase = await createClient();
   if (!supabase) return [];
 
+  const levelsMap = await getLevelsMap();
+
   const { data: tplRows, error: tplErr } = await supabase
     .from("deliverable_templates")
     .select("id, slug, title, max_score, is_active, ord, mission_id")
@@ -69,7 +71,7 @@ export async function getAdminDeliverables(): Promise<AdminDeliverableRow[]> {
       ord: r.ord,
       missionTitle: mission?.title ?? "",
       levelId: level,
-      levelLabel: levelLabel(level),
+      levelLabel: levelsMap.get(level)?.label ?? level,
     };
   });
 

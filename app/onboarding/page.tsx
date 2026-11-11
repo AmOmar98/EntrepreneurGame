@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import { getCurrentRole, pathForRole } from "@/lib/auth";
+import { resolveActivePlayerIdForUser } from "@/lib/player-membership";
 import { dictionaries } from "@/lib/i18n";
 
 const t = dictionaries.fr;
@@ -58,19 +59,15 @@ export default async function OnboardingPage() {
   const role = await getCurrentRole();
   if (role && role !== "player") redirect(pathForRole(role));
 
-  // Resolve player + onboarded_at via membership.
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id, players(id, name, idea, onboarded_at)")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const rawPlayer = membership?.players as
-    | { id: string; name: string | null; idea: string | null; onboarded_at: string | null }
-    | { id: string; name: string | null; idea: string | null; onboarded_at: string | null }[]
-    | null
-    | undefined;
-  const player = Array.isArray(rawPlayer) ? rawPlayer[0] : rawPlayer;
+  // Resolve player + onboarded_at via active-event-aware membership (EVT-01).
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  const { data: player } = playerId
+    ? await supabase
+        .from("players")
+        .select("id, name, idea, onboarded_at")
+        .eq("id", playerId)
+        .maybeSingle()
+    : { data: null };
 
   if (!player) {
     return (

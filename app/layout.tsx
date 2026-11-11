@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Baskervville, Montserrat } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
 import "./eic-tokens.css";
 import "./wf-components.css";
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body>
         {children}
         <SpeedInsights />
+        <AnalyticsProvider />
       </body>
     </html>
   );

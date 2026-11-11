@@ -46,6 +46,8 @@ export type RevisionPanelProps = {
   rewardXp: number;
   // Latest V1 submission, surfaced in the collapsible block.
   previousSubmission: Submission | null;
+  /** Optional playerId for scoping V2 draft auto-save (UX-01). */
+  playerId?: string | null;
   /**
    * Phase 8 / MNT-03 — async comments slot. Rendered between the checklist
    * and the resubmission form. Server component (list + composer) provided
@@ -96,6 +98,7 @@ export function RevisionPanel({
   rubric,
   rewardXp,
   previousSubmission,
+  playerId,
   commentsSlot,
 }: RevisionPanelProps) {
   const [showV1, setShowV1] = useState(false);
@@ -204,7 +207,11 @@ export function RevisionPanel({
 
       <div className="eic-revision__form">
         <p className="eic-revision__kicker">{t.revision_form_kicker}</p>
-        <SubmissionForm deliverableTemplateId={deliverableTemplateId} version={2} />
+        <SubmissionForm
+          deliverableTemplateId={deliverableTemplateId}
+          playerId={playerId}
+          version={2}
+        />
       </div>
 
       {previousSubmission ? (

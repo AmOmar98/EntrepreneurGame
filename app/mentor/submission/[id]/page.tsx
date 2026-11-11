@@ -33,7 +33,7 @@ import {
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
-import { levelLabel } from "@/lib/journey";
+import { getLevelsMap } from "@/lib/levels";
 import { getPendingSubmissionQueue } from "@/lib/mentor";
 import type {
   LevelId,
@@ -178,6 +178,8 @@ export default async function MentorSubmissionPage({
       </AppShell>
     );
   }
+
+  const levelsMap = await getLevelsMap();
 
   // Submission.
   const { data: subRow } = await supabase
@@ -402,7 +404,7 @@ export default async function MentorSubmissionPage({
                   </span>
                 ) : null}
                 <span className="eic-mentor-page__brief-item">
-                  <strong>{t.evaluation_level}</strong> · {levelLabel(player.current_level)}
+                  <strong>{t.evaluation_level}</strong> · {levelsMap.get(player.current_level)?.label ?? player.current_level}
                 </span>
                 <span className="eic-mentor-page__brief-item">
                   <strong>{t.evaluation_score_project}</strong> ·{" "}

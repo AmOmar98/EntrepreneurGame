@@ -10,6 +10,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveOnboarding, type WorkflowState } from "@/app/actions";
+import { captureEvent, ANALYTICS_EVENTS } from "@/lib/analytics";
 import { OnboardingStep1 } from "@/components/onboarding-step-1";
 import {
   OnboardingStep2,
@@ -74,6 +75,7 @@ export function OnboardingStepper({
 
   useEffect(() => {
     if (state.ok) {
+      captureEvent(ANALYTICS_EVENTS.eg_onboarding_completed);
       router.push("/journey");
     }
   }, [state.ok, router]);

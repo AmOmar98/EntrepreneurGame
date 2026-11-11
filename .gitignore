@@ -38,3 +38,6 @@ playwright/.cache/
 porteurs-agreentech-*.xlsx
 porteurs-agreentech-*.extracted.md
 livrables-post-bootcamp/
+digi-hackathon/
+.planning/quick/test-creds.sh
+.planning/quick/260519-onepagers/

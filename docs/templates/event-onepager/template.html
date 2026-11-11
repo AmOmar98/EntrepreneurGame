@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Carte équipe · P01 Simock · Digi-Hackathon 4ème édition</title>
+<style>
+  :root {
+    --brand-primary: #0B2545;
+    --brand-accent: #C9A227;
+    --brand-bg: #FAFAF7;
+    --brand-surface: #FFFFFF;
+    --brand-border: #E5E7EB;
+    --brand-text: #111827;
+    --brand-text-muted: #6B7280;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 8mm 12mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--brand-bg);
+    color: var(--brand-text);
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sheet {
+    max-width: 273mm;
+    margin: 0 auto;
+  }
+
+  /* ---------- HEADER ---------- */
+  .head {
+    background: var(--brand-primary);
+    color: #fff;
+    border-radius: 10px;
+    padding: 12px 18px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 4px solid var(--brand-accent);
+  }
+  .head .left { flex: 1; min-width: 0; }
+  .head .badge {
+    display: inline-block;
+    background: rgba(201, 162, 39, 0.18);
+    color: var(--brand-accent);
+    border: 1px solid rgba(201, 162, 39, 0.5);
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .head h1 {
+    font-size: 22pt;
+    line-height: 1.05;
+    margin: 0 0 3px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+  }
+  .head h1 .accent { color: var(--brand-accent); }
+  .head .lead-name {
+    font-size: 9.5pt;
+    color: #b9c5d9;
+    margin: 0;
+  }
+  .head .lead-name strong { color: #fff; }
+
+  .head-logos {
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .head-logos img.eic { height: 38px; width: auto; display: block; }
+  .head-logos .vsep {
+    width: 1px;
+    height: 38px;
+    background: var(--brand-border);
+  }
+  .head-logos img.uemf { height: 38px; width: auto; display: block; }
+
+  /* ---------- BODY 2 COLS ---------- */
+  .body {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  /* ---------- BLOCK ---------- */
+  .block {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .block + .block { margin-top: 10px; }
+  .block.highlight {
+    background: #f7f5ee;
+    border: 1.5px solid var(--brand-accent);
+  }
+  .block h2 {
+    font-size: 8.5pt;
+    color: var(--brand-primary);
+    margin: 0 0 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--brand-accent);
+  }
+  .block dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 3px 12px;
+  }
+  .block dt {
+    color: var(--brand-text-muted);
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    padding-top: 2px;
+  }
+  .block dd {
+    margin: 0;
+    font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    font-size: 10.5pt;
+    color: var(--brand-primary);
+    font-weight: 700;
+    word-break: break-all;
+  }
+  .block.normal dd {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 9.5pt;
+    word-break: normal;
+  }
+
+  /* ---------- MOCKUP DESKTOP ---------- */
+  .mock-row {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 10px;
+    padding: 10px 14px 12px;
+  }
+  .mock-row h2 {
+    font-size: 8.5pt;
+    color: var(--brand-primary);
+    margin: 0 0 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--brand-accent);
+  }
+  .mockup-desktop {
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid var(--brand-border);
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.08);
+  }
+  .browser-bar {
+    background: #eef2f5;
+    border-bottom: 1px solid var(--brand-border);
+    padding: 4px 9px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .browser-bar .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .browser-bar .dot.r { background: #ff5f56; }
+  .browser-bar .dot.y { background: #ffbd2e; }
+  .browser-bar .dot.g { background: #27c93f; }
+  .browser-bar .url {
+    flex: 1;
+    margin-left: 10px;
+    background: #fff;
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 6.5pt;
+    color: var(--brand-text-muted);
+  }
+  .mockup-desktop img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .mockup-cap {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 8pt;
+    color: var(--brand-text-muted);
+    font-style: italic;
+  }
+  .mockup-cap strong {
+    color: var(--brand-primary);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  /* ---------- COACHS GRID ---------- */
+  .coachs {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .coachs h2 {
+    font-size: 8.5pt;
+    color: var(--brand-primary);
+    margin: 0 0 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--brand-accent);
+  }
+  .coachs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px 8px;
+  }
+  .coach {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 7px;
+    background: #f7f5ee;
+    border-radius: 5px;
+    font-size: 8.5pt;
+    line-height: 1.2;
+  }
+  .coach .ini {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    color: var(--brand-accent);
+    font-weight: 700;
+    font-size: 7pt;
+    display: grid;
+    place-items: center;
+    letter-spacing: 0.3px;
+  }
+  .coach .nm { color: var(--brand-text); font-weight: 600; }
+
+  /* ---------- ORGANISATEURS ---------- */
+  .orgs {
+    margin-top: 10px;
+    background: #f0f4fa;
+    border: 1px solid #d0dbeb;
+    border-left: 4px solid var(--brand-primary);
+    border-radius: 10px;
+    padding: 9px 14px 10px;
+  }
+  .orgs h2 {
+    font-size: 8.5pt;
+    color: var(--brand-primary);
+    margin: 0 0 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+  }
+  .orgs .org-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .orgs .org-list li {
+    padding: 4px 0 4px 16px;
+    position: relative;
+    font-size: 8.5pt;
+    line-height: 1.35;
+    color: var(--brand-text);
+    border-bottom: 1px dashed #d0dbeb;
+  }
+  .orgs .org-list li:last-child { border-bottom: none; }
+  .orgs .org-list li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 9px;
+    width: 7px; height: 7px;
+    background: var(--brand-accent);
+    border-radius: 50%;
+  }
+  .orgs .org-list li strong { color: var(--brand-primary); }
+
+  /* ---------- FOOTER ---------- */
+  .foot {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 7.5pt;
+    color: var(--brand-text-muted);
+    font-style: italic;
+    line-height: 1.45;
+  }
+  .foot .gold { color: var(--brand-accent); font-weight: 700; font-style: normal; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- HEADER -->
+  <div class="head">
+    <div class="left">
+      <span class="badge">Digi-Hackathon 4ème édition · 20-22 mai 2026</span>
+      <h1>Simock <span class="accent">·</span> <span style="color:var(--brand-accent)">P01</span></h1>
+      <p class="lead-name">Lead équipe : <strong>DJE BI TRAZIE ENOCK</strong></p>
+    </div>
+    <div class="head-logos">
+      <img class="eic" src="assets/logo-eic.png" alt="Euromed Innovation Center" />
+      <span class="vsep"></span>
+      <img class="uemf" src="assets/logo-uemf.png" alt="Université Euro-Méditerranéenne de Fès" />
+    </div>
+  </div>
+
+  <!-- BODY 2 COLS -->
+  <div class="body">
+
+    <!-- LEFT COL : ACCESS + MOCKUP -->
+    <div>
+      <div class="block highlight">
+        <h2>Vos accès plateforme Entrepreneur Game</h2>
+        <dl>
+          <dt>URL</dt><dd>entrepreneur-game-six.vercel.app</dd>
+          <dt>Email</dt><dd>team-simock@digi.uemf.ma</dd>
+          <dt>Mot de passe</dt><dd>vgK5BppsURNL</dd>
+        </dl>
+      </div>
+
+      <div class="mock-row" style="margin-top:10px">
+        <h2>Aperçu plateforme · Entrepreneur Game</h2>
+        <div class="mockup-desktop">
+          <div class="browser-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="url">entrepreneur-game-six.vercel.app/journey</span>
+          </div>
+          <img src="assets/screenshot-desktop.png" alt="Aperçu /journey" />
+        </div>
+        <div class="mockup-cap"><strong>Votre parcours, vos livrables, vos messages avec vos coachs</strong></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COL : WIFI + LIEU + COACHS -->
+    <div>
+      <div class="block">
+        <h2>WiFi sur place</h2>
+        <dl>
+          <dt>Réseau</dt><dd>UEMF_2</dd>
+          <dt>Mot de passe</dt><dd>uemf@2016</dd>
+        </dl>
+      </div>
+
+      <div class="block normal">
+        <h2>Lieu</h2>
+        <dl>
+          <dt>Adresse</dt><dd>EIC — Eco-Campus UEMF, Fès Route de Meknès</dd>
+        </dl>
+      </div>
+
+      <div class="coachs">
+        <h2>Vos coachs</h2>
+        <div class="coachs-grid">
+          <div class="coach"><span class="ini">AW</span><span class="nm">Pr. Abebaw Degu Workneh</span></div>
+          <div class="coach"><span class="ini">OM</span><span class="nm">Pr. Oumaima Moutik</span></div>
+          <div class="coach"><span class="ini">NL</span><span class="nm">Pr. Nisrine Lachgar</span></div>
+          <div class="coach"><span class="ini">BE</span><span class="nm">Pr. Badr El Kari</span></div>
+          <div class="coach"><span class="ini">HS</span><span class="nm">Pr. Hiba Sekkat</span></div>
+          <div class="coach"><span class="ini">OA</span><span class="nm">Omar Ameur</span></div>
+          <div class="coach"><span class="ini">FF</span><span class="nm">Dr. Fatimaezzahra Fouad</span></div>
+          <div class="coach"><span class="ini">GB</span><span class="nm">Ghada Bouhlal</span></div>
+          <div class="coach"><span class="ini">IB</span><span class="nm">Imane Bousmaha</span></div>
+        </div>
+      </div>
+
+      <!-- ORGANISATEURS & PARTENAIRES -->
+      <div class="orgs">
+        <h2>Organisateurs &amp; partenaires</h2>
+        <ul class="org-list">
+          <li><strong>Division de la Santé Scolaire et Universitaire (DSSU)</strong> — Direction de la Population, Ministère de la Santé et de la Protection Sociale</li>
+          <li><strong>Université Euro-Méditerranéenne de Fès (UEMF)</strong> — Euromed Innovation Center (EIC)</li>
+          <li><strong>UNFPA</strong> — Fonds des Nations Unies pour la Population</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <span class="gold">Hackathon Santé mentale &amp; bien-être jeunes</span> · 4ème édition Digi-Hackathon · 20-22 mai 2026 ·
+    EIC Fès — Eco-Campus UEMF. Le Welcome Guide complet (programme, livrables, code de conduite) est remis séparément.
+  </div>
+
+</div>
+
+</body>
+</html>

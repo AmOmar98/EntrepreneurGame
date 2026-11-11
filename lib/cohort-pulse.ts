@@ -16,7 +16,7 @@
 //     -> empty (we only ever select id / cohort_id / mission_id / level_id /
 //     deliverable_template_id / status / player_id).
 import { createClient } from "@/utils/supabase/server";
-import { levelOrd } from "@/lib/journey";
+import { demoLevels } from "@/lib/seed/levels";
 import { seedPlayers } from "@/lib/seed";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type { LevelId, SubmissionStatus } from "@/lib/types";
@@ -63,9 +63,11 @@ function emptyEntries(total: number): CohortPulseEntry[] {
 function getCohortPulseDemo(): CohortPulseEntry[] {
   const players = seedPlayers();
   const total = players.length;
+  const levelsMap = new Map(demoLevels.map((l) => [l.id, l]));
+  const ordOf = (id: LevelId) => levelsMap.get(id)?.ord ?? 0;
   return PULSE_LEVELS.map((levelId) => {
-    const ord = levelOrd(levelId);
-    const count = players.filter((p) => levelOrd(p.currentLevel) > ord).length;
+    const ord = ordOf(levelId);
+    const count = players.filter((p) => ordOf(p.currentLevel) > ord).length;
     return { levelId, count, total };
   });
 }
@@ -83,20 +85,17 @@ export async function getCohortPulse(
     return emptyEntries(0);
   }
 
-  // Resolve the Player's cohort. We only ever select the cohort_id - never
-  // name / slug / scores. R1: the helper must never see those columns.
-  const { data: membership, error: memberErr } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
-  if (memberErr || !membership) return emptyEntries(0);
+  // Resolve the Player's cohort (active-event aware per EVT-01). We only ever
+  // select the cohort_id - never name / slug / scores. R1: the helper must never
+  // see those columns.
+  const { resolveActivePlayerIdForUser } = await import("@/lib/player-membership");
+  const { playerId, error: memberErr } = await resolveActivePlayerIdForUser(supabase, userId);
+  if (memberErr || !playerId) return emptyEntries(0);
 
   const { data: playerCohortRow, error: playerErr } = await supabase
     .from("players")
     .select("cohort_id")
-    .eq("id", (membership as { player_id: string }).player_id)
+    .eq("id", playerId)
     .maybeSingle();
   if (playerErr || !playerCohortRow) return emptyEntries(0);
   const cohortId = (playerCohortRow as { cohort_id: string }).cohort_id;
