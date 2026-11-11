@@ -7,7 +7,8 @@
 // getJourneyData fetches levels via getLevels() to populate JourneyData.levelLabel.
 import { createClient } from "@/utils/supabase/server";
 import { getLevels } from "@/lib/levels";
-import { getEventSettings } from "@/lib/event-settings";
+import { DEFAULT_EVENT_SETTINGS, getEventSettings } from "@/lib/event-settings";
+import { resolveActivePlayerIdForUser } from "@/lib/player-membership";
 import type {
   DeliverableTemplate,
   LevelId,
@@ -43,6 +44,8 @@ export type JourneyData = {
   levelLabel: string;
   missions: JourneyMission[];
   empty: boolean;
+  /** Guaranteed XP awarded on first submission (SETTINGS-01 / EVT-01). Defaults to 100. */
+  xpFirstSubmission?: number;
 };
 
 // ============================================================================
@@ -180,27 +183,28 @@ export async function getPlayerForUser(userId: string): Promise<Player | null> {
   const supabase = await createClient();
   if (!supabase) return null;
 
-  const { data: membership, error: memberErr } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
-  if (memberErr || !membership) return null;
+  const { playerId, error: memberErr } = await resolveActivePlayerIdForUser(supabase, userId);
+  if (memberErr || !playerId) return null;
 
   const { data: playerRow, error: playerErr } = await supabase
     .from("players")
     .select(
       "id, cohort_id, slug, name, idea, current_level, status, score_project, score_engagement, onboarded_at",
     )
-    .eq("id", membership.player_id)
+    .eq("id", playerId)
     .maybeSingle();
   if (playerErr || !playerRow) return null;
 
   return mapPlayer(playerRow as PlayerRow);
 }
 
-const EMPTY: JourneyData = { player: null, levelLabel: "", missions: [], empty: true };
+const EMPTY: JourneyData = {
+  player: null,
+  levelLabel: "",
+  missions: [],
+  empty: true,
+  xpFirstSubmission: DEFAULT_EVENT_SETTINGS.xpFirstSubmission,
+};
 
 export async function getJourneyData(userId: string, now: Date = new Date()): Promise<JourneyData> {
   const supabase = await createClient();
@@ -375,5 +379,6 @@ export async function getJourneyData(userId: string, now: Date = new Date()): Pr
     levelLabel: resolveLabel(player.currentLevel),
     missions,
     empty: false,
+    xpFirstSubmission: settings.xpFirstSubmission,
   };
 }

@@ -15,6 +15,16 @@ progress:
 
 # Project State
 
+## Orientation & Bootcamp Idea'Wave Update — 2026-11-11
+
+- **Target Event**: **Bootcamp Idea'Wave — 16 & 17 Novembre 2026** (`ideawave-bootcamp-nov-2026`, UUID `7d553162-1c1e-44d9-9845-9f7b1c58f619`, cohort `cohorte-ideawave-nov-2026`). Guide & runbook: [docs/IDEAWAVE_BOOTCAMP_16_17_NOV.md](../docs/IDEAWAVE_BOOTCAMP_16_17_NOV.md).
+- **Historical Archives Preserved**: `agreentech-fes-meknes-mai-2026` and `hack-days-fes-meknes-mai-2026` archived in-place (`is_active = false`, zero rows deleted) + full JSON snapshot (`SHA-256: 7aa57111e2a383dd042b8143889f18ee8a48fb53ce220f1f826bfad08b517042`) recorded in [ARCHIVE-20261111-pre-ideawave.md](ops-ledger/archives/ARCHIVE-20261111-pre-ideawave.md).
+- **Hardening Completed (`261111-ago`, `261111-db1`, `261111-iwb`)**:
+  - `REL-01` / `OPS-01`: Live GitHub + Supabase + Vercel CLI reconciliation and `.planning/ops-ledger/` traceability (`scripts/agent-ops.mjs`).
+  - `DB-01` / `SEC-01`: Fixed `database/triggers.sql` and `database/rls.sql` bootstrap defects; applied migration `20261111134235_revoke_authenticated_execute_internal_secdef`.
+  - `UX-01`: Scoped localStorage draft keys by `(playerId, deliverableTemplateId, version)` (`buildDraftStorageKey`) and controlled React-state restoration in `components/submission-form.tsx`.
+  - `DATA-01` / `EVT-01`: Added active-event player membership resolution (`lib/player-membership.ts`), mission-scoped `prep-questions-v1` dependency lookup, atomic rollback in `activateEventFlow` / `cloneEventFlow` (including `event_settings` + `pitch_criteria`), idempotent status reconciliation in `evaluateSubmission`, and dynamic `xpFirstSubmission` in `/journey`.
+
 ## Orientation update — 2026-09-29
 
 Omar confirmed the next direction: **production-ready for EIC first, prepared for other organizations later**, covering reliability, user experience and event management together. Follow-up recorded 2026-09-30: launch target = **Idea'Wave Cycle 1 initiation workshop, Tuesday 3 November 2026**, from the supplied provisional calendar (dates subject to change). Workshop time and concurrent-user target remain open. See [launch calendar](../docs/PRODUCTION_ROADMAP.md#ideawave-launch-calendar).

@@ -26,6 +26,7 @@ import { SubmissionTicket } from "@/components/submission-ticket";
 import { getCurrentRole, getCurrentUser, pathForRole } from "@/lib/auth";
 import { dictionaries } from "@/lib/i18n";
 import { getMoscowCardsForPlayerDeliverable } from "@/lib/moscow";
+import { resolveActivePlayerIdForUser } from "@/lib/player-membership";
 import { hasSupabaseEnv } from "@/lib/supabase-status";
 import type {
   RubricCriterion,
@@ -148,29 +149,24 @@ export default async function DeliverableDetailPage({
     );
   }
 
-  // Resolve Player membership (ownership precondition).
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) {
+  // Resolve Player membership (ownership precondition, active-event aware per EVT-01).
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  if (!playerId) {
     notFound();
   }
-  const playerId = (membership as { player_id: string }).player_id;
 
   // Fetch the deliverable template by id.
-  // ENGINE-05: also fetch composer_kind, template_url, auto_validate,
+  // ENGINE-05: also fetch mission_id, composer_kind, template_url, auto_validate,
   // soft_recommends_before (pre-migration: may be absent → defensive ?? fallbacks).
   const { data: tplRow } = await supabase
     .from("deliverable_templates")
-    .select("id, slug, title, description, rubric, max_score, is_bonus, composer_kind, template_url, auto_validate, soft_recommends_before")
+    .select("id, mission_id, slug, title, description, rubric, max_score, is_bonus, composer_kind, template_url, auto_validate, soft_recommends_before")
     .eq("id", id)
     .maybeSingle();
   if (!tplRow) {
     notFound();
   }
-  const tpl = tplRow as DeliverableTemplateRow;
+  const tpl = tplRow as DeliverableTemplateRow & { mission_id?: string | null };
   const rubric = Array.isArray(tpl.rubric) ? tpl.rubric : [];
 
   // ENGINE-05 defensive reads (pre-migration: columns may be absent).
@@ -197,13 +193,29 @@ export default async function DeliverableDetailPage({
   // composer can render an actionable Link back to the prerequisite. Stays
   // null when the prep template is absent (e.g. demo seed without 02a).
   // The slug remains a literal here (R3 exception, signed Omar 2026-05-19).
+  // EVT-01: scope lookup to tpl.mission_id first so multi-event DBs never collide.
   let prepQuestionsDeliverableId: string | null = null;
   if (isFichesEntretienDeliverable) {
-    const { data: prepTpl } = await supabase
-      .from("deliverable_templates")
-      .select("id")
-      .eq("slug", "prep-questions-v1")
-      .maybeSingle();
+    let prepTpl: { id: string } | null = null;
+    if (tpl.mission_id) {
+      const { data: sameMissionPrep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("mission_id", tpl.mission_id)
+        .eq("slug", "prep-questions-v1")
+        .limit(1)
+        .maybeSingle();
+      prepTpl = (sameMissionPrep as { id: string } | null) ?? null;
+    }
+    if (!prepTpl) {
+      const { data: fallbackPrep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("slug", "prep-questions-v1")
+        .limit(1)
+        .maybeSingle();
+      prepTpl = (fallbackPrep as { id: string } | null) ?? null;
+    }
     if (prepTpl) {
       prepQuestionsDeliverableId = (prepTpl as { id: string }).id;
       const { data: prepSubs } = await supabase
@@ -578,6 +590,7 @@ export default async function DeliverableDetailPage({
             deliverableTemplateId={id}
             deliverableTitle={tpl.title}
             evaluation={latestEvaluation}
+            playerId={playerId}
             previousSubmission={latest}
             rewardXp={tpl.max_score}
             rubric={rubric}
@@ -595,7 +608,7 @@ export default async function DeliverableDetailPage({
             >
               {t.submission_v2_title}
             </h2>
-            <SubmissionForm deliverableTemplateId={id} version={2} />
+            <SubmissionForm deliverableTemplateId={id} playerId={playerId} version={2} />
           </>
         ) : isFichesEntretienDeliverable ? (
           // quick-260519-l1l : dedicated 10-URL composer for fiches-entretien-v1
@@ -609,7 +622,7 @@ export default async function DeliverableDetailPage({
             prepQuestionsDeliverableId={prepQuestionsDeliverableId}
           />
         ) : (
-          <SubmissionForm deliverableTemplateId={id} />
+          <SubmissionForm deliverableTemplateId={id} playerId={playerId} />
         )}
       </main>
     </AppShell>

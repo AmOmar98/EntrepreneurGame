@@ -37,6 +37,7 @@ import {
 import { addJurorByEmail, removeJuror } from "@/lib/jurors";
 import type { PitchModeState } from "@/lib/types";
 import { reportServerError } from "@/lib/observability";
+import { resolveActivePlayerIdForUser } from "@/lib/player-membership";
 
 export type WorkflowState = {
   ok: boolean;
@@ -132,17 +133,15 @@ export async function saveOnboarding(
     return { ok: false, message: "Not authenticated." };
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { playerId: resolvedPlayerId, error: membershipError } =
+    await resolveActivePlayerIdForUser(supabase, user.id);
   if (membershipError) {
     return { ok: false, message: membershipError.message };
   }
-  if (!membership) {
+  if (!resolvedPlayerId) {
     return { ok: false, message: "Aucun Player rattache a votre compte." };
   }
+  const membership = { player_id: resolvedPlayerId };
 
   const { data: player, error: playerError } = await supabase
     .from("players")
@@ -244,18 +243,16 @@ export async function submitDeliverable(
     return { ok: false, message: "Non authentifie." };
   }
 
-  // Ownership check (SUBMIT-04 applicative gate, defense-in-depth alongside RLS).
-  const { data: membership, error: memberErr } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // Ownership check (SUBMIT-04 applicative gate, defense-in-depth alongside RLS, EVT-01 active-event aware).
+  const { playerId: resolvedPlayerId, error: memberErr } =
+    await resolveActivePlayerIdForUser(supabase, user.id);
   if (memberErr) {
     return { ok: false, message: memberErr.message };
   }
-  if (!membership) {
+  if (!resolvedPlayerId) {
     return { ok: false, message: "Aucun Player rattache a votre compte." };
   }
+  const membership = { player_id: resolvedPlayerId };
 
   // quick-260519-l1l : Resolve template slug + ENGINE-05 columns to dispatch on
   // special flows (hard-block dependency + auto-validation).
@@ -263,7 +260,7 @@ export async function submitDeliverable(
   // Pre-migration defensive: columns may be absent → fallback to slug-based behavior.
   const { data: tplRow, error: tplErr } = await supabase
     .from("deliverable_templates")
-    .select("slug, composer_kind, auto_validate")
+    .select("slug, mission_id, composer_kind, auto_validate")
     .eq("id", parsed.data.deliverableTemplateId)
     .maybeSingle();
   if (tplErr) {
@@ -272,7 +269,12 @@ export async function submitDeliverable(
   if (!tplRow) {
     return { ok: false, message: "Livrable inconnu." };
   }
-  const tplData = tplRow as { slug: string; composer_kind?: string | null; auto_validate?: boolean | null };
+  const tplData = tplRow as {
+    slug: string;
+    mission_id?: string | null;
+    composer_kind?: string | null;
+    auto_validate?: boolean | null;
+  };
   const templateSlug = tplData.slug;
   // ENGINE-05: data-driven auto-validate check (pre-migration: fallback to slug literal).
   const isAutoValidate =
@@ -283,13 +285,29 @@ export async function submitDeliverable(
   // If this deliverable depends on another being validated first, check that
   // dependency. Defense in depth: composer also disables submit DOM-side, but
   // server is the source of truth — rejects with explicit pedagogical message.
+  // EVT-01: scope lookup to the same mission_id first so multi-event DBs never collide.
   const dependsOnSlug = HARD_BLOCK_DEPENDENCIES[templateSlug];
   if (dependsOnSlug) {
-    const { data: depRow } = await supabase
-      .from("deliverable_templates")
-      .select("id")
-      .eq("slug", dependsOnSlug)
-      .maybeSingle();
+    let depRow: { id: string } | null = null;
+    if (tplData.mission_id) {
+      const { data: sameMissionDep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("mission_id", tplData.mission_id)
+        .eq("slug", dependsOnSlug)
+        .limit(1)
+        .maybeSingle();
+      depRow = (sameMissionDep as { id: string } | null) ?? null;
+    }
+    if (!depRow) {
+      const { data: fallbackDep } = await supabase
+        .from("deliverable_templates")
+        .select("id")
+        .eq("slug", dependsOnSlug)
+        .limit(1)
+        .maybeSingle();
+      depRow = (fallbackDep as { id: string } | null) ?? null;
+    }
     if (depRow) {
       const { data: depSubs } = await supabase
         .from("submissions")
@@ -593,9 +611,11 @@ export async function evaluateSubmission(
   }
 
   // Applicative unique check (readable error before relying on DB 23505).
+  // DATA-01: if the evaluation row was already inserted on a previous attempt
+  // whose status UPDATE failed, reconcile submissions.status idempotently.
   const { data: existingEval, error: existingErr } = await supabase
     .from("evaluations")
-    .select("id")
+    .select("id, verdict")
     .eq("submission_id", submission.id)
     .eq("evaluator_id", user.id)
     .maybeSingle();
@@ -603,6 +623,23 @@ export async function evaluateSubmission(
     return { ok: false, message: existingErr.message };
   }
   if (existingEval) {
+    const prevVerdict = (existingEval as { verdict?: string }).verdict;
+    const expectedStatus =
+      prevVerdict === "validate_v1" || prevVerdict === "validate_v2"
+        ? "validated"
+        : prevVerdict === "request_v2"
+          ? "feedback_received"
+          : "rejected";
+    if (submission.status !== expectedStatus) {
+      await supabase
+        .from("submissions")
+        .update({ status: expectedStatus })
+        .eq("id", submission.id);
+      revalidatePath("/mentor");
+      revalidatePath(`/mentor/submission/${submission.id}`);
+      revalidatePath(`/journey/deliverable/${submission.deliverable_template_id}`);
+      revalidatePath("/journey");
+    }
     return { ok: false, message: "Vous avez deja evalue cette soumission." };
   }
 
@@ -1655,15 +1692,10 @@ export async function claimBonusEventFlow(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Non authentifie." };
 
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) {
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  if (!playerId) {
     return { ok: false, message: "Aucun Player rattache a votre compte." };
   }
-  const playerId = (membership as { player_id: string }).player_id;
 
   // R3 : pas de check "deja claime" hard. On autorise re-claim apres rejet.
   // Mais on bloque double "submitted" en attente review (UX clarity, pas pedagogical block).
@@ -1818,13 +1850,9 @@ export async function createMoscowCardFlow(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Non authentifie." };
 
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) return { ok: false, message: "Aucun Player rattache." };
-  const playerId = (membership as { player_id: string }).player_id;
+  const { playerId: moscowPlayerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  if (!moscowPlayerId) return { ok: false, message: "Aucun Player rattache." };
+  const playerId = moscowPlayerId;
 
   const { error: insErr } = await supabase.from("moscow_cards").insert({
     project_id: playerId,
@@ -1991,13 +2019,9 @@ export async function submitMoscowDeliverableFlow(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Non authentifie." };
 
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!membership) return { ok: false, message: "Aucun Player rattache." };
-  const playerId = (membership as { player_id: string }).player_id;
+  const { playerId: moscowPlayerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  if (!moscowPlayerId) return { ok: false, message: "Aucun Player rattache." };
+  const playerId = moscowPlayerId;
 
   // R3 warn-only : count >=2 MUST + >=1 WONT pour message d'avertissement (NOT blocage)
   const { data: cards } = await supabase
@@ -2205,12 +2229,7 @@ export async function createHelpRequestFlow(
     return { ok: false, message: "Non authentifié.", severity: "error" };
   }
 
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const playerId = (membership as { player_id: string } | null)?.player_id;
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
   if (!playerId) {
     return {
       ok: false,
@@ -2691,14 +2710,27 @@ export async function activateEventFlow(
   // Resolve the event's organization_id so we can scope the deactivation.
   const { data: evtRow, error: evtErr } = await supabase
     .from("events")
-    .select("organization_id")
+    .select("id, organization_id")
     .eq("id", parsed.data.eventId)
     .maybeSingle();
   if (evtErr) {
     return { ok: false, message: evtErr.message };
   }
+  if (!evtRow) {
+    return { ok: false, message: "Event introuvable." };
+  }
 
-  const orgId = (evtRow as { organization_id: string | null } | null)?.organization_id ?? null;
+  const orgId = (evtRow as { organization_id: string | null }).organization_id ?? null;
+
+  // Record previously active event in the same org so we can roll back if step 2 fails (DATA-01).
+  let prevActiveQuery = supabase.from("events").select("id").eq("is_active", true);
+  if (orgId) {
+    prevActiveQuery = prevActiveQuery.eq("organization_id", orgId) as typeof prevActiveQuery;
+  } else {
+    prevActiveQuery = prevActiveQuery.is("organization_id", null) as typeof prevActiveQuery;
+  }
+  const { data: prevActiveRow } = await prevActiveQuery.limit(1).maybeSingle();
+  const prevActiveId = (prevActiveRow as { id?: string } | null)?.id ?? null;
 
   // Step 1: deactivate all events in the same org (single-active invariant).
   // Always scope: org events when orgId is set, null-org events only when orgId is null.
@@ -2720,6 +2752,9 @@ export async function activateEventFlow(
     .update({ is_active: true })
     .eq("id", parsed.data.eventId);
   if (activateErr) {
+    if (prevActiveId && prevActiveId !== parsed.data.eventId) {
+      await supabase.from("events").update({ is_active: true }).eq("id", prevActiveId);
+    }
     return { ok: false, message: activateErr.message };
   }
 
@@ -2841,6 +2876,26 @@ export async function cloneEventFlow(
   }
   const newEventId = (newEvent as { id: string }).id;
 
+  // old mission id -> new mission id
+  const missionIdMap = new Map<string, string>();
+  // old template id -> new template id
+  const templateIdMap = new Map<string, string>();
+
+  // DATA-01: Unified rollback helper so no partial clone is left behind if any step fails.
+  const rollbackPartialClone = async () => {
+    const newTemplateIds = [...templateIdMap.values()];
+    if (newTemplateIds.length > 0) {
+      await supabase.from("deliverable_templates").delete().in("id", newTemplateIds);
+    }
+    const newMissionIds = [...missionIdMap.values()];
+    if (newMissionIds.length > 0) {
+      await supabase.from("missions").delete().in("id", newMissionIds);
+    }
+    await supabase.from("pitch_criteria").delete().eq("event_id", newEventId);
+    await supabase.from("event_settings").delete().eq("event_id", newEventId);
+    await supabase.from("events").delete().eq("id", newEventId);
+  };
+
   // 3. Fetch source missions.
   const { data: srcMissions, error: missionErr } = await supabase
     .from("missions")
@@ -2848,11 +2903,9 @@ export async function cloneEventFlow(
     .eq("event_id", parsed.data.eventId)
     .order("ord", { ascending: true });
   if (missionErr) {
+    await rollbackPartialClone();
     return { ok: false, message: missionErr.message };
   }
-
-  // old mission id -> new mission id
-  const missionIdMap = new Map<string, string>();
 
   for (const m of (srcMissions ?? []) as MissionRow[]) {
     const { data: newMission, error: mErr } = await supabase
@@ -2868,6 +2921,7 @@ export async function cloneEventFlow(
       .select("id")
       .single();
     if (mErr || !newMission) {
+      await rollbackPartialClone();
       return { ok: false, message: mErr?.message ?? "Erreur clonage mission." };
     }
     missionIdMap.set(m.id, (newMission as { id: string }).id);
@@ -2885,13 +2939,11 @@ export async function cloneEventFlow(
       .in("mission_id", srcMissionIds)
       .order("ord", { ascending: true });
     if (tplErr) {
+      await rollbackPartialClone();
       return { ok: false, message: tplErr.message };
     }
     srcTemplates = (tplData ?? []) as TemplateRow[];
   }
-
-  // old template id -> new template id
-  const templateIdMap = new Map<string, string>();
 
   // WR-05: single timestamp + per-item index to guarantee unique slugs even
   // when the loop completes within the same millisecond.
@@ -2902,6 +2954,7 @@ export async function cloneEventFlow(
     const tpl = srcTemplates[tplIdx];
     const newMissionId = missionIdMap.get(tpl.mission_id);
     if (!newMissionId) {
+      await rollbackPartialClone();
       return { ok: false, message: `Mission cible introuvable pour template ${tpl.slug}.` };
     }
     const { data: newTpl, error: tplInsertErr } = await supabase
@@ -2925,6 +2978,7 @@ export async function cloneEventFlow(
       .select("id")
       .single();
     if (tplInsertErr || !newTpl) {
+      await rollbackPartialClone();
       return { ok: false, message: tplInsertErr?.message ?? "Erreur clonage template." };
     }
     templateIdMap.set(tpl.id, (newTpl as { id: string }).id);
@@ -2945,17 +2999,62 @@ export async function cloneEventFlow(
       .update({ soft_recommends_before: newPrereqId })
       .eq("id", newTplId);
     if (remapErr) {
-      // Best-effort cleanup: delete cloned templates, missions, event (FK-safe order).
-      const newTemplateIds = [...templateIdMap.values()];
-      if (newTemplateIds.length > 0) {
-        await supabase.from("deliverable_templates").delete().in("id", newTemplateIds);
-      }
-      const newMissionIds = [...missionIdMap.values()];
-      if (newMissionIds.length > 0) {
-        await supabase.from("missions").delete().in("id", newMissionIds);
-      }
-      await supabase.from("events").delete().eq("id", newEventId);
+      await rollbackPartialClone();
       return { ok: false, message: `Clone echoue (nettoyage effectue): ${remapErr.message}` };
+    }
+  }
+
+  // 5. DATA-01: Also clone event_settings and pitch_criteria when present on the source event.
+  const { data: srcSettings } = await supabase
+    .from("event_settings")
+    .select(
+      "xp_first_submission, xp_validate_v1, xp_validate_v2, eng_submitted, eng_reviewed, eng_validated, pitch_weight, bonus_multiplier_cap",
+    )
+    .eq("event_id", parsed.data.eventId)
+    .maybeSingle();
+  if (srcSettings) {
+    const { error: settingsCloneErr } = await supabase
+      .from("event_settings")
+      .upsert(
+        {
+          event_id: newEventId,
+          ...(srcSettings as Record<string, unknown>),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "event_id" },
+      );
+    if (settingsCloneErr) {
+      await rollbackPartialClone();
+      return { ok: false, message: `Erreur clonage parametres: ${settingsCloneErr.message}` };
+    }
+  }
+
+  const { data: srcCriteria } = await supabase
+    .from("pitch_criteria")
+    .select("key, label, max, ord")
+    .eq("event_id", parsed.data.eventId)
+    .order("ord", { ascending: true });
+  if (srcCriteria && srcCriteria.length > 0) {
+    const criteriaToInsert = (
+      srcCriteria as {
+        key: string;
+        label: string;
+        max: number;
+        ord: number;
+      }[]
+    ).map((c) => ({
+      event_id: newEventId,
+      key: c.key,
+      label: c.label,
+      max: c.max,
+      ord: c.ord,
+    }));
+    const { error: criteriaCloneErr } = await supabase
+      .from("pitch_criteria")
+      .insert(criteriaToInsert);
+    if (criteriaCloneErr) {
+      await rollbackPartialClone();
+      return { ok: false, message: `Erreur clonage grille jury: ${criteriaCloneErr.message}` };
     }
   }
 

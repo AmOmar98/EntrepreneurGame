@@ -13,7 +13,7 @@ Recorded 2026-09-30 from the user-supplied **Reglement-AAP-IdeaWave-Cycle-1-2026
 | Applications | 1–31 October 2026, closing at 23:59 Morocco time | Recruitment period; this does not imply application processing moves into the game |
 | Selection committee | 2 November 2026 | Final roster may only be available the day before launch; rehearse imports/access beforehand |
 | Initiation workshop | **3 November 2026** | **Application launch target**; onboarding and the workshop's required flows must be ready |
-| Bootcamp, EIC / Eco-campus UEMF | 11–12 November 2026 | Rehearse the full delivery/review/jury sequence before these dates |
+| Bootcamp, EIC / Eco-campus UEMF | **16–17 November 2026** (updated 2026-11-11 from 11–12 Nov provisional) | Active event `ideawave-bootcamp-nov-2026` (`7d553162-1c1e-44d9-9845-9f7b1c58f619`) provisioned in Supabase; see [IDEAWAVE_BOOTCAMP_16_17_NOV.md](IDEAWAVE_BOOTCAMP_16_17_NOV.md) |
 | Post-bootcamp support | 16 November–18 December 2026 | Plan continued access, feedback and support after the bootcamp |
 
 The regulation targets **10 selected projects**, then **3 laureates** for post-bootcamp support. These counts do not establish account numbers or simultaneous users: team sizes, mentors, jurors and staff still need sizing.

@@ -85,10 +85,7 @@ export async function getPlayerIdForCurrentUser(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  return (data as { player_id: string } | null)?.player_id ?? null;
+  const { resolveActivePlayerIdForUser } = await import("@/lib/player-membership");
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, user.id);
+  return playerId;
 }

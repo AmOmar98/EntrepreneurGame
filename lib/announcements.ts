@@ -156,13 +156,9 @@ export async function getAnnouncementsForPlayer(
   const supabase = await createClient();
   if (!supabase) return [];
 
-  // Resolve player + level.
-  const { data: membership } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const playerId = (membership as { player_id?: string } | null)?.player_id ?? null;
+  // Resolve player + level (active-event aware per EVT-01).
+  const { resolveActivePlayerIdForUser } = await import("@/lib/player-membership");
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, userId);
 
   let levelId: LevelId | null = null;
   if (playerId) {

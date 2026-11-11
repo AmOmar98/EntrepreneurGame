@@ -78,14 +78,9 @@ export async function getPitchPrepForUser(userId: string): Promise<PitchPrepData
   const supabase = await createClient();
   if (!supabase) return empty;
 
-  // 1. Map auth user -> player_id (Player belongs to at most one team for pilot).
-  const { data: memberRow } = await supabase
-    .from("player_members")
-    .select("player_id")
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
-  const playerId = (memberRow as { player_id?: string } | null)?.player_id ?? null;
+  // 1. Map auth user -> player_id (active-event aware per EVT-01).
+  const { resolveActivePlayerIdForUser } = await import("@/lib/player-membership");
+  const { playerId } = await resolveActivePlayerIdForUser(supabase, userId);
   if (!playerId) return empty;
 
   // 2. Resolve current event (GM-designated active event via is_active).

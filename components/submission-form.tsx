@@ -12,7 +12,7 @@ import { dictionaries } from "@/lib/i18n";
 import { AutoSaveBadge } from "@/components/auto-save-badge";
 import { FieldCompletionCounter } from "@/components/field-completion-counter";
 import { PixelMascotPlayer } from "@/components/pixel-mascot-player";
-import { useAutoSave } from "@/hooks/use-auto-save";
+import { buildDraftStorageKey, useAutoSave } from "@/hooks/use-auto-save";
 import { useFirstDeliveryTrigger } from "@/hooks/use-pixel-trigger";
 
 const t = dictionaries.fr;
@@ -22,13 +22,17 @@ const initialState: WorkflowState = { ok: false, message: "" };
 export function SubmissionForm({
   deliverableTemplateId,
   version = 1,
+  playerId,
 }: {
   deliverableTemplateId: string;
   version?: 1 | 2;
+  playerId?: string | null;
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitDeliverable, initialState);
   const [kind, setKind] = useState<"proof_url" | "proof_text">("proof_url");
+  const [proofUrl, setProofUrl] = useState<string>("");
+  const [proofText, setProofText] = useState<string>("");
   const submitLabel = version === 2 ? t.submission_v2_submit : t.submission_submit;
 
   // T3-A5 (a) — Pixel mascot 1er livrable soumis (mood euphorique).
@@ -36,10 +40,23 @@ export function SubmissionForm({
   // pour la première soumission de ce navigateur (localStorage flag).
   const firstDelivery = useFirstDeliveryTrigger(state.ok);
 
-  // A1 — Auto-save: ref wired to <form> so the hook can read FormData.
+  // A1 / UX-01 — Auto-save: scoped per (playerId, deliverableTemplateId, version)
+  // with React state restoration for kind + proofUrl + proofText.
   const formRef = useRef<HTMLFormElement>(null);
   const { lastSavedAt, clear } = useAutoSave(formRef, {
-    key: `eg_draft_${deliverableTemplateId}`,
+    key: buildDraftStorageKey({ playerId, deliverableTemplateId, version }),
+    legacyKey: version === 1 ? `eg_draft_${deliverableTemplateId}` : undefined,
+    onRestore: (stored) => {
+      if (stored.kind === "proof_text" || stored.kind === "proof_url") {
+        setKind(stored.kind);
+      }
+      if (typeof stored.proofUrl === "string") {
+        setProofUrl(stored.proofUrl);
+      }
+      if (typeof stored.proofText === "string") {
+        setProofText(stored.proofText);
+      }
+    },
   });
 
   useEffect(() => {
@@ -97,6 +114,8 @@ export function SubmissionForm({
           <input
             type="url"
             name="proofUrl"
+            value={proofUrl}
+            onChange={(e) => setProofUrl(e.target.value)}
             placeholder={t.submission_url_placeholder}
             required
             className="eic-form-input"
@@ -107,6 +126,8 @@ export function SubmissionForm({
           <span className="eic-form-field__label">{t.submission_text_label}</span>
           <textarea
             name="proofText"
+            value={proofText}
+            onChange={(e) => setProofText(e.target.value)}
             placeholder={t.submission_text_placeholder}
             required
             rows={10}

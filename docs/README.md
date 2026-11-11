@@ -23,6 +23,7 @@ Current orientation was reviewed on **2026-09-29**, against branch `milestone/v0
 | [Preflight](PILOT-PREFLIGHT.md) | Event rehearsal checklist to adapt to the next confirmed event |
 | [Observability](OBSERVABILITY.md) | Sentry/PostHog and performance tooling; configured/verified status is still to establish |
 | [Agent operations & traceability](AGENT_OPS.md) | Live monitoring, guarded hotfix worktrees, and `.planning/ops-ledger/` traceability across GitHub, Supabase and Vercel |
+| [Bootcamp Idea'Wave 16–17 Nov 2026](IDEAWAVE_BOOTCAMP_16_17_NOV.md) | Live event IDs (`ideawave-bootcamp-nov-2026`), 16–17 Nov schedule, deliverable catalog, and CSV team import guide |
 | [Validator severity](validator-severity-baseline.md) | R2 rationale and static-gate scope |
 | [Pilot event runbook](PILOT-J1J2-RUNBOOK.md), [swarm runbook](SWARM-PROD-RUNBOOK.md) | Historical operations context, not current monitoring evidence |
 
