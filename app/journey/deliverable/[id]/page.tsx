@@ -17,6 +17,7 @@ import {
   MentorCommentsList,
   type MentorCommentEntry,
 } from "@/components/mentor-comments-list";
+import { DeliverableComposerDispatcher } from "@/components/composers/deliverable-composer-dispatcher";
 import { FichesEntretienComposer } from "@/components/fiches-entretien-composer";
 import { MoscowKanban } from "@/components/moscow-kanban";
 import { RevisionPanel } from "@/components/revision-panel";
@@ -587,6 +588,7 @@ export default async function DeliverableDetailPage({
                 />
               </section>
             }
+            deliverableSlug={tpl.slug}
             deliverableTemplateId={id}
             deliverableTitle={tpl.title}
             evaluation={latestEvaluation}
@@ -608,7 +610,15 @@ export default async function DeliverableDetailPage({
             >
               {t.submission_v2_title}
             </h2>
-            <SubmissionForm deliverableTemplateId={id} playerId={playerId} version={2} />
+            <DeliverableComposerDispatcher
+              deliverableSlug={tpl.slug}
+              deliverableTemplateId={id}
+              deliverableTitle={tpl.title}
+              initialProofText={latest?.proofText ?? null}
+              initialProofUrl={latest?.proofUrl ?? null}
+              playerId={playerId}
+              version={2}
+            />
           </>
         ) : isFichesEntretienDeliverable ? (
           // quick-260519-l1l : dedicated 10-URL composer for fiches-entretien-v1
@@ -621,8 +631,33 @@ export default async function DeliverableDetailPage({
             lockedReason={fichesGateReason}
             prepQuestionsDeliverableId={prepQuestionsDeliverableId}
           />
+        ) : isMoscowDeliverable ? (
+          // MoSCoW Kanban already renders its own submit button (submitMoscowDeliverableFlow);
+          // keep external link / free-text fallback accessible on toggle without redundant duplicate form.
+          <details style={{ marginTop: 16 }}>
+            <summary
+              style={{
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#475569",
+                userSelect: "none",
+              }}
+            >
+              Soumettre plutôt un lien externe ou un texte libre (optionnel)
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <SubmissionForm deliverableTemplateId={id} playerId={playerId} />
+            </div>
+          </details>
         ) : (
-          <SubmissionForm deliverableTemplateId={id} playerId={playerId} />
+          <DeliverableComposerDispatcher
+            deliverableSlug={tpl.slug}
+            deliverableTemplateId={id}
+            deliverableTitle={tpl.title}
+            playerId={playerId}
+            version={1}
+          />
         )}
       </main>
     </AppShell>

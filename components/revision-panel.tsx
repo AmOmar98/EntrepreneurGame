@@ -22,8 +22,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { DeliverableComposerDispatcher } from "@/components/composers/deliverable-composer-dispatcher";
 import { DeliverableScoreBlock } from "@/components/deliverable-score-block";
-import { SubmissionForm } from "@/components/submission-form";
 import { dictionaries } from "@/lib/i18n";
 import type { RubricCriterion, Submission, Verdict } from "@/lib/types";
 
@@ -40,6 +40,7 @@ type Evaluation = {
 
 export type RevisionPanelProps = {
   deliverableTemplateId: string;
+  deliverableSlug?: string;
   deliverableTitle: string;
   evaluation: Evaluation;
   rubric: RubricCriterion[];
@@ -93,6 +94,7 @@ function formatDateFr(iso: string): string {
 
 export function RevisionPanel({
   deliverableTemplateId,
+  deliverableSlug,
   deliverableTitle,
   evaluation,
   rubric,
@@ -207,8 +209,12 @@ export function RevisionPanel({
 
       <div className="eic-revision__form">
         <p className="eic-revision__kicker">{t.revision_form_kicker}</p>
-        <SubmissionForm
+        <DeliverableComposerDispatcher
+          deliverableSlug={deliverableSlug ?? ""}
           deliverableTemplateId={deliverableTemplateId}
+          deliverableTitle={deliverableTitle}
+          initialProofText={previousSubmission?.proofText ?? null}
+          initialProofUrl={previousSubmission?.proofUrl ?? null}
           playerId={playerId}
           version={2}
         />
