@@ -168,7 +168,7 @@ export default async function JourneyPage() {
   );
 }
 
-// Bandeau discret pointant vers le Welcome Guide Digi-Hackathon sur OneDrive UEMF.
+// Bandeau discret pointant vers le Pack Livrables A3 / Guide du bootcamp sur OneDrive/SharePoint UEMF.
 // Visible une fois en haut du parcours porteur (branche non-empty) et juste
 // sous le titre de bienvenue (branche empty). Lien externe nouvel onglet.
 function WelcomeGuideStrip() {
@@ -190,8 +190,8 @@ function WelcomeGuideStrip() {
       }}
     >
       <span>
-        <strong>Welcome Guide Digi-Hackathon</strong> &mdash; brief porteur, règles
-        du bootcamp, checklist 20-22 mai.
+        <strong>Pack Livrables &amp; Guide Bootcamp</strong> &mdash; 12 gabarits A3
+        officiels, brief porteur et ressources.
       </span>
       <a
         href={WELCOME_GUIDE_URL}
@@ -207,7 +207,7 @@ function WelcomeGuideStrip() {
           whiteSpace: "nowrap",
         }}
       >
-        Ouvrir le guide
+        Ouvrir le pack A3
       </a>
     </div>
   );

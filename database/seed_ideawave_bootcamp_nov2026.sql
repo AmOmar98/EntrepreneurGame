@@ -111,4 +111,35 @@ BEGIN
       ord = EXCLUDED.ord;
 END $$;
 
+-- 6. Synchronisation des liens officiels SharePoint (12 gabarits A3 Idea'Wave)
+--    Pack complet A3 (00) : https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQC0UMx12PvjTbxCU4rXmropAe9JE-mz9di_fmh7i0TmySs?e=Llz1O0
+DO $$
+DECLARE
+  v_event_id uuid;
+BEGIN
+  SELECT id INTO v_event_id FROM public.events WHERE slug = 'ideawave-bootcamp-nov-2026';
+
+  IF v_event_id IS NOT NULL THEN
+    UPDATE public.deliverable_templates dt
+    SET template_url = CASE dt.slug
+      WHEN 'fiche-probleme-client-v1'       THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQAMxOSPswr4RqFH7kT0AG-LAbvI1wjO8ilEWduFpqOCNsI?e=RJhAbg'
+      WHEN 'design-thinking-v1'             THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQASRT8B9PdoQ4MYgJoojr1bAYqafFar2ypcLdEjJRCOiD8?e=r3g1Gn'
+      WHEN 'bmc-v1'                         THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCek4lt036-QqDfKH2TYrMeAeVHZYE0WcmTJmaPxDT2KQY?e=Qvy0F0'
+      WHEN 'etude-marche-positionnement-v1' THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBcotBs2UFrR6xIKuB2zY1bAYmIgIcIXdzsNz9Q711YUYE?e=6J3I7y'
+      WHEN 'faisabilite-plan-dev-v1'        THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDjFxok71EJTZMdAXCwx6BgAbWSdQMtmD7httaImGvGTv4?e=vKTbcg'
+      WHEN 'moscow-v1'                      THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBZp3lIuyV4QKTkXsvTWxjzAYW0_2h77rYWOE5_ZdRcOU4?e=TdOaY5'
+      WHEN 'plan-acces-marche-v1'           THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCx75rE1LxzRq7ITpF6GA8pAQS0kRK9jjUFv2OsfthHPO4?e=kYDIrx'
+      WHEN 'fondamentaux-marketing-v1'      THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBvZmCWb3GTRawtLxWOsK9nAWxCa8BjhyUtJm1oPcwFDbQ?e=YTgJ7U'
+      WHEN 'besoin-financement-v1'          THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCPR3DfR0IXRZ5QVGrFVZTgAZD_tJHZi3QnFnEo356Arhk?e=sOWPWP'
+      WHEN 'canevas-consolides-j1-v1'       THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBuQzIEw-2_Q5HoIjKygZFTAbXJ6NT5RzKq9zgV8NsSw70?e=ImquBX'
+      WHEN 'pitch-3min-support-v1'          THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDeXbkwIf8hRqn7dUoXQKfnAdrihyzJwwosXY9c_-bniNA?e=3e1MuP'
+      WHEN 'pitch-final-objections-v1'      THEN 'https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDckQNN7UhDSLeMZk6deNRFAZNHjAPUjhSiEf4TnM4g0Cw?e=kc1LTR'
+      ELSE dt.template_url
+    END
+    FROM public.missions m
+    WHERE dt.mission_id = m.id
+      AND m.event_id = v_event_id;
+  END IF;
+END $$;
+
 COMMIT;

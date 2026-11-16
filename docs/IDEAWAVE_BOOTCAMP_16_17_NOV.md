@@ -66,11 +66,40 @@ Pour la session **Présentation devant le jury (`14h00 – 15h30` le 17 novembre
 
 ---
 
-## 5. Prochaine étape : Import des équipes & liens templates OneDrive
+## 5. Gabarits Officiels A3 — Liens SharePoint (Lecture Seule)
+
+Tous les livrables ont été régénérés au format **A3 Paysage (`420 × 297 mm`)**, conformes à l'identité visuelle officielle **Idea'Wave** (Encre `#0D0F12`, Papier `#F3F3F0`, accents Signal `#C8FF2E`, typographies Barlow Condensed / Barlow / IBM Plex Mono, co-branding institutionnel UEMF / EIC / Tamwilcom / Innov Invest / Blue Space / Bank of Africa).
+
+Les liens sont configurés en direct dans la base de données (`public.deliverable_templates.template_url`) pour l'événement actif `ideawave-bootcamp-nov-2026` et accessibles aux porteurs depuis l'interface `/journey/deliverable/[id]`.
+
+### Pack complet A3
+
+- **00 · Pack Livrables A3 complet (12 planches A3 fusionnées)** :  
+  [https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQC0UMx12PvjTbxCU4rXmropAe9JE-mz9di_fmh7i0TmySs?e=Llz1O0](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQC0UMx12PvjTbxCU4rXmropAe9JE-mz9di_fmh7i0TmySs?e=Llz1O0)
+
+### Les 12 livrables individuels
+
+| N° | Livrable | Slug (`deliverable_templates`) | Mission | Lien de partage SharePoint (lecture seule) |
+| :---: | :--- | :--- | :---: | :--- |
+| **01** | **Fiche Problème Client** | `fiche-probleme-client-v1` | M1 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQAMxOSPswr4RqFH7kT0AG-LAbvI1wjO8ilEWduFpqOCNsI?e=RJhAbg) |
+| **02** | **Design Thinking (Bonus)** | `design-thinking-v1` | M1 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQASRT8B9PdoQ4MYgJoojr1bAYqafFar2ypcLdEjJRCOiD8?e=r3g1Gn) |
+| **03** | **Business Model Canvas** | `bmc-v1` | M2 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCek4lt036-QqDfKH2TYrMeAeVHZYE0WcmTJmaPxDT2KQY?e=Qvy0F0) |
+| **04** | **Étude de Marché & Positionnement** | `etude-marche-positionnement-v1` | M3 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBcotBs2UFrR6xIKuB2zY1bAYmIgIcIXdzsNz9Q711YUYE?e=6J3I7y) |
+| **05** | **Faisabilité & Plan de Dév.** | `faisabilite-plan-dev-v1` | M4 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDjFxok71EJTZMdAXCwx6BgAbWSdQMtmD7httaImGvGTv4?e=vKTbcg) |
+| **06** | **Matrice MoSCoW** | `moscow-v1` | M4 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBZp3lIuyV4QKTkXsvTWxjzAYW0_2h77rYWOE5_ZdRcOU4?e=TdOaY5) |
+| **07** | **Plan d’Accès au Marché** | `plan-acces-marche-v1` | M5 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCx75rE1LxzRq7ITpF6GA8pAQS0kRK9jjUFv2OsfthHPO4?e=kYDIrx) |
+| **08** | **Fondamentaux Marketing** | `fondamentaux-marketing-v1` | M5 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBvZmCWb3GTRawtLxWOsK9nAWxCa8BjhyUtJm1oPcwFDbQ?e=YTgJ7U) |
+| **09** | **Besoin de Financement** | `besoin-financement-v1` | M6 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQCPR3DfR0IXRZ5QVGrFVZTgAZD_tJHZi3QnFnEo356Arhk?e=sOWPWP) |
+| **10** | **Consolidation J1** | `canevas-consolides-j1-v1` | M6 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQBuQzIEw-2_Q5HoIjKygZFTAbXJ6NT5RzKq9zgV8NsSw70?e=ImquBX) |
+| **11** | **Pitch 3 min (Support)** | `pitch-3min-support-v1` | M7 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDeXbkwIf8hRqn7dUoXQKfnAdrihyzJwwosXY9c_-bniNA?e=3e1MuP) |
+| **12** | **Pitch Final & Objections** | `pitch-final-objections-v1` | M7 | [Lien SharePoint](https://universiteeurome-my.sharepoint.com/:b:/g/personal/o_ameur_ueuromed_org/IQDckQNN7UhDSLeMZk6deNRFAZNHjAPUjhSiEf4TnM4g0Cw?e=kc1LTR) |
+
+---
+
+## 6. Prochaine étape : Import des équipes & Jury
 
 Dès que vous disposez :
 1. **De la liste des projets / équipes sélectionnés** (format CSV `team_name,member_email,member_full_name,idea` ou liste brute dans le chat),
-2. **Des éventuels liens OneDrive/Google Drive des gabarits vierges** (`template_url` pour chaque livrable),
-3. **Des emails des Mentors et des membres du Jury**,
+2. **Des emails des Mentors et des membres du Jury**,
 
 transmettez-les ici ou importez-les depuis `/admin/import` et `/admin/jurors`.
